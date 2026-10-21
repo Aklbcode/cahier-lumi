@@ -3720,7 +3720,9 @@ GAMES.trace = {
         let W = 0, H = 0, dpr = 1, mask = null, fat = null, gctx, ictx, lw = 20, drawn = 0;
         const fontPx = () => Math.round(H * (L.font === 'cursive' ? (t.length > 1 ? .42 : .55) : (t.length > 1 ? .5 : .66)));
         const setup = () => {
-          const r = wrap.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
+          let r = wrap.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
+          /* anciens navigateurs sans aspect-ratio : la zone aurait une hauteur nulle */
+          if (r.height < 60 && r.width > 0) { wrap.style.height = Math.round(Math.min(r.width / 1.25, (window.innerHeight || 600) * .55)) + 'px'; r = wrap.getBoundingClientRect(); }
           W = Math.max(200, Math.round(r.width)); H = Math.max(160, Math.round(r.height));
           [guide, ink].forEach(c => { c.width = W * dpr; c.height = H * dpr; });
           gctx = guide.getContext('2d'); ictx = ink.getContext('2d'); gctx.setTransform(dpr, 0, 0, dpr, 0, 0); ictx.setTransform(dpr, 0, 0, dpr, 0, 0);
