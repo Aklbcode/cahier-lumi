@@ -1739,22 +1739,22 @@ function rewardSay(r) {
   return out;
 }
 
-/* ---------- Cadeaux du parent : versés une seule fois par enfant (mémorisés dans sa progression) ---------- */
-const GIFTS = [{ id: 'cadeau-2026-10-21', kid: 'luca', stars: 27, treasures: 4, gear: ['sac', 'chapeau'] }];
+/* ---------- Cadeau annulé : si un appareil l'avait déjà reçu, on le retire une fois ---------- */
+const GIFTS_REVOKED = [{ id: 'cadeau-2026-10-21', kid: 'luca', stars: 27 }];
 function applyGifts() {
-  let given = false; const keep = S.current;
-  GIFTS.forEach(g => {
-    if (!KIDS_DEF[g.kid]) return;
-    S.current = g.kid; const p = P(); p.gifts = p.gifts || [];
-    if (p.gifts.includes(g.id)) return;
-    addStars(g.stars || 0);
-    if (g.treasures) p.treasures = Math.max(p.treasures || 0, g.treasures);
-    (g.gear || []).forEach(id => { avState().gear[id] = true; });
-    p.gifts.push(g.id); given = true;
+  let changed = false; const keep = S.current;
+  GIFTS_REVOKED.forEach(g => {
+    if (!KIDS_DEF[g.kid] || !S.progress[g.kid]) return;
+    S.current = g.kid; const p = P();
+    if (!(p.gifts || []).includes(g.id)) return;
+    p.stars = Math.max(0, p.stars - g.stars);
+    p.treasures = Math.min(TREASURES.length, Math.floor(p.stars / STARS_PER_TREASURE));
+    const st = avState(); delete st.gear.sac; delete st.gear.chapeau;
+    p.gifts = p.gifts.filter(x => x !== g.id); changed = true;
   });
   S.current = keep;
-  if (given) save();
-  return given;
+  if (changed) save();
+  return changed;
 }
 
 /* ---------- Écran « Qui joue ? » ---------- */
