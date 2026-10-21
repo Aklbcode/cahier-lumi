@@ -777,6 +777,15 @@ function loadLocal() { try { const t = localStorage.getItem(LS_KEY); if (t) { co
    Lola sur l'iPad et Luca sur le Mac peuvent jouer en même temps sans s'écraser. */
 const DEVICE_KEY = 'cahier-lumi-appareil';
 const syncDocs = () => ['reglages', ...S.profiles.map(p => p.id)];
+/* Signature « de contenu » : ignore l'ordre des clés et les valeurs vides créées par défaut,
+   pour qu'un simple affichage ne passe jamais pour une modification à envoyer */
+function isBlank(v) { if (v == null || v === 0 || v === false || v === '') return true; if (typeof v === 'object') return Object.values(v).every(isBlank); return false; }
+function stableSig(v) {
+  if (Array.isArray(v)) return '[' + v.map(stableSig).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).filter(k => !isBlank(v[k])).sort().map(k => JSON.stringify(k) + ':' + stableSig(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+function docSig(k) { return k === 'reglages' ? stableSig({ settings: S.settings, worlds: S.profiles.map(p => [p.id, p.world]) }) : stableSig(S.progress[k] || {}); }
 function localDoc(k) { return k === 'reglages' ? JSON.stringify({ settings: S.settings, worlds: S.profiles.map(p => [p.id, p.world]) }) : JSON.stringify(S.progress[k] || {}); }
 function applyDoc(k, txt) {
   const o = JSON.parse(txt);
@@ -785,9 +794,9 @@ function applyDoc(k, txt) {
 }
 const Track = {
   last: {},
-  init() { S.at = S.at || {}; syncDocs().forEach(k => { this.last[k] = localDoc(k); }); },
+  init() { S.at = S.at || {}; syncDocs().forEach(k => { this.last[k] = docSig(k); }); },
   /* tant que la première lecture du compte n'est pas faite, on ne date rien : des valeurs par défaut ne doivent jamais écraser la vraie progression */
-  mark() { S.at = S.at || {}; const now = Date.now(); syncDocs().forEach(k => { const c = localDoc(k); if (c !== this.last[k]) { if (Remote.state !== 'pending') S.at[k] = now; this.last[k] = c; } }); }
+  mark() { S.at = S.at || {}; const now = Date.now(); syncDocs().forEach(k => { const c = docSig(k); if (c !== this.last[k]) { if (Remote.state !== 'pending') S.at[k] = now; this.last[k] = c; } }); }
 };
 let saveTimer = null;
 function save() {
@@ -829,7 +838,7 @@ const Remote = {
     try {
       const snap = await this.ref(k).get(); const d = snap.exists ? snap.data() : null;
       if (!d || !d.state) return 'absent';
-      if ((d.updatedAt || 0) > ((S.at || {})[k] || 0)) { applyDoc(k, d.state); S.at[k] = d.updatedAt; this.pushed[k] = d.updatedAt; Track.last[k] = localDoc(k); return 'updated'; }
+      if ((d.updatedAt || 0) > ((S.at || {})[k] || 0)) { applyDoc(k, d.state); S.at[k] = d.updatedAt; this.pushed[k] = d.updatedAt; Track.last[k] = docSig(k); return 'updated'; }
       this.pushed[k] = Math.max(this.pushed[k] || 0, d.updatedAt || 0);
       return 'same';
     } catch (e) { return 'error'; }
