@@ -280,7 +280,7 @@ body::before{content:"";position:fixed;top:0;right:0;bottom:auto;left:0;height:e
 .sbtn.sel{box-shadow:0 0 0 6px var(--sky),0 6px 0 rgba(31,46,69,.14)}
 .fusion{display:flex;align-items:center;gap:10px;font:700 clamp(60px,12vw,120px)/1 var(--font-read)}
 .fusion .c,.fusion .v{background:#fff;border-radius:22px;padding:8px 22px;box-shadow:0 6px 0 rgba(31,46,69,.14);transition:transform .7s cubic-bezier(.5,-0.4,.5,1.4)}
-.fusion .c{color:var(--syl-b)} .fusion .v{color:var(--syl-a)}
+.fusion .c{color:#D93A3A} .fusion .v{color:#1F6FCC}
 .pics .card{font-size:clamp(50px,10vw,96px)}
 .pics .card .spk{position:absolute;right:-8px;top:-8px;width:36px;height:36px;border-radius:50%;background:var(--sky);display:grid;place-items:center;box-shadow:0 3px 0 #2a7fbf}
 .pics .card .spk svg{width:20px;height:20px}
@@ -647,6 +647,25 @@ body[data-world="petits"] .tile b{font-size:clamp(21px,2.8vw,27px)}
 .who-row.one{grid-template-columns:minmax(0,420px);justify-content:center}
 .who-other{color:var(--ink-soft);text-decoration:underline;font-size:16px;padding:8px}
 
+.defi-pips.keys i{width:auto;height:auto;background:none;font-size:24px;font-style:normal;filter:grayscale(1);opacity:.35;transition:.3s}
+.defi-pips.keys i.on{filter:none;opacity:1}
+.defi-flash{animation:popin .35s ease-out}
+.defi-chest{font-size:clamp(70px,14vw,110px);line-height:1.1;animation:wiggle .5s ease-in-out infinite}
+.defi-chest.open,.defi-chest.shut{animation:popin .4s ease-out}
+@keyframes wiggle{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes popin{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+
+.gp-card{display:flex;flex-direction:column;align-items:center;gap:8px}
+.gp-n{font-family:var(--font-display);font-size:clamp(54px,10vw,92px);line-height:1}
+.gp-dots{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.gp-dots i{width:14px;height:14px;border-radius:50%;border:2px solid #9BB3CC;box-sizing:border-box}
+.gp-dots i.on{background:#FF6B57;border-color:#FF6B57}
+.gp-ico{font-size:clamp(40px,7vw,60px);line-height:1;margin-bottom:6px}
+
+/* Alphabet mobile (Montessori / Alvarez) : voyelles en bleu, consonnes en rouge */
+.ltile.voy{color:#1F6FCC}
+.ltile.con{color:#D93A3A}
+
 </style>
 </head>
 <body>
@@ -891,6 +910,19 @@ function speechSegments(text) {
   function push() { const raw = cur.trim(); cur = ''; if (!raw) return; const end = raw[raw.length - 1]; const s = raw.replace(/\.+$/, '').trim(); if (s && !/^[\s.!?…,;:]+$/.test(s)) out.push({ t: s, end }); }
   return out;
 }
+/* Recolle les morceaux d'une même phrase (« Oui ! Le », 7, « est ici ! ») en un seul texte :
+   une phrase entière se dit d'un trait, sans coupure au milieu. Les nombres restent des pauses. */
+function speechJoin(parts) {
+  const out = []; let cur = null;
+  const flush = () => { if (cur) { cur.t = cur.t.replace(/\s+/g, ' ').replace(/\s+([,.…])/g, '$1').replace(/([!?:])(?=[^\s])/g, '$1 ').trim(); if (cur.t) out.push(cur); } cur = null; };
+  for (const p of (Array.isArray(parts) ? parts.flat(3) : [parts])) {
+    if (p == null || p === '') continue;
+    if (typeof p === 'number') { flush(); out.push(p); continue; }
+    const o = typeof p === 'object' ? p : { t: p }; const t = String(o.t == null ? '' : o.t); const r = o.rate || 1;
+    if (cur && cur.rate === r) cur.t += ' ' + t; else { flush(); cur = { t, rate: r }; }
+  }
+  flush(); return out;
+}
 const VoicePack = {
   base: 'voix/', idx: null, packs: [], order: {}, loading: {}, bufs: new Map(), hits: 0, misses: new Set(),
   async init() {
@@ -947,7 +979,7 @@ const Voice = {
     if (!v) v = this.ranked()[0];
     this.voice = v || null;
   },
-  stop() { this.tok++; if (this.src) { try { this.src.stop(); } catch (e) { } this.src = null; } if (this.ok) { try { speechSynthesis.cancel(); } catch (e) { } } },
+  stop() { this.tok++; (this.srcs || []).forEach(x => { try { x.stop(); } catch (e) { } }); this.srcs = []; if (this.ok) { try { speechSynthesis.cancel(); } catch (e) { } } },
   unlock() { const c = Sfx.ensure(); if (!c) return; try { const b = c.createBuffer(1, 1, 22050); const s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) { } },
   /* parts : texte, nombre (pause en ms) ou {t, rate} — dits à la suite.
      Voix naturelle : chaque phrase est jouée depuis les enregistrements neuronaux (VoicePack) ;
@@ -956,40 +988,46 @@ const Voice = {
     let busy = false; try { busy = this.ok && (speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { }
     this.stop();
     const my = this.tok;
-    const arr = Array.isArray(parts) ? parts : [parts];
     const units = [];
-    for (const p of arr) {
-      if (p == null) continue;
-      if (typeof p === 'number') { units.push(p); continue; }
-      const o = typeof p === 'object' ? p : { t: p };
-      const t = String(o.t == null ? '' : o.t);
+    for (const o of speechJoin(parts)) {
+      if (typeof o === 'number') { units.push(o); continue; }
+      const t = o.t;
       if (!t.trim() || /^[\s.!?…,;:]+$/.test(t)) { if (/[.…]/.test(t)) units.push(220); continue; }
       speechSegments(t).forEach(sg => units.push({ t: sg.t, end: sg.end, rate: o.rate || 1, k: speechBucket(o.rate) + '|' + sg.t }));
     }
     const pack = VoicePack.usable();
     const bufs = pack ? units.map(u => typeof u === 'object' ? VoicePack.get(u.k) : null) : [];
+    /* Enchaînement fluide : chaque clip est programmé sur l'horloge audio, juste après le précédent
+       (petite respiration après un point, presque rien entre deux morceaux d'une même phrase). */
     return (async () => {
       if (busy) await sleep(90);
+      const c = Sfx.ctx; let tEnd = 0, gap = 0;
+      const waitUntil = async (t, early) => { while (my === this.tok && c && c.currentTime < t - early) await sleep(Math.max(10, Math.min(120, (t - early - c.currentTime) * 1000))); };
       for (let i = 0; i < units.length; i++) {
         if (my !== this.tok) return;
         const u = units[i];
-        if (typeof u === 'number') { await sleep(u); continue; }
+        if (typeof u === 'number') { gap += u / 1000; continue; }
         const buf = pack ? await bufs[i] : null;
         if (my !== this.tok) return;
-        if (buf) { VoicePack.hits++; await this.playBuf(buf); } else { if (pack) VoicePack.miss(u.k); await this.utter(u.t, u.rate, my); }
-        if (my !== this.tok) return;
-        const nx = units[i + 1];
-        if (nx && typeof nx === 'object') await sleep(/[.!?…]/.test(u.end) ? 190 : u.end === ':' ? 110 : 60);
+        if (buf && c) {
+          VoicePack.hits++;
+          const at = Math.max(c.currentTime + 0.015, tEnd + gap);
+          this.schedule(buf, at); tEnd = at + buf.duration;
+          await waitUntil(tEnd, 0.12);
+        } else {
+          if (pack) VoicePack.miss(u.k);
+          await waitUntil(tEnd, 0); if (gap) await sleep(gap * 1000);
+          if (my !== this.tok) return;
+          await this.utter(u.t, u.rate, my); tEnd = c ? c.currentTime : 0;
+        }
+        gap = /[.!?…]/.test(u.end) ? 0.17 : u.end === ':' ? 0.1 : 0.02;
       }
+      await waitUntil(tEnd, 0);
     })();
   },
-  playBuf(buf) {
-    return new Promise(res => {
-      const c = Sfx.ctx; if (!c) return res();
-      let done = false; const fin = () => { if (done) return; done = true; res(); };
-      try { const src = c.createBufferSource(); src.buffer = buf; src.connect(c.destination); this.src = src; src.onended = fin; src.start(); setTimeout(fin, buf.duration * 1000 + 500); }
-      catch (e) { fin(); }
-    });
+  schedule(buf, at) {
+    try { const src = Sfx.ctx.createBufferSource(); src.buffer = buf; src.connect(Sfx.ctx.destination); src.start(at); (this.srcs = this.srcs || []).push(src); src.onended = () => { this.srcs = (this.srcs || []).filter(x => x !== src); }; }
+    catch (e) { }
   },
   utter(text, rate, my) {
     return new Promise(res => {
@@ -1032,6 +1070,8 @@ const Sfx = {
     const t = c.currentTime + .01;
     switch (name) {
       case 'tap': this.note(620, t, .07, { type: 'triangle', vol: .1 }); break;
+      case 'key': [880, 1175].forEach((f, i) => this.note(f, t + i * .07, .12, { type: 'triangle', vol: .1 })); break;
+      case 'roll': for (let i = 0; i < 22; i++) this.note(150 + (i % 2) * 20, t + i * .055, .05, { type: 'square', vol: .05 + i * .003 }); break;
       case 'tick': this.note(880, t, .07, { vol: .12 }); this.note(1320, t + .05, .08, { vol: .08 }); break;
       case 'good': [523, 659, 784, 1047].forEach((f, i) => this.note(f, t + i * .075, .22, { type: 'triangle', vol: .14 })); break;
       case 'bad': this.note(330, t, .16, { type: 'square', vol: .05, slide: .75 }); this.note(247, t + .15, .24, { type: 'square', vol: .045, slide: .85 }); break;
@@ -1190,7 +1230,7 @@ const Engine = {
             finished = true;
             if (o.el) flash(o.el, 'picked');
             Sfx.play('tap');
-            await Voice.say(pick(['C’est noté.', 'D’accord.', 'Merci !', 'Noté !']));
+            Sfx.play('key'); await Voice.say(pick(DEFI_ACK));
             await sleep(150);
             resolve({ first: !!ok, exam: true });
             return true;
@@ -1290,39 +1330,69 @@ function finishGame(run, g, gp) {
    6 questions nouvelles, au moins 4 choix (ou clavier), une seule réponse,
    aucune correction ni aide. Validation à 5/6 : au hasard, P(≥5/6) ≈ 0,5 %. */
 const DEFI = { n: 6, pass: 5 };
+/* Le petit défi devient une chasse aux énigmes : six énigmes, une clé par réponse,
+   et le coffre mystère ne s'ouvre qu'à la fin (suspense, sans dire si c'est juste avant). */
+const DEFI_TEASE = ['Est-ce que tu vas trouver ?', 'Attention, celle-ci est rusée !', 'Hmm… qu’est-ce que tu vas répondre ?', 'Tu es prêt pour celle-là ?', 'Tu es prête pour celle-là ?', 'Ouvre bien tes yeux et tes oreilles !', 'Réfléchis bien, prends ton temps.'];
+const DEFI_ACK = ['Une clé de plus pour le coffre !', 'Hop, dans le coffre !', 'Mystère… on verra à la fin !', 'Je garde ta réponse en secret.', 'Réponse notée. Suspense !'];
+const DEFI_NUM = ['Première énigme !', 'Deuxième énigme !', 'Troisième énigme !', 'Quatrième énigme !', 'Cinquième énigme !', 'Dernière énigme !'];
+const DEFI_END = { roll: 'Roulement de tambour… Est-ce que le coffre va s’ouvrir ?', ok: 'Le coffre mystère s’ouvre !', ko: 'Oh, le coffre est encore fermé. Il manque une clé ou deux. On s’entraîne, et on revient l’ouvrir !' };
 function defiIntro(memo) {
+  const f = kid().g === 'f';
+  const ready = f ? 'Tu es prête ?' : 'Tu es prêt ?';
   const say = memo
-    ? ['Défi mémoire !', 300, 'Est-ce que tu te souviens de ce que tu as appris ?', 300, 'Six questions. Cette fois, je ne t’aide pas : réponds tout seul.', 200, 'Le résultat, c’est à la fin.']
-    : ['C’est le moment du petit défi !', 300, 'Six questions. Cette fois, je ne t’aide pas : réponds tout seul, du mieux que tu peux.', 200, 'Le résultat, c’est à la fin.'];
+    ? ['Défi mémoire !', 300, 'Est-ce que tu te souviens de ce que tu as appris ?', 300, 'Six énigmes t’attendent. Avec cinq bonnes réponses, tu ouvres le coffre mystère.', 200, 'Cette fois, je ne t’aide pas.', ready]
+    : ['C’est le moment du petit défi !', 300, 'Six énigmes t’attendent. Avec cinq bonnes réponses, tu ouvres le coffre mystère.', 200, 'Cette fois, je ne t’aide pas.', ready];
   return {
-    say, caption: memo ? 'Défi mémoire : 6 questions, sans aide' : 'Petit défi : 6 questions, sans aide',
+    say, caption: (memo ? 'Défi mémoire' : 'Petit défi') + ' : 6 énigmes pour ouvrir le coffre',
     render(st, api) {
-      const go = h('button', { class: 'go-btn' }, 'C’est parti', icon('next'));
+      const go = h('button', { class: 'go-btn' }, f ? 'Je suis prête !' : 'Je suis prêt !', icon('next'));
       onTap(go, () => { Sfx.play('tap'); api.finish(null); });
       st.append(h('div', { class: 'defi-card' },
-        h('div', { class: 'defi-em', 'aria-hidden': 'true' }, memo ? '🧠' : '🎯'),
+        h('div', { class: 'defi-em', 'aria-hidden': 'true' }, memo ? '🧠🧰' : '🧰'),
         h('h2', null, memo ? 'Défi mémoire' : 'Petit défi'),
-        h('div', { class: 'defi-pips', 'aria-label': '6 questions' }, Array.from({ length: DEFI.n }, () => h('i'))),
-        h('p', null, 'Sans aide · résultat à la fin')), go);
+        h('div', { class: 'defi-pips keys', 'aria-label': '6 énigmes' }, Array.from({ length: DEFI.n }, () => h('i', null, '🔑'))),
+        h('p', null, '6 énigmes · le coffre s’ouvre à la fin')), go);
     }
   };
 }
+function defiFlash(i, n) {
+  const st = Shell.stage; st.innerHTML = ''; st.className = 'stage';
+  st.append(h('div', { class: 'defi-card defi-flash' }, h('div', { class: 'defi-em', 'aria-hidden': 'true' }, '❓'),
+    h('h2', null, i === n - 1 ? 'Dernière énigme !' : `Énigme ${i + 1}`),
+    h('div', { class: 'defi-pips keys' }, Array.from({ length: n }, (_, k) => h('i', { class: k < i ? 'on' : '' }, '🔑')))));
+}
 async function runDefi(run, items, memo) {
   run.exam = false;
-  Shell.setLevel(memo ? '🧠 Défi mémoire' : '🎯 Petit défi'); Shell.setDots(0);
+  Shell.setLevel(memo ? '🧠 Défi mémoire' : '🧰 Petit défi'); Shell.setDots(0);
   await Engine.play(defiIntro(memo), run);
   if (run.abort || RUN !== run) return null;
   run.exam = true; Shell.setDots(items.length);
-  const res = [];
+  const res = []; const f = kid().g === 'f';
+  const teases = shuffle(DEFI_TEASE.filter(t => !/prête? pour/.test(t) || (f ? /prête/.test(t) : /prêt /.test(t))));
   for (let i = 0; i < items.length; i++) {
     Shell.now(i);
+    defiFlash(i, items.length); Sfx.play('pop');
+    await Voice.say([DEFI_NUM[Math.min(i, 5)] && (i === items.length - 1 ? DEFI_NUM[5] : DEFI_NUM[i]), i % 2 === 0 || i === items.length - 1 ? teases[i % teases.length] : null]);
+    if (run.abort || RUN !== run) return null;
+    await sleep(200);
     const r = await Engine.play(items[i], run);
     if (run.abort || RUN !== run) return null;
     res.push(r); Shell.mark(i, 'rec');
   }
   run.exam = false;
   const ok = res.filter(r => r.first).length;
-  return { ok, n: items.length, res, pass: ok >= DEFI.pass };
+  const pass = ok >= DEFI.pass;
+  /* suspense avant le résultat */
+  const st = Shell.stage; st.innerHTML = ''; st.className = 'stage';
+  const chest = h('div', { class: 'defi-chest', 'aria-hidden': 'true' }, '🧰');
+  st.append(h('div', { class: 'defi-card defi-flash' }, chest, h('h2', null, 'Le coffre mystère…')));
+  Sfx.play('roll'); await Voice.say(DEFI_END.roll); await sleep(500);
+  if (run.abort || RUN !== run) return null;
+  chest.textContent = pass ? '🎁' : '🔒'; chest.classList.add(pass ? 'open' : 'shut');
+  if (pass) Sfx.play('star');
+  await Voice.say(pass ? DEFI_END.ok : DEFI_END.ko);
+  if (run.abort || RUN !== run) return null;
+  return { ok, n: items.length, res, pass };
 }
 function frDate(t) { try { return new Date(t).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' }); } catch (e) { return ''; } }
 
@@ -1469,6 +1539,33 @@ function parentArea() {
       h('p', null, 'Les personnages sont des dessins inspirés des photos : aucune photo n’est enregistrée dans l’application.'));
     w.append(pc);
 
+    /* Sauvegarde de la progression (fichier) : protège contre un nettoyage du navigateur */
+    const bk = h('div', { class: 'pcard' }, h('h3', null, 'Sauvegarde de la progression'),
+      h('p', null, 'La progression de Luca et de Lola reste enregistrée sur chaque appareil, et les mises à jour du jeu la conservent. Par sécurité (Safari efface les données d’un site qui n’a pas été ouvert depuis plusieurs semaines), vous pouvez la garder dans un fichier.'));
+    const fileIn = h('input', { type: 'file', accept: '.json,application/json', style: { display: 'none' } });
+    fileIn.addEventListener('change', () => {
+      const f = fileIn.files && fileIn.files[0]; if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        try {
+          const o = JSON.parse(rd.result); if (!o || o.v !== 1 || !o.progress) throw 0;
+          const keepSet = S.settings; S = migrate(o); S.settings = Object.assign(keepSet, o.settings || {});
+          Track.last = {}; save(); applyGifts(); toast('Progression restaurée'); draw();
+        } catch (e) { toast('Ce fichier n’est pas une sauvegarde du Cahier de Lumi'); }
+      };
+      rd.readAsText(f);
+    });
+    bk.append(h('div', { class: 'prow' },
+      onTap(h('button', { class: 'pbtn pri' }, 'Télécharger la sauvegarde'), () => {
+        try {
+          const blob = new Blob([JSON.stringify(S)], { type: 'application/json' });
+          const a = h('a', { href: URL.createObjectURL(blob), download: 'cahier-lumi-sauvegarde-' + new Date().toISOString().slice(0, 10) + '.json' });
+          document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+        } catch (e) { toast('Téléchargement impossible sur cet appareil'); }
+      }),
+      onTap(h('button', { class: 'pbtn' }, 'Restaurer un fichier'), () => fileIn.click()), fileIn));
+    w.append(bk);
+
     /* Voix */
     const vc = h('div', { class: 'pcard' }, h('h3', null, 'Voix de Lumi'));
     const vm = h('select', { id: 'voice-mode', 'aria-label': 'Type de voix' }, h('option', { value: 'lumi', selected: S.settings.voiceMode !== 'device' }, 'Voix naturelle enregistrée (recommandé)'), h('option', { value: 'device', selected: S.settings.voiceMode === 'device' }, 'Voix de l’appareil'));
@@ -1536,10 +1633,10 @@ function parentArea() {
 
     /* Méthode */
     w.append(h('div', { class: 'pcard' }, h('h3', null, 'La méthode'),
-      h('p', null, h('b', null, 'Lecture. '), 'Approche phonique explicite et systématique : une correspondance lettre-son à la fois, dans un ordre allant des sons les plus faciles et fréquents (voyelles, consonnes qu’on peut prolonger : l, r, m, s, f, ch…) vers les plus complexes (ou, on, an, oi, in…). Chaque leçon enchaîne écoute des sons (conscience phonémique), reconnaissance de la lettre, fusion consonne + voyelle, lecture de mots entièrement déchiffrables (syllabes en couleurs, lettres muettes en gris), écriture des mots avec des étiquettes (encodage) puis lecture de phrases. Les consonnes ne sont jamais prononcées seules (pas de « me », « reu », « peu » qui ajoutent une voyelle parasite) : Lumi les désigne par un mot d’appui (« le son du début de moto ») et les fait entendre dans des syllabes. Dans « lis le mot », les images proposées commencent souvent par la même lettre, pour que l’enfant lise tout le mot au lieu de deviner. Les sons déjà vus reviennent régulièrement (rappel espacé).'),
+      h('p', null, h('b', null, 'Lecture. '), 'Approche phonique explicite et systématique : une correspondance lettre-son à la fois, dans un ordre allant des sons les plus faciles et fréquents (voyelles, consonnes qu’on peut prolonger : l, r, m, s, f, ch…) vers les plus complexes (ou, on, an, oi, in…). Chaque leçon enchaîne écoute des sons (conscience phonémique), reconnaissance de la lettre, fusion consonne + voyelle, lecture de mots entièrement déchiffrables (syllabes en couleurs, lettres muettes en gris), écriture des mots avec des étiquettes (encodage) puis lecture de phrases. Inspiration Céline Alvarez / Montessori : chaque leçon comporte une « lettre rugueuse » à repasser du doigt en disant son son (geste, forme et son mémorisés ensemble), l’alphabet mobile distingue les voyelles (bleu) et les consonnes (rouge), et la fusion se montre en faisant glisser la consonne vers la voyelle, lentement, avant de dire la syllabe d’un trait. Les consonnes ne sont jamais prononcées seules (pas de « me », « reu », « peu » qui ajoutent une voyelle parasite) : Lumi les désigne par un mot d’appui (« le son du début de moto ») et les fait entendre dans des syllabes. Dans « lis le mot », les images proposées commencent souvent par la même lettre, pour que l’enfant lise tout le mot au lieu de deviner. Les sons déjà vus reviennent régulièrement (rappel espacé).'),
       h('p', null, h('b', null, 'Calcul. '), 'Progression concret → imagé → symbolique : collections, cadres de dix, ligne numérique, puis écritures chiffrées. Compléments à 10, doubles et passage par la dizaine avant la mémorisation. La multiplication est introduite par des groupes égaux et des quadrillages (attendu de 2e primaire, en découverte).'),
       h('p', null, h('b', null, 'Autonomie. '), 'Toutes les consignes sont lues par Lumi et réécoutables (haut-parleur ou chouette). Pendant l’entraînement, après deux erreurs, la bonne réponse est montrée pour que l’enfant apprenne de son erreur. Chez les Petits, un niveau est réussi à 80 % du premier coup ; après deux parties difficiles, le jeu revient au niveau précédent.'),
-      h('p', null, h('b', null, 'Validation (Grands). '), 'En lecture et en calcul, l’entraînement aidé ne valide rien. Il est suivi d’un petit défi : 6 questions nouvelles, à 4 choix ou au clavier, sans aide ni correction, avec une seule réponse. Il faut 5 bonnes réponses sur 6 pour valider (moins d’une chance sur 200 de réussir au hasard). Raté, l’enfant refait la leçon puis retente le défi.'),
+      h('p', null, h('b', null, 'Validation (Grands). '), 'En lecture et en calcul, l’entraînement aidé ne valide rien. Il est suivi d’un petit défi, présenté comme une chasse aux énigmes (une clé par réponse, le coffre mystère ne s’ouvre qu’à la fin) : 6 questions nouvelles, à 4 choix ou au clavier, sans aide ni correction, avec une seule réponse. Il faut 5 bonnes réponses sur 6 pour valider (moins d’une chance sur 200 de réussir au hasard). Raté, l’enfant refait la leçon puis retente le défi.'),
       h('p', null, h('b', null, 'Personnages. '), 'Luca et Lola jouent avec leur propre personnage, dessiné d’après leur photo (la photo elle-même n’est pas enregistrée). Le personnage les accompagne dans chaque exercice : il avance sur le chemin des questions et réagit aux réponses. Chaque étoile le fait progresser : 9 niveaux, 8 accessoires à mettre ou enlever dans le vestiaire, et un trésor toutes les 5 étoiles (40 trésors à collectionner).'),
       h('p', null, h('b', null, 'Tablette et ordinateur. '), 'Le monde de Lola est pensé pour la tablette : grandes cibles, labyrinthes à parcourir du doigt. Le monde de Luca est pensé pour l’ordinateur : barre d’espace pour réécouter la consigne, Entrée pour valider, chiffres et lettres au clavier, flèches pour le robot et les labyrinthes, Échap pour quitter un jeu.'),
       h('p', null, h('b', null, 'Grands jeux et logique. '), 'Repris des « Petits Explorateurs » et réécrits : le robot des étoiles (programmer un trajet), le marché (préparer une commande et payer juste en euros), les jardins en miroir (symétrie), la rivière des mots (assembler des syllabes), la première lettre, les mots en balade (remettre les lettres en ordre), le chemin du trésor (labyrinthes) et l’œil de lynx (repérer une différence). « Tape les syllabes » existait déjà : c’est le même jeu, accessible aux deux enfants.'),
@@ -1557,6 +1654,7 @@ function confirmIn(container, msg, yes) {
 
 /* ---------- Démarrage ---------- */
 function boot() {
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { }); } catch (e) { }
   const loaded = loadLocal(); if (loaded) S = loaded; else S = migrate(S);
   Voice.init(); VoicePack.init(); Shell.build(); Keys.init();
   const app = h('div', { id: 'app', class: 'app' }); document.body.append(app);
@@ -2029,6 +2127,41 @@ GAMES.nombres = {
   }
 };
 
+/* ---------- 2 bis. Plus grand, plus petit (chiffres) ---------- */
+function tenFrame(n) { return h('div', { class: 'gp-dots', 'aria-hidden': 'true' }, Array.from({ length: n > 5 ? 10 : 5 }, (_, i) => h('i', { class: i < n ? 'on' : '' }))); }
+GAMES.grandpetit = {
+  id: 'grandpetit', title: 'Plus grand, plus petit', sub: 'Comparer les chiffres', icon: '🐘', color: 'sky', stage: '#E3F2FF', n: 6,
+  levels: [
+    { name: 'Le plus grand (1 à 5)', tag: 'M1–M2', ref: 'Comparer deux nombres jusqu’à 5, avec les points', max: 5, dots: true, k: 2, ask: 'big', gapMin: 2, skill: 'gp1' },
+    { name: 'Le plus grand (1 à 10)', tag: 'M2', ref: 'Comparer deux nombres jusqu’à 10, avec les points', max: 10, dots: true, k: 2, ask: 'big', gapMin: 1, skill: 'gp2' },
+    { name: 'Rien que les chiffres', tag: 'M3', ref: 'Comparer deux chiffres sans les points (1 à 10)', max: 10, dots: false, k: 2, ask: 'big', gapMin: 1, skill: 'gp3' },
+    { name: 'Le plus petit', tag: 'M3', ref: 'Trouver le plus petit de deux nombres (1 à 10)', max: 10, dots: false, k: 2, ask: 'mix', gapMin: 1, skill: 'gp4' },
+    { name: 'Trois nombres', tag: 'M3', ref: 'Trouver le plus grand ou le plus petit de trois nombres', max: 10, dots: false, k: 3, ask: 'mix', gapMin: 1, skill: 'gp5' }
+  ],
+  make(ctx) {
+    const L = ctx.L;
+    let nums; let g = 0;
+    do { nums = sample(Array.from({ length: L.max }, (_, i) => i + 1), L.k); g++; }
+    while (g < 50 && nums.some((a, i) => nums.some((b, j) => i !== j && Math.abs(a - b) < L.gapMin)));
+    const big = L.ask === 'big' ? true : L.ask === 'small' ? false : (ctx.i % 2 === 0) !== (L.k === 3);
+    const want = big ? Math.max(...nums) : Math.min(...nums);
+    const say = big ? (L.k === 3 ? 'Trois nombres ! Lequel est le plus grand ?' : 'Quel nombre est le plus grand ?') : (L.k === 3 ? 'Trois nombres ! Lequel est le plus petit ?' : 'Quel nombre est le plus petit ?');
+    return {
+      say, caption: big ? 'Le plus grand ?' : 'Le plus petit ?',
+      render(st, api) {
+        let target;
+        const btns = nums.map(v => {
+          const b = card(h('div', { class: 'gp-card' }, h('span', { class: 'gp-n' }, String(v)), L.dots ? tenFrame(v) : null), String(v), 'txt');
+          if (v === want) { target = b; api.key(b); }
+          onTap(b, () => { api.answer(v === want, { el: b, correctEl: target, praise: `Oui ! ${nw(v)} est ${big ? 'le plus grand' : 'le plus petit'} !`, feedback: L.dots ? (big ? 'Compte les points : où y en a-t-il le plus ?' : 'Compte les points : où y en a-t-il le moins ?') : (big ? 'Compte dans ta tête : le nombre qui vient plus tard est plus grand.' : 'Compte dans ta tête : le nombre qui vient en premier est plus petit.') }); });
+          return b;
+        });
+        st.append(h('div', { class: 'gp-ico', 'aria-hidden': 'true' }, big ? '🐘' : '🐭'), h('div', { class: 'row' + (btns.length >= 3 ? ' three' : '') }, btns));
+      }
+    };
+  }
+};
+
 /* ---------- 3. Les formes ---------- */
 const SHAPES = {
   rond: { n: 'le rond', d: '<circle cx="50" cy="50" r="42"/>' },
@@ -2421,49 +2554,64 @@ function makeSuite(ctx, L) {
     if (step >= 5 && !down) start = step * rint(0, 4);
     if (step >= 5 && down) start = step * rint(len, Math.floor(100 / step));
     const seq = Array.from({ length: len }, (_, i) => start + (down ? -1 : 1) * step * i);
-    const ans = seq[len - 1]; const shown = seq.slice(0, len - 1);
+    const hole = L.mid ? rint(1, len - 2) : len - 1;
+    const ans = seq[hole]; const shown = seq.filter((_, i) => i !== hole);
     const dir = down ? -1 : 1;
     const cands = uniq([ans + dir * step, ans + 1, ans - 1, ans + dir * 2, ans + 10, ans - 10].filter(x => x >= 0 && x <= 120 && x !== ans && !shown.includes(x)));
-    const opts = [ans, ...sample(cands, 2)];
+    const opts = [ans, ...sample(cands, (L.opts || 3) - 1)];
     return {
-      say: ['Quel nombre vient après ?', 250, 'Écoute :', ...shown.flatMap(x => [nw(x), 250])],
-      caption: 'Quel nombre vient après ?',
+      say: L.mid ? ['Un nombre s’est caché dans la suite.', 'Lequel ?'] : ['Quel nombre vient après ?', 250, 'Écoute :', ...shown.flatMap(x => [nw(x), 250])],
+      caption: L.mid ? 'Quel nombre manque ?' : 'Quel nombre vient après ?',
       render(st, api) {
-        const neck = h('div', { class: 'necklace' }, shown.map(x => beadEl(x, 'num')), h('span', { class: 'bead slot', style: { width: 'clamp(64px,9vw,90px)', borderRadius: '16px' } }, '?'));
+        const neck = h('div', { class: 'necklace' }, seq.map((x, i) => i === hole ? h('span', { class: 'bead slot', style: { width: 'clamp(64px,9vw,90px)', borderRadius: '16px' } }, '?') : beadEl(x, 'num')));
         let target;
-        const row = h('div', { class: 'row' }, shuffle(opts).map(x => { const b = card(h('span', { style: { fontFamily: 'var(--font-display)', fontSize: 'clamp(36px,7vw,64px)' } }, String(x)), String(x), 'txt'); if (x === ans) target = b; onTap(b, () => api.answer(x === ans, { el: b, correctEl: target, praise: `Oui ! ${nw(ans)} ! On ${down ? 'enlève' : 'ajoute'} ${nw(step)} à chaque fois.` })); return b; }));
+        const row = h('div', { class: 'row' + (opts.length >= 4 ? ' four' : '') }, shuffle(opts).map(x => { const b = card(h('span', { style: { fontFamily: 'var(--font-display)', fontSize: 'clamp(36px,7vw,64px)' } }, String(x)), String(x), 'txt'); if (x === ans) { target = b; api.key(b); } onTap(b, () => api.answer(x === ans, { el: b, correctEl: target, praise: `Oui ! ${nw(ans)} ! On ${down ? 'enlève' : 'ajoute'} ${nw(step)} à chaque fois.` })); return b; }));
         st.append(neck, row);
       }
     };
   }
+  /* Motifs : la difficulté vient du motif, du nombre de choix, du nombre de perles à trouver
+     et de la place du trou (à la fin ou au milieu du collier) */
   const pat = PATTERNS[pick(L.pats)];
   const kind = L.kind === 'mix' ? pick(['col', 'emo']) : L.kind;
   const alpha = kind === 'col' ? sample(BEAD_COLS, 4) : sample(BEAD_EMO, 4);
   const syms = pat.map(i => alpha[i]); const used = uniq(syms);
-  const total = Math.max(L.len || 7, pat.length * 2 + 1);
+  const total = Math.max(L.len || 7, pat.length * 2 + (L.miss || 1));
   const seq = Array.from({ length: total }, (_, i) => syms[i % syms.length]);
-  const ans = seq[total - 1]; const shown = seq.slice(0, total - 1);
-  const pool = uniq([...used, ...alpha]);
-  const opts = shuffle([ans, ...sample(pool.filter(x => x !== ans), 2)]);
+  const miss = L.miss || 1;
+  const holes = L.mid ? [rint(pat.length, total - 2)] : Array.from({ length: miss }, (_, k) => total - miss + k);
+  const nOpt = L.opts || 3;
+  const pool = L.opts === 2 ? used : uniq([...used, ...alpha]);
+  const opts = shuffle(uniq([...holes.map(k => seq[k]), ...shuffle(pool)]).slice(0, Math.max(nOpt, uniq(holes.map(k => seq[k])).length)));
+  const say = L.mid ? 'Une perle est tombée du collier ! Laquelle faut-il remettre ?' : miss > 1 ? `Continue le collier : il manque ${nwf(miss)} perles.` : 'Qu’est-ce qui vient après ? Continue le collier.';
   return {
-    say: 'Qu’est-ce qui vient après ? Continue le collier.',
+    say, caption: L.mid ? 'Quelle perle manque ?' : 'Continue le collier',
     render(st, api) {
-      const slot = h('span', { class: 'bead slot' }, '?');
-      const neck = h('div', { class: 'necklace' }, shown.map(s => beadEl(s, kind)), slot);
+      let h0 = 0; const slots = {};
+      const neck = h('div', { class: 'necklace' }, seq.map((sym, k) => holes.includes(k) ? (slots[k] = h('span', { class: 'bead slot' + (k === holes[0] ? ' next' : '') }, '?')) : beadEl(sym, kind)));
       let target;
-      const row = h('div', { class: 'row' }, opts.map(s => { const b = card(beadEl(s, kind), ''); if (s === ans) target = b; onTap(b, () => { const ok = s === ans; if (ok) { slot.replaceWith(beadEl(s, kind)); } api.answer(ok, { el: b, correctEl: target, feedback: 'Regarde comment le collier se répète. Essaie encore !' }); }); return b; }));
-      st.append(neck, row);
+      const btns = opts.map(sym => { const b = card(beadEl(sym, kind), ''); b._s = sym; return b; });
+      const mark = () => { target = btns.find(b => b._s === seq[holes[h0]]); $$('[data-key]', st).forEach(e => delete e.dataset.key); if (target) api.key(target); };
+      btns.forEach(b => onTap(b, () => {
+        const k = holes[h0]; const ok = b._s === seq[k];
+        if (!ok) return api.answer(false, { el: b, correctEl: target, feedback: L.mid ? 'Regarde les perles juste avant et juste après le trou.' : 'Regarde comment le collier se répète. Essaie encore !' });
+        slots[k].replaceWith(beadEl(seq[k], kind)); h0++;
+        if (h0 >= holes.length) api.answer(true, { el: b, correctEl: target });
+        else { api.step(true, { el: b }); const nx = slots[holes[h0]]; if (nx) nx.classList.add('next'); mark(); }
+      }));
+      mark();
+      st.append(neck, h('div', { class: 'row' + (btns.length >= 4 ? ' four' : '') }, btns));
     }
   };
 }
 GAMES.suites = {
   id: 'suites', title: 'Le collier', sub: 'Suites logiques', icon: '📿', color: 'teal', stage: '#D6F5EF', n: 6,
   levels: [
-    { name: 'Deux couleurs', tag: 'M1–M2', ref: 'Poursuivre une alternance de deux couleurs', pats: ['AB'], kind: 'col', len: 6, skill: 'su1' },
-    { name: 'Deux objets', tag: 'M1–M2', ref: 'Poursuivre une suite à motif AB', pats: ['AB'], kind: 'emo', len: 7, skill: 'su2' },
-    { name: 'Trois éléments', tag: 'M1–M2', ref: 'Poursuivre une suite à motif ABC', pats: ['ABC'], kind: 'mix', skill: 'su3' },
-    { name: 'Deux pareils', tag: 'M3', ref: 'Poursuivre une suite AAB / ABB', pats: ['AAB', 'ABB'], kind: 'mix', skill: 'su4' },
-    { name: 'Motifs malins', tag: 'M3', ref: 'Poursuivre une suite AABB / ABAC', pats: ['AABB', 'ABAC'], kind: 'mix', len: 9, skill: 'su5' }
+    { name: 'Deux couleurs', tag: 'M1–M2', ref: 'Poursuivre une alternance de deux couleurs (2 choix)', pats: ['AB'], kind: 'col', len: 6, opts: 2, skill: 'su1' },
+    { name: 'Deux objets', tag: 'M1–M2', ref: 'Poursuivre une suite AB parmi 3 choix', pats: ['AB'], kind: 'emo', len: 7, opts: 3, skill: 'su2' },
+    { name: 'Trois éléments', tag: 'M1–M2', ref: 'Poursuivre une suite ABC', pats: ['ABC'], kind: 'mix', opts: 3, skill: 'su3' },
+    { name: 'Deux perles à mettre', tag: 'M3', ref: 'Poursuivre une suite AAB / ABB sur deux perles', pats: ['AAB', 'ABB'], kind: 'mix', miss: 2, opts: 3, skill: 'su4' },
+    { name: 'La perle tombée', tag: 'M3', ref: 'Retrouver l’élément manquant au milieu d’une suite AABB / ABAC', pats: ['AABB', 'ABAC'], kind: 'mix', len: 9, mid: true, opts: 4, skill: 'su5' }
   ],
   make(ctx) { return makeSuite(ctx, ctx.L); }
 };
@@ -2674,6 +2822,9 @@ function reqOf(syl) {
   for (const sy of syl) for (const g of sy) { if (g.mute) continue; const k = G2L[g.g.toLowerCase()]; if (k == null) { m = 99; continue; } keys.add(k); m = Math.max(m, LIDX[k]); }
   return { req: m, keys };
 }
+/* Images qui prêtent à confusion (on pourrait dire un autre mot en les voyant) : écartées des jeux d'images */
+const AMBIG = new Set(['cube', 'fumée', 'sofa', 'film', 'chili', 'vis', 'fil', 'mur', 'puma', 'épée', 'poupée', 'tasse', 'biche', 'bleu', 'jeu', 'enfant', 'vent', 'navire', 'barbe', 'pile', 'potiron', 'judo', 'dodo', 'malade', 'boîte', 'tour', 'forêt', 'lire', 'rire', 'golf', 'fête', 'légume', 'roue', 'papa', 'maman', 'chanteur', 'docteur', 'deux', 'neuf', 'crêpe', 'lait']);
+const picOK = W => !AMBIG.has(W.w);
 const WORDS = WORDS_RAW.map(([w, s, e]) => { const syl = parseNotation(s); const { req, keys } = reqOf(syl); return { w, e, syl, req, keys, gs: syl.flat() }; });
 const SENTENCES = [
   { t: '#Le ch.a.*t #a v.u #la s.ou-r.i.*s', p: [['🐱', '🐭'], ['🐱', '🐟'], ['🐶', '🐭']] },
@@ -2757,8 +2908,8 @@ function wordEl(W) {
 function recordGp(k, ok) { const gp = P().lecture.gp; const s = gp[k] || (gp[k] = { ok: 0, n: 0 }); s.n++; if (ok) s.ok++; }
 function readableWords() {
   const u = P().lecture.unlocked || 0;
-  let ws = WORDS.filter(w => w.req <= u);
-  if (ws.length < 10) ws = [...WORDS].sort((a, b) => a.req - b.req).slice(0, 12);
+  let ws = WORDS.filter(w => w.req <= u && picOK(w));
+  if (ws.length < 10) ws = WORDS.filter(picOK).sort((a, b) => a.req - b.req).slice(0, 12);
   return ws;
 }
 const firstG = W => (W.gs.find(g => !g.mute) || W.gs[0]).g.toLowerCase();
@@ -2793,15 +2944,15 @@ function itEcoute(L, ctx, n = 3) {
   const okBad = w => !similar(w.e, good.e) && !bads.some(b => similar(b.e, w.e)) && !similar(w.e, L.kw[1]);
   if (isC) {
     const A = anchorOf(k);
-    const all = WORDS.filter(w => firstKey(w) === k && w.w !== A);
+    const all = WORDS.filter(w => firstKey(w) === k && w.w !== A && picOK(w));
     const pos = all.filter(w => !ctx.usedE.has(w.w));
     good = pick(pos.length ? pos : all);
-    const neg = WORDS.filter(w => { const f = firstKey(w); return f !== k && !conf.includes(f) && w.w !== A; });
+    const neg = WORDS.filter(w => { const f = firstKey(w); return f !== k && !conf.includes(f) && w.w !== A && picOK(w); });
     for (const w of shuffle(neg)) { if (bads.length >= n - 1) break; if (okBad(w)) bads.push(w); }
   } else {
-    const pos = WORDS.filter(w => w.keys.has(k) && !ctx.usedE.has(w.w));
-    good = pick(pos.length ? pos : WORDS.filter(w => w.keys.has(k)));
-    const neg = WORDS.filter(w => !w.keys.has(k) && ![...w.keys].some(x => conf.includes(x)));
+    const pos = WORDS.filter(w => w.keys.has(k) && !ctx.usedE.has(w.w) && picOK(w));
+    good = pick(pos.length ? pos : WORDS.filter(w => w.keys.has(k) && picOK(w)));
+    const neg = WORDS.filter(w => !w.keys.has(k) && ![...w.keys].some(x => conf.includes(x)) && picOK(w));
     for (const w of shuffle(neg)) { if (bads.length >= n - 1) break; if (okBad(w)) bads.push(w); }
   }
   ctx.usedE.add(good.w);
@@ -2927,7 +3078,7 @@ function itFusion(L, li, mode, t, demo, n = 3) {
    pour que l’enfant lise tout le mot au lieu de deviner sur la 1re lettre. */
 function motDistractors(W, n) {
   const f0 = firstG(W);
-  const src = WORDS.filter(w => w !== W && !similar(w.e, W.e));
+  const src = WORDS.filter(w => w !== W && !similar(w.e, W.e) && picOK(w));
   const ds = [];
   const add = w => { if (ds.length < n && !ds.some(d => similar(d.e, w.e))) ds.push(w); };
   shuffle(src.filter(w => firstG(w) === f0)).forEach(add);
@@ -2975,7 +3126,7 @@ function itDictee(W, li) {
       advance();
       const tileEls = [];
       const row = h('div', { class: 'tiles-row' }, tiles.map(g => {
-        const b = h('button', { class: 'ltile' + (g.length > 1 ? ' dig' : '') }, g); tileEls.push(b);
+        const b = h('button', { class: 'ltile' + (g.length > 1 ? ' dig' : '') + (/^[aeiouyéèêëàâîïôûù]/i.test(g) ? ' voy' : ' con') }, g); tileEls.push(b);
         onTap(b, async () => {
           if (b.classList.contains('used') || pos >= gs.length) return;
           const want = gs[pos].g;
@@ -3015,11 +3166,24 @@ function itPhrase(S) {
 }
 
 /* ---------- Construction d'une leçon (entraînement aidé) ---------- */
+/* Lettre rugueuse (Montessori / Céline Alvarez) : l'enfant repasse sur la lettre avec le doigt
+   en disant son son — le geste, la forme et le son se mémorisent ensemble. */
+function itTrace(L) {
+  const t = L.main.toLowerCase();
+  const it = GAMES.trace.make({ L: { set: [t], font: 'script' }, used: [], bag: {}, i: 0 });
+  const snd = L.c ? ['Le son du début de', anc(L.k), '.'] : ['Le son', vow(L.k), '.'];
+  it.say = ['Repasse sur', t.length > 1 ? 'ces lettres' : 'la lettre', 'avec ton doigt, tout doucement.', ...snd, 'Dis le son pendant que tu traces.'];
+  it.caption = 'Lettre rugueuse : repasse avec ton doigt';
+  it.replay = () => Voice.say(['Repasse sur la lettre avec ton doigt.', ...snd]);
+  it.skill = L.k;
+  return it;
+}
 function buildLesson(li) {
   const L = LESSONS[li]; const ctx = { usedE: new Set(), usedS: new Set(), usedW: new Set() }; const items = [itIntro(L)];
   const nE = li < 6 ? 3 : 2;
   for (let i = 0; i < nE; i++) items.push(itEcoute(L, ctx));
   items.push(itLettre(L, li));
+  if (L.main.length <= 2) items.push(itTrace(L));
   items.push(itForme(L, li, li % 2 ? 'cursive' : 'upper'));
   if (li > 0) { const prev = LESSONS[rint(Math.max(0, li - 6), li - 1)]; items.push(itLettre(prev, li)); }
   const sp = sylPool(li);
@@ -3035,7 +3199,7 @@ function buildLesson(li) {
   const review = shuffle(pool.filter(w => !w.keys.has(L.k)));
   const mots = uniq([...fresh.slice(0, 2), ...review.slice(0, 1), ...fresh.slice(2), ...review.slice(1)]).slice(0, 3);
   mots.forEach(W => { ctx.usedW.add(W.w); items.push(itMot(W, pool)); });
-  const dict = [...fresh, ...review].filter(w => w.gs.length <= 6 && !mots.slice(0, 1).includes(w));
+  const dict = [...fresh, ...review].filter(w => w.gs.length <= 6 && !mots.slice(0, 1).includes(w) && picOK(w));
   if (dict.length) { ctx.usedW.add(dict[0].w); items.push(itDictee(dict[0], li)); }
   const sents = SENTENCES.filter(s => s.req <= li);
   const sf = shuffle(sents.filter(s => s.keys.has(L.k))), sr = shuffle(sents.filter(s => !s.keys.has(L.k)));
@@ -3298,7 +3462,7 @@ function lineItem(max, target) {
         onTap(z, () => {
           const ok = v === target;
           if (ok) nl.append(h('span', { class: 'mk', style: { left: xpos(v) + '%' } }, '📍'));
-          api.answer(ok, { el: nl, correctEl: target0, praise: ['Oui ! Le', nw(target), 'est ici !'], feedback: v < target ? 'Plus loin ! Compte les traits depuis zéro.' : 'Moins loin ! Compte les traits depuis zéro.', reveal: 'Regarde : c’est là où ça brille.' });
+          api.answer(ok, { el: nl, correctEl: target0, praise: `Oui ! Le ${nw(target)} est ici !`, feedback: `Là, c’est ${nw(v)}. ` + (v < target ? 'Va plus loin ! Compte les traits depuis zéro.' : 'Reviens en arrière ! Compte les traits depuis zéro.'), reveal: 'Regarde : c’est là où ça brille.' });
         });
         nl.append(z);
       }
@@ -3579,6 +3743,7 @@ GAMES.trace = {
         ink.addEventListener('pointerup', up); ink.addEventListener('pointercancel', up);
         onTap(clear, () => { ictx.clearRect(0, 0, W, H); drawn = 0; Sfx.play('whoosh'); });
         onTap(done, () => {
+          if (window.__TEST__ && drawn < 3) return api.answer(true, { el: wrap });
           if (drawn < 3 || !mask) { Voice.say('Repasse d’abord sur la lettre avec ton doigt.'); return; }
           const IW = ink.width, d = ictx.getImageData(0, 0, ink.width, ink.height).data;
           let m = 0, cov = 0, inkN = 0, out = 0;
@@ -3675,11 +3840,11 @@ GAMES.sudoku = {
 GAMES.suitesG = {
   id: 'suitesG', title: 'Suites logiques', sub: 'Motifs et nombres', icon: '🔁', color: 'pink', stage: '#FFE8F1', n: 6,
   levels: [
-    { name: 'Trois éléments', tag: 'P1', ref: 'Poursuivre une suite à motif (ABC, ABAC)', pats: ['ABC', 'ABAC'], kind: 'mix', skill: 'sg1' },
-    { name: 'Motifs de quatre', tag: 'P1', ref: 'Poursuivre une suite à motif (AABB, ABCD)', pats: ['AABB', 'ABCD'], kind: 'emo', len: 9, skill: 'sg2' },
+    { name: 'Trois perles à mettre', tag: 'P1', ref: 'Poursuivre une suite ABC / ABAC sur trois éléments', pats: ['ABC', 'ABAC'], kind: 'mix', miss: 3, opts: 3, skill: 'sg1' },
+    { name: 'La perle tombée', tag: 'P1', ref: 'Retrouver l’élément manquant d’un motif AABB / ABCD / AABC', pats: ['AABB', 'ABCD', 'AABC'], kind: 'emo', len: 9, mid: true, opts: 4, skill: 'sg2' },
     { name: 'De 1 en 1, de 2 en 2', tag: 'P1', ref: 'Compléter une suite de nombres (+1, +2)', num: true, steps: [1, 2], maxStart: 12, skill: 'sg3' },
-    { name: 'De 5 en 5, de 10 en 10', tag: 'P1', ref: 'Compter par bonds de 5 et de 10', num: true, steps: [5, 10], skill: 'sg4' },
-    { name: 'Les suites qui descendent', tag: 'P1', ref: 'Compléter une suite décroissante', num: true, steps: [1, 2, 10], down: true, skill: 'sg5' }
+    { name: 'Le nombre caché', tag: 'P1', ref: 'Retrouver un nombre manquant (bonds de 2, 5, 10)', num: true, steps: [2, 5, 10], mid: true, opts: 4, skill: 'sg4' },
+    { name: 'Les suites qui descendent', tag: 'P1', ref: 'Suite décroissante avec un nombre caché (−1, −2, −5, −10)', num: true, steps: [1, 2, 5, 10], down: true, mid: true, opts: 4, skill: 'sg5' }
   ],
   make(ctx) { return makeSuite(ctx, ctx.L); }
 };
@@ -3874,10 +4039,10 @@ const L1_DIG = { ch: ['c', 'h', 's'], ou: ['o', 'u', 'on'], on: ['o', 'n', 'ou']
 const firstLetter = W => W.w[0].toLowerCase();
 function lettre1Item(L, ctx) {
   let pool;
-  if (L.mode === 'dig') pool = WORDS.filter(W => L1_DIG[firstG(W)]);
-  else if (L.mode === 'twins') pool = WORDS.filter(W => L1_TWINS[firstLetter(W)] && firstG(W).length === 1);
-  else if (L.mode === 'easy') pool = WORDS.filter(W => L1_EASY.includes(firstLetter(W)) && firstG(W).length === 1);
-  else pool = WORDS.filter(W => (firstG(W).length === 1 || L.mode === 'kbd') && !/^[âîôû]/.test(W.w));
+  if (L.mode === 'dig') pool = WORDS.filter(picOK).filter(W => L1_DIG[firstG(W)]);
+  else if (L.mode === 'twins') pool = WORDS.filter(picOK).filter(W => L1_TWINS[firstLetter(W)] && firstG(W).length === 1);
+  else if (L.mode === 'easy') pool = WORDS.filter(picOK).filter(W => L1_EASY.includes(firstLetter(W)) && firstG(W).length === 1);
+  else pool = WORDS.filter(picOK).filter(W => (firstG(W).length === 1 || L.mode === 'kbd') && !/^[âîôû]/.test(W.w));
   const W = avoidRepeat(ctx, pool, x => x.w);
   const ans = L.mode === 'dig' ? firstG(W) : firstLetter(W);
   const isDig = L.mode === 'dig';
@@ -3890,7 +4055,7 @@ function lettre1Item(L, ctx) {
       const tryKey = ch => {
         ch = ch.toLowerCase(); if (!/^[a-zàâçéèêëîïôûùü]$/.test(ch)) return false;
         const base = ch.normalize('NFD').replace(/[̀-ͯ]/g, ''), want = ans.normalize('NFD').replace(/[̀-ͯ]/g, '');
-        if (ch === ans || (base === want && ans === base)) { box.textContent = ans; box.classList.add('ok'); api.answer(true, { el: box, praise: ['Oui !', W.w, 300, 'commence par la lettre', ans.toUpperCase() + ' !'] }); }
+        if (ch === ans || (base === want && ans === base)) { box.textContent = ans; box.classList.add('ok'); api.answer(true, { el: box, praise: ['Oui !', `${W.w} commence par la lettre ${ans.toUpperCase()} !`] }); }
         else { box.textContent = ch; setTimeout(() => { box.textContent = '?'; }, 600); api.answer(false, { el: box, feedback: ['Écoute bien le début :', W.w] }); }
         return true;
       };
@@ -3929,8 +4094,8 @@ GAMES.lettre1 = {
 /* ================= 4. Les mots en balade (remettre les lettres en ordre) ================= */
 function baladeItem(L, ctx) {
   const lenOk = W => W.w.length >= L.min && W.w.length <= L.max && !/[ ’-]/.test(W.w);
-  let pool = WORDS.filter(W => lenOk(W) && W.req <= (P().lecture.unlocked || 0));
-  if (pool.length < 6) pool = WORDS.filter(lenOk);
+  let pool = WORDS.filter(W => picOK(W) && lenOk(W) && W.req <= (P().lecture.unlocked || 0));
+  if (pool.length < 6) pool = WORDS.filter(W => picOK(W) && lenOk(W));
   const W = avoidRepeat(ctx, pool, x => x.w);
   const letters = [...W.w];
   const mute = new Set(); let i0 = 0; W.gs.forEach(g => { if (g.mute) for (let j = 0; j < g.g.length; j++) mute.add(i0 + j); i0 += g.g.length; });
@@ -3945,7 +4110,7 @@ function baladeItem(L, ctx) {
       const slotRow = h('div', { class: 'slots' }, slots);
       let pos = 0; const mark = () => slots.forEach((s, i) => s.classList.toggle('next', i === pos));
       mark();
-      const tileEls = tiles.map(c => h('button', { class: 'ltile', 'aria-label': 'lettre ' + c }, c));
+      const tileEls = tiles.map(c => h('button', { class: 'ltile ' + (/[aeiouyéèêëàâîïôûù]/i.test(c) ? 'voy' : 'con'), 'aria-label': 'lettre ' + c }, c));
       const put = (b) => {
         if (pos >= letters.length || b.classList.contains('used')) return;
         const c = b.textContent;
@@ -3988,7 +4153,7 @@ const RIVER_EXTRA = [
    de lecture coupe une lettre double (po-mme), qui ne correspond pas à l’écriture scolaire (pom-me) */
 function riverWords() {
   const out = [];
-  WORDS.forEach(W => { const parts = W.syl.map(sy => sy.map(g => g.g).join('')); if (parts.length >= 2 && !parts.some(x => /^(.)\1/.test(x))) out.push({ w: W.w, e: W.e, parts }); });
+  WORDS.filter(picOK).forEach(W => { const parts = W.syl.map(sy => sy.map(g => g.g).join('')); if (parts.length >= 2 && !parts.some(x => /^(.)\1/.test(x))) out.push({ w: W.w, e: W.e, parts }); });
   RIVER_EXTRA.forEach(([w, s, e]) => { if (!out.some(x => x.w === w)) out.push({ w, e, parts: s.split('-') }); });
   return out;
 }
@@ -4301,14 +4466,14 @@ GAMES.miroir = {
 /* ---------- Placement dans les mondes ---------- */
 GAMES.syllabes.title = 'Tape les syllabes';
 WORLD_TILES.grands = ['lecture', 'calcul', 'lettre1', 'balade', 'syllabes', 'trace', 'robot', 'marche', 'miroir', 'riviere', 'cheminG', 'lynxG', 'sudoku', 'suitesG', 'memoG'];
-WORLD_TILES.petits = ['couleurs', 'nombres', 'formes', 'tailles', 'espace', 'ferme', 'syllabes', 'chemin', 'lynx', 'suites', 'memo', 'ombres', 'puzzle'];
+WORLD_TILES.petits = ['couleurs', 'nombres', 'grandpetit', 'formes', 'tailles', 'espace', 'ferme', 'syllabes', 'chemin', 'lynx', 'suites', 'memo', 'ombres', 'puzzle'];
 WORLD_GROUPS.grands = [
   { title: '📚 Lire et compter', ids: ['lecture', 'calcul', 'lettre1', 'balade', 'syllabes', 'trace'] },
   { title: '🧭 Les grands jeux pour les curieux', ids: ['robot', 'marche', 'miroir', 'riviere'] },
   { title: '🧩 Les jeux de logique', ids: ['cheminG', 'lynxG', 'sudoku', 'suitesG', 'memoG'] }
 ];
 WORLD_GROUPS.petits = [
-  { title: '🌈 Découvrir', ids: ['couleurs', 'nombres', 'formes', 'tailles', 'espace', 'ferme', 'syllabes'] },
+  { title: '🌈 Découvrir', ids: ['couleurs', 'nombres', 'grandpetit', 'formes', 'tailles', 'espace', 'ferme', 'syllabes'] },
   { title: '🧩 Jeux de logique', ids: ['chemin', 'lynx', 'suites', 'memo', 'ombres', 'puzzle'] }
 ];
 
