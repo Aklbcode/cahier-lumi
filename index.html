@@ -667,6 +667,125 @@ body[data-world="petits"] .tile b{font-size:clamp(21px,2.8vw,27px)}
 .ltile.voy{color:#1F6FCC}
 .ltile.con{color:#D93A3A}
 
+/* ================= Maison de Lumi ================= */
+.cw{font-family:var(--font-read);font-weight:700;letter-spacing:.02em}
+.cw .voy{color:#1F6FCC}.cw .con{color:#D93A3A}.cw .sp{display:inline-block;width:.3em}
+.cw.big{font-size:clamp(32px,6vw,52px)}
+.ov-screen{position:fixed;top:0;right:0;bottom:0;left:0;z-index:50;background:var(--ground-2);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ov-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:14px;padding:12px max(16px,env(safe-area-inset-left,0px));background:var(--ground-2)}
+.ov-top h2{font-family:var(--font-display);font-size:clamp(24px,4.4vw,36px);margin:0}
+.ov-body{padding:4px 16px 40px;max-width:1100px;margin:0 auto}
+/* parcours du jour */
+.daily{background:#fff;border-radius:24px;padding:14px 16px;margin-top:14px;box-shadow:0 6px 0 rgba(31,46,69,.08)}
+.daily-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.daily-head b{font-family:var(--font-display);font-size:clamp(20px,3.4vw,26px)}
+.daily-head span{color:var(--ink-soft);font-size:14px}
+.daily-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.daily-step{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;background:#F3F6FC;border:3px solid transparent;text-align:left;min-width:0}
+.daily-step.next{border-color:#FFC43D;background:#FFF8E1}
+.daily-step.ok{background:#E6F6EA;opacity:.85}
+.ds-n{width:30px;height:30px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.daily-step.ok .ds-n{background:#35B872;color:#fff}
+.ds-em{font-size:28px;flex:none}
+.ds-t{font-weight:700;font-size:15px;line-height:1.15;min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* maison */
+.house{margin-top:18px;position:relative}
+.house-roof{height:clamp(46px,8vw,70px);margin:0 6px -2px}
+.house-roof svg{width:100%;height:100%;display:block}
+.house-deco{position:absolute;top:-6px;left:0;right:0;display:flex;justify-content:space-around;font-size:clamp(22px,4vw,34px);pointer-events:none;z-index:1}
+.house-deco span:nth-child(odd){transform:translateY(10px) rotate(-8deg)}
+.house-body{background:#F7E7CF;border:6px solid #C99A6B;border-radius:0 0 24px 24px;padding:12px}
+.house-rooms{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.room{position:relative;background:#fff;border-radius:16px;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;border:4px solid transparent;box-shadow:inset 0 -6px 0 color-mix(in srgb,var(--rc) 22%,#fff);transition:transform .12s}
+.room .r-em{font-size:clamp(34px,6vw,50px);line-height:1}
+.room b{font-size:clamp(13px,2vw,16px);line-height:1.15;text-align:center}
+.room.on{border-color:var(--rc);transform:translateY(-3px)}
+.room.garden{background:linear-gradient(#DFF3C9,#BFE39A)}
+.r-badge{position:absolute;top:-8px;right:-6px;background:#FF6B57;color:#fff;font-size:12px;font-weight:800;padding:3px 8px;border-radius:12px}
+.room-content{margin-top:12px}
+.room-content .section-title{margin:6px 0 10px}
+/* jardin */
+.g-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.g-drops{display:flex;align-items:center;gap:6px;background:#fff;border-radius:18px;padding:8px 14px;font-size:24px;box-shadow:0 4px 0 var(--line)}
+.g-help{flex:1;color:var(--ink-soft);min-width:180px}
+.g-field{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;background:linear-gradient(#B7E08F,#8CC665);padding:16px;border-radius:26px}
+.plot{position:relative;aspect-ratio:1.15;min-height:120px;border-radius:20px;background:#8B5E3C;box-shadow:inset 0 -10px 0 #6E4729;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff}
+.plot.empty{background:#A87A52;opacity:.85}
+.plot.wet{background:#6B4428}
+.pl-em{font-size:clamp(46px,9vw,80px);line-height:1}
+.plot.empty .pl-em{font-size:40px}
+.pl-t{font-weight:800;font-size:15px}
+.pl-grow{display:flex;gap:5px}.pl-grow i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.35)}.pl-grow i.on{background:#7BE07B}
+.pl-pest{position:absolute;font-size:34px;animation:wiggle 1s ease-in-out infinite}
+.pl-pest.weed{left:8px;bottom:10px}.pl-pest.snail{right:8px;top:8px}
+.grown-3{background:#5E8B3A;box-shadow:inset 0 -10px 0 #4A7030}
+.grown-3 .pl-em{animation:popin .5s ease-out}
+.sheet.seeds{width:min(100%,560px)}
+.seed-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px}
+.seed{padding:16px 8px;border-radius:16px;background:#FFF4DC;box-shadow:0 5px 0 #E8CF96}
+.seed-pack{font-size:clamp(18px,3vw,26px);overflow-wrap:anywhere}.seed-pack.em{font-size:52px}
+/* cuisine */
+.k-pantry{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border-radius:18px;padding:10px 14px;margin-bottom:14px}
+.k-have{font-size:22px;background:#FFF4E6;border-radius:12px;padding:2px 8px}
+.k-none{color:var(--ink-soft)}
+.k-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.recipe{background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 6px 0 #F2D8C2;text-align:center}
+.recipe.locked{opacity:.6;filter:grayscale(.5)}
+.rc-em{font-size:54px;line-height:1}.rc-ing{font-size:20px}.rc-miss{font-size:13px;color:#C4473A;font-weight:700}
+.k-top{display:flex;gap:18px;align-items:center;justify-content:center;flex-wrap:wrap;width:100%}
+.k-card{background:#FFFDF5;border:3px dashed #E2BE57;border-radius:18px;padding:12px 16px;display:flex;flex-direction:column;gap:6px;min-width:200px}
+.k-card>b{font-family:var(--font-display);font-size:22px}
+.k-line{display:flex;align-items:center;gap:10px;font-size:clamp(22px,4vw,30px);background:#fff;border-radius:12px;padding:4px 10px;text-align:left}
+.k-n{font-family:var(--font-display);font-size:1.2em;color:#E8604C;min-width:1em}
+.k-dots{color:#E8604C;letter-spacing:2px;font-size:16px}
+.k-bowl-wrap{display:flex;flex-direction:column;align-items:center}
+.k-bowl{font-size:clamp(70px,13vw,110px);line-height:1;position:relative}
+.k-bowl.big{font-size:clamp(110px,22vw,180px);background:none}
+.k-bowl.spin{animation:wiggle .35s ease-in-out}
+.k-spoon{position:absolute;right:-10%;top:-10%;font-size:.45em}
+.k-in{display:flex;flex-wrap:wrap;gap:2px;max-width:220px;justify-content:center;font-size:24px;min-height:30px}
+.k-shelf{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;background:#E9D3B5;padding:10px;border-radius:16px;margin:10px 0}
+.k-item{width:clamp(58px,9vw,76px);height:clamp(58px,9vw,76px);border-radius:16px;background:#fff;font-size:clamp(32px,5.5vw,44px);box-shadow:0 4px 0 #D9BE98}
+.k-dish{font-size:clamp(70px,14vw,120px);line-height:1;text-align:center;margin-bottom:8px}
+.k-pb{width:min(80%,360px);height:16px}
+/* heure */
+.clock-wrap{position:relative;width:min(62vw,300px,42vh);aspect-ratio:1;margin:6px auto}
+.clock-wrap svg{width:100%;height:100%;display:block}
+.clock-hit{position:absolute;width:16%;height:16%;transform:translate(-50%,-50%);border-radius:50%;background:transparent}
+.clock-hit:hover{background:rgba(58,162,238,.15)}
+.time-txt{font-family:var(--font-display);font-size:clamp(28px,5vw,44px)}
+.half-btn.on{background:#D9ECFF;border-color:#3AA2EE}
+/* histoires */
+.st-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.st-book{background:#fff;border-radius:18px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:6px 6px 0 #C9B6F2;border-left:10px solid #8E63E6;position:relative}
+.st-book.read{border-left-color:#35B872;box-shadow:6px 6px 0 #B9E6C6}
+.st-cover{font-size:64px;line-height:1}.st-done{font-size:13px;color:#2E9B5C;font-weight:800}
+.st-scene{font-size:clamp(56px,11vw,100px);line-height:1.1;letter-spacing:.08em;text-align:center}
+.st-text{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px;margin:14px 0;max-width:900px}
+.st-text.small{font-size:clamp(20px,3.4vw,28px);text-align:center;display:block;font-weight:700}
+.st-w{font:600 clamp(28px,5vw,46px)/1.25 var(--font-read);color:#8A94A8;background:none;padding:2px 4px;border-radius:10px}
+.st-w.dec{color:var(--ink)}
+.st-w.heard{background:#FFF1C9}
+/* cartes */
+.gcard-prev{width:min(90%,420px);border-radius:22px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 8px 0 rgba(31,46,69,.1)}
+.gcard-prev b,.gcard-big b{font-family:var(--font-display);font-size:clamp(28px,5vw,44px)}
+.gc-stk{font-size:clamp(36px,7vw,56px);min-height:1.1em}
+.stk-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.col-dot{width:44px;height:44px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px var(--line)}
+.gcard-modal{z-index:95}
+.gcard-big{width:min(92vw,560px);border-radius:30px;padding:30px 20px;display:flex;flex-direction:column;align-items:center;gap:10px;animation:popin .5s ease-out;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.gcard-big span{font-size:24px;font-weight:700}.gcard-big small{font-size:18px;color:var(--ink-soft)}
+.gc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.gcard-mini{border-radius:18px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;box-shadow:0 5px 0 rgba(31,46,69,.1)}
+.gcard-mini span{font-size:30px}
+/* notions */
+.notions-wrap{overflow-x:auto}
+table.notions{width:100%;border-collapse:collapse;font-size:14px}
+table.notions th,table.notions td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+table.notions tr.st-acquis td:last-child{color:#2E9B5C;font-weight:700}
+@media (max-width:760px){.house-rooms{grid-template-columns:repeat(3,1fr)}.daily-row{grid-template-columns:1fr}.g-field{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:460px){.house-rooms{grid-template-columns:repeat(2,1fr)}}
+
 </style>
 </head>
 <body>
@@ -1282,7 +1401,7 @@ const NO_AR = !(window.CSS && CSS.supports && CSS.supports('aspect-ratio', '1 / 
 function fixSquares(root) {
   if (!NO_AR) return;
   requestAnimationFrame(() => {
-    $$('.rc, .mc, .frame i, .mcard, .album span, .album .tr', root).forEach(el => { el.style.height = el.offsetWidth + 'px'; });
+    $$('.rc, .mc, .frame i, .mcard, .album span, .album .tr, .clock-wrap', root).forEach(el => { el.style.height = el.offsetWidth + 'px'; });
     $$('.maze', root).forEach(el => { const ar = el.style.gridTemplateRows.match(/\d+/), ac = el.style.gridTemplateColumns.match(/\d+/); if (ar && ac) el.style.height = (el.offsetWidth * (+ar[0]) / (+ac[0])) + 'px'; });
   });
 }
@@ -1425,6 +1544,8 @@ const Celebrate = {
     Sfx.play('fanfare'); confetti();
     const parts = [title];
     if (noteSay) parts.push(...[].concat(noteSay));
+    const bonus = typeof activityDone === 'function' ? activityDone() : null; if (bonus) { parts.push(bonus); el.insertBefore(h('div', { class: 'unlock' }, '🌟 Parcours du jour terminé : +3 💧'), acts); }
+    save();
     parts.push(...rewardSay(reward));
     setTimeout(() => Voice.say(parts), 350);
   }
@@ -1489,7 +1610,7 @@ function gameTile(gid) {
     : h('button', { class: `tile sm c-${g.color}`, 'aria-label': g.title, 'data-gid': gid },
       h('div', { class: 'tl-top' }, h('b', null, g.title), g.sub ? h('span', { class: 'sub' }, g.sub) : null),
       h('div', { class: 'tl-bot' }, h('div', { class: 'tl-row' }, h('span', { class: 'lv' }, inf.lv), h('span', { class: 'em2', 'aria-hidden': 'true' }, g.icon)), h('div', { class: 'pb' }, h('i', { style: { width: Math.round(clamp(inf.pct, 0, 1) * 100) + '%' } }))));
-  onTap(t, () => { Sfx.play('tap'); Voice.say(g.title); setTimeout(() => runGame(gid), 380); });
+  onTap(t, () => { Sfx.play('tap'); Voice.say(g.title); CURRENT_ACT = gid; lastPlayed()[gid] = dayNo(); setTimeout(() => runGame(gid), 380); });
   return t;
 }
 function renderHome() {
@@ -1503,6 +1624,7 @@ function renderHome() {
     onTap(h('button', { class: 'icon-btn', 'aria-label': 'Espace parents', html: ICON.lock }), () => parentGate(parentArea))));
   const hello = h('div', { class: 'hello wrap' }, h('span', { html: lumiSVG() }), h('div', { class: 'bubble' }, WORLDS[world].hello(k.name)));
   app.append(head, avatarCard(), hello);
+  if (typeof houseEl === 'function' && ROOMS[world]) { app.append(dailyEl(), houseEl(world)); return; }
   const groups = WORLD_GROUPS[world].length ? WORLD_GROUPS[world] : [{ title: null, ids: WORLD_TILES[world] }];
   groups.forEach(gr => {
     if (gr.title) app.append(h('h2', { class: 'section-title wrap' }, gr.title, gr.sub ? h('small', null, gr.sub) : null));
@@ -1570,6 +1692,7 @@ function parentArea() {
       }),
       onTap(h('button', { class: 'pbtn' }, 'Restaurer un fichier'), () => fileIn.click()), fileIn));
     w.append(bk);
+    if (typeof notionsCard === 'function') S.profiles.forEach(pf => w.append(notionsCard(pf.id)));
 
     /* Voix */
     const vc = h('div', { class: 'pcard' }, h('h3', null, 'Voix de Lumi'));
@@ -1639,6 +1762,7 @@ function parentArea() {
     /* Méthode */
     w.append(h('div', { class: 'pcard' }, h('h3', null, 'La méthode'),
       h('p', null, h('b', null, 'Lecture. '), 'Approche phonique explicite et systématique : une correspondance lettre-son à la fois, dans un ordre allant des sons les plus faciles et fréquents (voyelles, consonnes qu’on peut prolonger : l, r, m, s, f, ch…) vers les plus complexes (ou, on, an, oi, in…). Chaque leçon enchaîne écoute des sons (conscience phonémique), reconnaissance de la lettre, fusion consonne + voyelle, lecture de mots entièrement déchiffrables (syllabes en couleurs, lettres muettes en gris), écriture des mots avec des étiquettes (encodage) puis lecture de phrases. Inspiration Céline Alvarez / Montessori : chaque leçon comporte une « lettre rugueuse » à repasser du doigt en disant son son (geste, forme et son mémorisés ensemble), l’alphabet mobile distingue les voyelles (bleu) et les consonnes (rouge), et la fusion se montre en faisant glisser la consonne vers la voyelle, lentement, avant de dire la syllabe d’un trait. Les consonnes ne sont jamais prononcées seules (pas de « me », « reu », « peu » qui ajoutent une voyelle parasite) : Lumi les désigne par un mot d’appui (« le son du début de moto ») et les fait entendre dans des syllabes. Dans « lis le mot », les images proposées commencent souvent par la même lettre, pour que l’enfant lise tout le mot au lieu de deviner. Les sons déjà vus reviennent régulièrement (rappel espacé).'),
+      h('p', null, h('b', null, 'La maison (inspirée d’Adibou). '), 'L’accueil est une maison : chaque pièce regroupe une famille d’activités. Le parcours du jour propose 3 activités choisies selon les notions les plus fragiles et les jeux pas faits depuis longtemps ; le terminer donne 3 gouttes d’eau. Chaque jeu terminé donne une goutte pour arroser le jardin ; une plante doit être arrosée 3 jours différents pour être récoltée, ce qui donne envie de revenir sans pression. Les récoltes servent en cuisine : Luca lit la recette (mots en couleurs), Lola l’écoute, puis il faut mettre exactement les bonnes quantités dans le bol. Dans les histoires, les mots que Luca sait déchiffrer (selon les sons déjà validés) et les petits mots outils sont en couleur, les autres en gris : il lit ce qu’il peut, Lumi aide sur le reste. L’atelier des cartes fait lire puis écrire un prénom pour fabriquer une vraie carte. Le tableau des notions ci-dessus indique, par notion : découverte (moins de 4 réponses), en cours, ou acquis (au moins 80 % sur 6 réponses ou plus).'),
       h('p', null, h('b', null, 'Calcul. '), 'Progression concret → imagé → symbolique : collections, cadres de dix, ligne numérique, puis écritures chiffrées. Compléments à 10, doubles et passage par la dizaine avant la mémorisation. La multiplication est introduite par des groupes égaux et des quadrillages (attendu de 2e primaire, en découverte).'),
       h('p', null, h('b', null, 'Autonomie. '), 'Toutes les consignes sont lues par Lumi et réécoutables (haut-parleur ou chouette). Pendant l’entraînement, après deux erreurs, la bonne réponse est montrée pour que l’enfant apprenne de son erreur. Chez les Petits, un niveau est réussi à 80 % du premier coup ; après deux parties difficiles, le jeu revient au niveau précédent.'),
       h('p', null, h('b', null, 'Validation (Grands). '), 'En lecture et en calcul, l’entraînement aidé ne valide rien. Il est suivi d’un petit défi, présenté comme une chasse aux énigmes (une clé par réponse, le coffre mystère ne s’ouvre qu’à la fin) : 6 questions nouvelles, à 4 choix ou au clavier, sans aide ni correction, avec une seule réponse. Il faut 5 bonnes réponses sur 6 pour valider (moins d’une chance sur 200 de réussir au hasard). Raté, l’enfant refait la leçon puis retente le défi.'),
@@ -4483,6 +4607,729 @@ WORLD_GROUPS.petits = [
   { title: '🌈 Découvrir', ids: ['couleurs', 'nombres', 'grandpetit', 'formes', 'tailles', 'espace', 'ferme', 'syllabes'] },
   { title: '🧩 Jeux de logique', ids: ['chemin', 'lynx', 'suites', 'memo', 'ombres', 'puzzle'] }
 ];
+
+/* ================================================================
+   La maison de Lumi (inspirée d'Adibou) : pièces, jardin, cuisine,
+   parcours du jour, histoires, atelier de cartes, l'heure, fêtes.
+   ================================================================ */
+const dayNo = (t = Date.now()) => { const d = new Date(t); return Math.floor((t - d.getTimezoneOffset() * 60000) / 86400000); };
+let CURRENT_ACT = null;
+function lastPlayed() { const p = P(); return p.last || (p.last = {}); }
+const isF = () => kid().g === 'f';
+const VOY_RE = /[aeiouyéèêëàâîïôûù]/i;
+function colorWord(w, big) {
+  return h('span', { class: 'cw' + (big ? ' big' : '') }, [...w].map(c => h('span', { class: c === ' ' ? 'sp' : VOY_RE.test(c) ? 'voy' : /[a-zç]/i.test(c) ? 'con' : '' }, c)));
+}
+function ovScreen(title, onClose, cls = '') {
+  const el = h('div', { class: 'ov-screen ' + cls, role: 'dialog', 'aria-label': title });
+  const close = () => { el.remove(); document.removeEventListener('keydown', esc); Voice.stop(); (onClose || renderHome)(); };
+  const esc = e => { if (e.key === 'Escape' && !Shell.isOpen() && document.body.lastElementChild === el) close(); };
+  document.addEventListener('keydown', esc);
+  const top = h('div', { class: 'ov-top' }, onTap(h('button', { class: 'round-btn', 'aria-label': 'Retour', html: ICON.close }), close), h('h2', null, title));
+  const body = h('div', { class: 'ov-body' });
+  el.append(top, body); document.body.append(el);
+  return { el, top, body, close };
+}
+
+/* ---------------- Saisons et fêtes ---------------- */
+const SEASONS = [
+  { id: 'halloween', from: [10, 10], to: [11, 3], icon: '🎃', name: 'Halloween', deco: ['🎃', '👻', '🦇', '🕸️', '🍬'] },
+  { id: 'nicolas', from: [11, 18], to: [12, 6], icon: '🎅', name: 'Saint-Nicolas', deco: ['🎁', '🍊', '🍪', '🥕', '⭐'] },
+  { id: 'noel', from: [12, 10], to: [1, 6], icon: '🎄', name: 'Noël', deco: ['🎄', '⭐', '🎁', '❄️', '🔔'] }
+];
+function season(t = new Date()) {
+  const md = (t.getMonth() + 1) * 100 + t.getDate();
+  return SEASONS.find(s => { const a = s.from[0] * 100 + s.from[1], b = s.to[0] * 100 + s.to[1]; return a <= b ? md >= a && md <= b : md >= a || md <= b; }) || null;
+}
+
+/* ---------------- Les pièces de la maison ---------------- */
+const ROOMS = {
+  grands: [
+    { id: 'biblio', name: 'La bibliothèque', icon: '📚', col: '#8E63E6', ids: ['lecture', 'histoires', 'lettre1', 'balade', 'syllabes', 'trace'] },
+    { id: 'nombres', name: 'L’atelier des nombres', icon: '🔢', col: '#3AA2EE', ids: ['calcul', 'heure', 'marche'] },
+    { id: 'jeux', name: 'La salle de jeux', icon: '🧩', col: '#FF9636', ids: ['cheminG', 'lynxG', 'sudoku', 'suitesG', 'memoG'] },
+    { id: 'voyage', name: 'Le grand voyage', icon: '🧭', col: '#35B872', ids: ['robot', 'miroir', 'riviere'] },
+    { id: 'jardin', name: 'Le jardin', icon: '🌻', col: '#6BBF3A', open: () => gardenView() },
+    { id: 'cuisine', name: 'La cuisine', icon: '🍳', col: '#FF6B57', open: () => kitchenView() },
+    { id: 'atelier', name: 'L’atelier des cartes', icon: '🎨', col: '#FF86B3', ids: ['atelier'] }
+  ],
+  petits: [
+    { id: 'eveil', name: 'La salle d’éveil', icon: '🌈', col: '#FF9636', ids: ['couleurs', 'nombres', 'grandpetit', 'formes', 'tailles', 'espace', 'ferme', 'syllabes'] },
+    { id: 'jeux', name: 'La salle de jeux', icon: '🧩', col: '#3AA2EE', ids: ['chemin', 'lynx', 'suites', 'memo', 'ombres', 'puzzle'] },
+    { id: 'histoires', name: 'Le coin des histoires', icon: '📖', col: '#8E63E6', ids: ['histoires'] },
+    { id: 'jardin', name: 'Le jardin', icon: '🌷', col: '#6BBF3A', open: () => gardenView() },
+    { id: 'cuisine', name: 'La cuisine', icon: '🍳', col: '#FF6B57', open: () => kitchenView() },
+    { id: 'atelier', name: 'L’atelier des cartes', icon: '🎨', col: '#FF86B3', ids: ['atelier'] }
+  ]
+};
+function roomsOf(world) {
+  const rs = ROOMS[world].slice(); const s = season();
+  if (s) rs.push({ id: 'fete', name: s.name, icon: s.icon, col: '#7A4FD6', ids: [world === 'petits' ? 'feteP' : 'feteG'] });
+  return rs;
+}
+function houseEl(world) {
+  const p = P(); const rs = roomsOf(world);
+  let cur = rs.find(r => r.id === p.room && !r.open) || rs[0];
+  const s = season();
+  const roomsBox = h('div', { class: 'house-rooms' });
+  const content = h('div', { class: 'room-content' });
+  const btns = rs.map(r => {
+    const b = h('button', { class: 'room' + (r.id === 'jardin' ? ' garden' : '') + (r.id === cur.id ? ' on' : ''), style: { '--rc': r.col }, 'data-room': r.id, 'aria-label': r.name },
+      h('span', { class: 'r-em', 'aria-hidden': 'true' }, r.icon), h('b', null, r.name), r.id === 'jardin' ? gardenBadge() : null);
+    onTap(b, () => {
+      Sfx.play('tap'); Voice.say(r.name);
+      if (r.open) { CURRENT_ACT = r.id; lastPlayed()[r.id] = dayNo(); save(); setTimeout(r.open, 250); return; }
+      cur = r; p.room = r.id; save(); btns.forEach(x => x.classList.toggle('on', x === b)); draw();
+    });
+    b.addEventListener('keydown', e => {
+      const i = btns.indexOf(b); const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (d) { e.preventDefault(); e.stopPropagation(); btns[(i + d + btns.length) % btns.length].focus(); }
+    });
+    return b;
+  });
+  roomsBox.append(...btns);
+  const draw = () => {
+    content.innerHTML = '';
+    content.append(h('h2', { class: 'section-title' }, cur.icon + ' ' + cur.name), h('div', { class: 'tiles' }, cur.ids.filter(id => GAMES[id]).map(gameTile)));
+  };
+  draw();
+  const roof = h('div', { class: 'house-roof', html: `<svg viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path d="M8 66 L200 6 L392 66 Z" fill="#E8604C"/><path d="M8 66 L200 6 L392 66" fill="none" stroke="#C4473A" stroke-width="6" stroke-linejoin="round"/><rect x="300" y="18" width="26" height="34" fill="#B5503F"/></svg>` });
+  const deco = s ? h('div', { class: 'house-deco', 'aria-hidden': 'true' }, s.deco.map(e => h('span', null, e))) : null;
+  return h('section', { class: 'house wrap', 'aria-label': 'La maison de Lumi' }, deco, roof, h('div', { class: 'house-body' }, roomsBox), content);
+}
+function gardenBadge() {
+  const g = garden(); const ripe = g.plots.filter(x => x && x.st >= 3).length; const thirsty = g.plots.filter(x => x && x.st < 3 && x.w !== dayNo()).length;
+  if (ripe) return h('span', { class: 'r-badge' }, `${ripe} à cueillir`);
+  if (thirsty && g.drops) return h('span', { class: 'r-badge' }, 'À arroser');
+  return null;
+}
+
+/* ---------------- Parcours du jour ---------------- */
+function skillPct(gid) {
+  const g = GAMES[gid]; if (!g || !g.levels) return null;
+  const L = g.levels[clamp(gameProg(gid).lvl, 0, g.levels.length - 1)]; const s = P().skills[L.skill];
+  return s && s.n >= 3 ? s.ok / s.n : null;
+}
+function dailyPlan() {
+  const p = P(); const today = dayNo();
+  if (p.daily && p.daily.day === today && p.daily.ids && p.daily.ids.every(id => GAMES[id])) return p.daily;
+  const world = S.world; const last = lastPlayed();
+  const pool = ROOMS[world].flatMap(r => r.ids || []).filter(id => GAMES[id] && !['atelier', 'histoires'].includes(id));
+  const rnd = n => (today * 9301 + n * 49297) % 233280 / 233280;
+  const ids = [];
+  if (world === 'grands') ids.push('lecture');
+  else ids.push([...ROOMS.petits[0].ids].sort((a, b) => (last[a] || 0) - (last[b] || 0) || rnd(a.length) - .5)[0]);
+  const weak = pool.filter(id => !ids.includes(id) && skillPct(id) != null).sort((a, b) => skillPct(a) - skillPct(b));
+  if (weak.length && skillPct(weak[0]) < .8) ids.push(weak[0]);
+  else ids.push(world === 'grands' ? 'calcul' : pool.filter(id => !ids.includes(id))[Math.floor(rnd(3) * 5)]);
+  const old = pool.filter(id => !ids.includes(id)).sort((a, b) => (last[a] || 0) - (last[b] || 0) || rnd(a.charCodeAt(0)) - .5);
+  ids.push(old[0]);
+  p.daily = { day: today, ids: ids.filter(Boolean).slice(0, 3), done: [], bonus: false };
+  return p.daily;
+}
+function dailyEl() {
+  const d = dailyPlan(); const n = d.done.length;
+  const box = h('section', { class: 'daily wrap', 'aria-label': 'Le parcours du jour' },
+    h('div', { class: 'daily-head' }, h('b', null, '🌟 Le parcours du jour'), h('span', null, n >= d.ids.length ? 'Bravo, tout est fait ! 💧💧💧' : `${n} sur ${d.ids.length} · bonus : 3 gouttes d’eau`)));
+  const row = h('div', { class: 'daily-row' });
+  d.ids.forEach((id, i) => {
+    const g = GAMES[id]; const ok = d.done.includes(id);
+    const b = h('button', { class: 'daily-step' + (ok ? ' ok' : '') + (!ok && d.ids.slice(0, i).every(x => d.done.includes(x)) ? ' next' : ''), 'aria-label': g.title + (ok ? ', fait' : '') },
+      h('span', { class: 'ds-n' }, ok ? '✓' : String(i + 1)), h('span', { class: 'ds-em', 'aria-hidden': 'true' }, g.icon), h('span', { class: 'ds-t' }, g.title));
+    onTap(b, () => { Sfx.play('tap'); Voice.say(g.title); CURRENT_ACT = id; lastPlayed()[id] = dayNo(); setTimeout(() => runGame(id), 350); });
+    row.append(b);
+  });
+  box.append(row);
+  return box;
+}
+/* appelé à chaque fin d'activité (écran de fête) */
+function activityDone() {
+  const g = garden(); g.drops = Math.min(9, (g.drops || 0) + 1);
+  const d = P().daily; let bonus = null;
+  if (d && d.day === dayNo() && CURRENT_ACT && d.ids.includes(CURRENT_ACT) && !d.done.includes(CURRENT_ACT)) {
+    d.done.push(CURRENT_ACT);
+    if (d.done.length >= d.ids.length && !d.bonus) { d.bonus = true; g.drops = Math.min(12, g.drops + 3); bonus = 'Parcours du jour terminé ! Tu gagnes trois gouttes d’eau pour ton jardin.'; }
+  }
+  if (CURRENT_ACT) lastPlayed()[CURRENT_ACT] = dayNo();
+  return bonus;
+}
+
+/* ---------------- Le jardin ---------------- */
+const SEEDS = {
+  carotte: { e: '🥕', s: 'une carotte', p: 'des carottes', w: 'carotte', who: 'grands' },
+  tomate: { e: '🍅', s: 'une tomate', p: 'des tomates', w: 'tomate', who: 'grands' },
+  salade: { e: '🥬', s: 'une salade', p: 'des salades', w: 'salade', who: 'grands' },
+  potiron: { e: '🎃', s: 'un potiron', p: 'des potirons', w: 'potiron', who: 'grands' },
+  fraise: { e: '🍓', s: 'une fraise', p: 'des fraises', w: 'fraise', who: 'all' },
+  pomme: { e: '🍎', s: 'une pomme', p: 'des pommes', w: 'pomme', who: 'all' },
+  tulipe: { e: '🌷', s: 'une tulipe', p: 'des tulipes', w: 'tulipe', who: 'all' },
+  tournesol: { e: '🌻', s: 'un tournesol', p: 'des tournesols', w: 'tournesol', who: 'all' }
+};
+const seedsFor = world => Object.keys(SEEDS).filter(k => SEEDS[k].who === 'all' || SEEDS[k].who === world);
+function garden() {
+  const p = P(); const g = p.garden || (p.garden = { drops: 3, plots: [null, null, null, null, null, null], pantry: {}, dishes: 0, intro: false });
+  g.plots = g.plots || []; while (g.plots.length < 6) g.plots.push(null); g.pantry = g.pantry || {};
+  return g;
+}
+const STAGE_EM = ['🟫', '🌱', '🌿'];
+function gardenView() {
+  const g = garden(); const k = kid(); const world = S.world; const today = dayNo();
+  /* événements du jour : mauvaises herbes et escargots */
+  g.plots.forEach((pl, i) => {
+    if (!pl || pl.seen === today) return; pl.seen = today;
+    if (pl.st < 3) { const r = ((today * 31 + i * 17) % 100) / 100; if (r < .3) pl.weed = true; else if (r < .45) pl.snail = true; }
+  });
+  save();
+  const ov = ovScreen(world === 'petits' ? `Le jardin de ${k.name}` : `Le potager de ${k.name}`, null, 'garden-screen');
+  const head = h('div', { class: 'g-head' });
+  const field = h('div', { class: 'g-field' });
+  ov.body.append(head, field);
+  const draw = () => {
+    head.innerHTML = '';
+    head.append(h('div', { class: 'g-drops', 'aria-label': `${g.drops} gouttes d’eau` }, h('span', null, '💧'), h('b', null, '× ' + g.drops)),
+      h('div', { class: 'g-help' }, g.drops ? 'Touche une plante pour l’arroser (une fois par jour).' : 'Plus de gouttes : termine un jeu pour en gagner.'),
+      onTap(h('button', { class: 'pbtn', 'aria-label': 'Aller à la cuisine' }, '🍳 Cuisine'), () => { ov.el.remove(); kitchenView(); }));
+    field.innerHTML = '';
+    g.plots.forEach((pl, i) => {
+      const plot = h('button', { class: 'plot' + (pl ? ' grown-' + pl.st : ' empty') + (pl && pl.w === today ? ' wet' : ''), 'aria-label': pl ? SEEDS[pl.s].w : 'case vide' });
+      if (!pl) plot.append(h('span', { class: 'pl-em' }, '＋'), h('span', { class: 'pl-t' }, 'Planter'));
+      else {
+        plot.append(h('span', { class: 'pl-em' }, pl.st >= 3 ? SEEDS[pl.s].e : STAGE_EM[pl.st]));
+        plot.append(h('span', { class: 'pl-t' }, pl.st >= 3 ? 'À cueillir !' : pl.w === today ? 'Arrosé 💧' : 'Soif…'));
+        plot.append(h('span', { class: 'pl-grow' }, [0, 1, 2].map(j => h('i', { class: j < pl.st ? 'on' : '' }))));
+        if (pl.weed) plot.append(h('span', { class: 'pl-pest weed', 'aria-label': 'mauvaise herbe' }, '🌾'));
+        if (pl.snail) plot.append(h('span', { class: 'pl-pest snail', 'aria-label': 'escargot' }, '🐌'));
+      }
+      onTap(plot, () => tapPlot(i, plot));
+      field.append(plot);
+    });
+  };
+  const tapPlot = (i, el) => {
+    const pl = g.plots[i];
+    if (!pl) return chooseSeed(i);
+    if (pl.weed) { pl.weed = false; g.drops = Math.min(12, g.drops + 1); Sfx.play('pop'); Voice.say(['Tu as arraché la mauvaise herbe !', 'Elle te donne une goutte d’eau.']); save(); return draw(); }
+    if (pl.snail) { pl.snail = false; Sfx.play('whoosh'); Voice.say('L’escargot part se promener ailleurs !'); save(); return draw(); }
+    if (pl.st >= 3) {
+      g.pantry[pl.s] = (g.pantry[pl.s] || 0) + (pl.s === 'fraise' || pl.s === 'tomate' || pl.s === 'pomme' ? 3 : 2);
+      const n = g.pantry[pl.s]; g.plots[i] = null; Sfx.play('star'); confetti(1200);
+      Voice.say([`Tu as cueilli ${SEEDS[pl.s].p} !`, `Tu en as ${nwf(n)} dans ta cuisine.`]); save(); return draw();
+    }
+    if (pl.w === today) { Voice.say('Elle a déjà bu aujourd’hui. Reviens demain !'); flash(el, 'shake'); return; }
+    if (!g.drops) { Voice.say(['Tu n’as plus de gouttes d’eau.', 'Termine un jeu pour en gagner une !']); flash(el, 'shake'); return; }
+    g.drops--; pl.w = today; pl.st++; Sfx.play('flip');
+    Voice.say(pl.st >= 3 ? [`Ta plante est prête !`, 'Touche-la pour la cueillir.'] : pl.st === 1 ? 'Glou glou ! Une petite pousse sort de la terre.' : 'Glou glou ! Elle grandit. Reviens demain pour l’arroser encore.');
+    save(); draw();
+  };
+  const chooseSeed = i => {
+    const m = h('div', { class: 'modal', role: 'dialog', 'aria-label': 'Choisis une graine' });
+    const close = () => m.remove();
+    const sh = h('div', { class: 'sheet seeds' }, h('h3', null, world === 'grands' ? 'Lis les sachets de graines' : 'Choisis une graine'));
+    const row = h('div', { class: 'seed-row' }, seedsFor(world).map(id => {
+      const sd = SEEDS[id];
+      const b = h('button', { class: 'seed', 'aria-label': world === 'grands' ? 'sachet de graines' : sd.w },
+        world === 'grands' ? h('span', { class: 'seed-pack' }, colorWord(sd.w)) : h('span', { class: 'seed-pack em' }, sd.e));
+      onTap(b, () => { close(); g.plots[i] = { s: id, st: 0, w: -1, d: dayNo(), seen: dayNo() }; Sfx.play('pop'); Voice.say([`Tu as planté ${SEEDS[id].p}.`, 'Arrose-les pour les faire pousser !']); save(); draw(); });
+      return b;
+    }));
+    sh.append(row, onTap(h('button', { class: 'pbtn', style: { marginTop: '12px' } }, 'Fermer'), close));
+    m.append(sh); document.body.append(m);
+    Voice.say(world === 'grands' ? ['Lis les sachets, et choisis ce que tu veux planter.', 'Touche un sachet.'] : 'Qu’est-ce que tu veux planter ? Touche une graine.');
+  };
+  draw();
+  if (!g.intro) { g.intro = true; save(); Voice.say(['Voici ton jardin !', 'Plante des graines, puis arrose-les chaque jour.', 'Pour arroser, il faut des gouttes d’eau : tu en gagnes une à chaque jeu terminé.']); }
+  else Voice.say(`Tu as ${nwf(g.drops)} goutte${g.drops > 1 ? 's' : ''} d’eau.`);
+}
+
+/* ---------------- La cuisine ---------------- */
+const BASE = { oeuf: { e: '🥚', s: 'un œuf', p: 'œufs', w: 'œuf', wp: 'œufs' }, lait: { e: '🥛', s: 'un verre de lait', p: 'verres de lait', w: 'lait', wp: 'laits' }, farine: { e: '🌾', s: 'une cuillère de farine', p: 'cuillères de farine', w: 'farine', wp: 'farines' }, sucre: { e: '🍬', s: 'un sucre', p: 'sucres', w: 'sucre', wp: 'sucres' }, beurre: { e: '🧈', s: 'un morceau de beurre', p: 'morceaux de beurre', w: 'beurre', wp: 'beurres' } };
+const ING = id => BASE[id] || { e: SEEDS[id].e, s: SEEDS[id].s, p: SEEDS[id].p.replace(/^des /, ''), w: SEEDS[id].w, wp: SEEDS[id].p.replace(/^des /, '') };
+const RECIPES = [
+  { id: 'crepes', e: '🥞', n: 'Les crêpes', ing: { oeuf: 2, lait: 1, farine: 3 }, who: 'all' },
+  { id: 'jus', e: '🧃', n: 'Le jus de fraises', ing: { fraise: 4, sucre: 1 }, who: 'all' },
+  { id: 'compote', e: '🥣', n: 'La compote de pommes', ing: { pomme: 3, sucre: 2 }, who: 'all' },
+  { id: 'tarte', e: '🥧', n: 'La tarte aux fraises', ing: { fraise: 5, farine: 2, beurre: 1 }, who: 'all' },
+  { id: 'bouquet', e: '💐', n: 'Le bouquet pour la table', ing: { tulipe: 2, tournesol: 2 }, who: 'all' },
+  { id: 'salade', e: '🥗', n: 'La salade de tomates', ing: { tomate: 3, salade: 2 }, who: 'grands' },
+  { id: 'soupe', e: '🍲', n: 'La soupe au potiron', ing: { potiron: 2, carotte: 2, lait: 1 }, who: 'grands' },
+  { id: 'gateau', e: '🎂', n: 'Le gâteau aux carottes', ing: { carotte: 3, oeuf: 2, farine: 2, sucre: 2 }, who: 'grands' }
+];
+const GUESTS = [['papa', '👨'], ['maman', '👩'], ['mamie', '👵'], ['Lumi', '🦉'], ['le chien', '🐶']];
+const recipesFor = world => RECIPES.filter(r => r.who === 'all' || r.who === world);
+function missingOf(r) { const g = garden(); return Object.entries(r.ing).filter(([id, n]) => !BASE[id] && (g.pantry[id] || 0) < n).map(([id, n]) => [id, n - (g.pantry[id] || 0)]); }
+function kitchenView() {
+  const g = garden(); const world = S.world;
+  const ov = ovScreen('La cuisine', null, 'kitchen-screen');
+  const shelf = h('div', { class: 'k-pantry' }, h('b', null, 'Dans ta cuisine : '),
+    ...Object.entries(g.pantry).filter(([, n]) => n > 0).map(([id, n]) => h('span', { class: 'k-have' }, `${SEEDS[id].e} × ${n}`)),
+    Object.values(g.pantry).some(n => n > 0) ? null : h('span', { class: 'k-none' }, 'rien du jardin pour l’instant'),
+    onTap(h('button', { class: 'pbtn', style: { marginLeft: 'auto' } }, '🌻 Jardin'), () => { ov.el.remove(); gardenView(); }));
+  const list = h('div', { class: 'k-list' }, recipesFor(world).map(r => {
+    const miss = missingOf(r); const ok = !miss.length;
+    const b = h('button', { class: 'recipe' + (ok ? '' : ' locked'), 'aria-label': r.n },
+      h('span', { class: 'rc-em' }, r.e), h('b', null, r.n),
+      h('span', { class: 'rc-ing' }, Object.entries(r.ing).map(([id, n]) => `${n} ${ING(id).e}`).join('  ')),
+      ok ? null : h('span', { class: 'rc-miss' }, 'Il manque : ' + miss.map(([id, n]) => `${n} ${SEEDS[id].e}`).join(' ')));
+    onTap(b, () => {
+      if (!ok) { Voice.say(['Il te manque des ingrédients du jardin :', ...miss.map(([id, n]) => `${nwf(n)} ${n > 1 ? ING(id).p : SEEDS[id].w}.`), 'Va planter et arroser !']); flash(b, 'shake'); return; }
+      ov.el.remove(); cookRecipe(r);
+    });
+    return b;
+  }));
+  ov.body.append(shelf, list);
+  Voice.say(['Bienvenue dans la cuisine !', 'Choisis une recette.']);
+}
+async function cookRecipe(r) {
+  Sfx.ensure(); const world = S.world; const reader = world === 'grands';
+  const run = { gid: 'cuisine', abort: false, res: [] }; RUN = run;
+  Shell.open({ bg: '#FFF4E6', level: r.e + ' ' + r.n, onClose: () => kitchenView() });
+  Shell.setDots(3);
+  const lines = Object.entries(r.ing);
+  /* 1. préparer les ingrédients */
+  const prep = {
+    say: reader ? ['Lis la recette.', 'Mets les bons ingrédients dans le bol, puis touche Mélanger.'] : ['Écoute la recette :', ...lines.map(([id, n]) => `${nwf(n)} ${n > 1 ? ING(id).p : ING(id).s.replace(/^une? /, '')}.`), 'Mets-les dans le bol !'],
+    caption: 'Mets les bons ingrédients dans le bol',
+    render(st, api) {
+      const cnt = {}; lines.forEach(([id]) => cnt[id] = 0);
+      const card = h('div', { class: 'k-card' }, h('b', null, r.e + ' ' + r.n), lines.map(([id, n]) => {
+        const ln = h('button', { class: 'k-line', 'aria-label': `${n} ${ING(id).w}` }, h('span', { class: 'k-n' }, String(n)), reader ? colorWord(n > 1 ? ING(id).wp : ING(id).w) : h('span', null, ING(id).e), reader ? null : h('span', { class: 'k-dots' }, '●'.repeat(n)));
+        onTap(ln, () => Voice.say(`${nwf(n)} ${n > 1 ? ING(id).p : ING(id).s.replace(/^une? /, '')}`));
+        return ln;
+      }));
+      const bowl = h('div', { class: 'k-bowl', 'aria-label': 'le bol' }, h('span', { class: 'k-bowl-em' }, '🥣'));
+      const inBowl = h('div', { class: 'k-in' });
+      const redraw = () => { inBowl.innerHTML = ''; Object.entries(cnt).forEach(([id, n]) => { for (let i = 0; i < n; i++) inBowl.append(h('span', null, ING(id).e)); }); };
+      const pool = uniq([...lines.map(([id]) => id), ...shuffle([...Object.keys(BASE), ...seedsFor(S.world).filter(x => !/tulipe|tournesol/.test(x) || r.id === 'bouquet')].filter(x => !r.ing[x])).slice(0, 3)]);
+      const shelfRow = h('div', { class: 'k-shelf' }, shuffle(pool).map(id => {
+        const b = h('button', { class: 'k-item', 'aria-label': ING(id).w }, ING(id).e);
+        onTap(b, () => { cnt[id] = (cnt[id] || 0) + 1; Sfx.play('pop'); redraw(); });
+        return b;
+      }));
+      const undo = onTap(h('button', { class: 'hint-btn' }, icon('again'), 'Vider le bol'), () => { Object.keys(cnt).forEach(k => cnt[k] = 0); redraw(); Sfx.play('whoosh'); });
+      const go = onTap(h('button', { class: 'go-btn' }, icon('check'), 'Mélanger'), () => {
+        const bad = lines.find(([id, n]) => (cnt[id] || 0) !== n) || Object.keys(cnt).find(id => cnt[id] && !r.ing[id]);
+        if (!bad) return api.answer(true, { el: bowl, praise: 'Parfait, tout est dans le bol !' });
+        const id = Array.isArray(bad) ? bad[0] : bad; const want = r.ing[id] || 0, have = cnt[id] || 0;
+        api.answer(false, { el: bowl, feedback: want === 0 ? `Oups, il ne faut pas de ${ING(id).w} dans cette recette. Vide le bol et recommence.` : have < want ? `Il manque ${ING(id).p.startsWith('verre') || ING(id).p.startsWith('cuill') || ING(id).p.startsWith('morc') ? 'des ingrédients' : 'des ' + ING(id).p}. Relis la recette.` : `Il y a trop de ${ING(id).p}. Vide le bol et recommence.` });
+      });
+      if (window.__TEST__) { go._auto = () => { lines.forEach(([id, n]) => cnt[id] = n); }; api.key(go); }
+      st.append(h('div', { class: 'k-top' }, card, h('div', { class: 'k-bowl-wrap' }, bowl, inBowl)), shelfRow, h('div', { class: 'row' }, undo, go));
+    }
+  };
+  /* 2. mélanger */
+  const stir = {
+    say: 'Touche le bol pour mélanger !', caption: 'Mélange : touche le bol',
+    render(st, api) {
+      let k = 0; const need = 6;
+      const bowl = h('button', { class: 'k-bowl big', 'aria-label': 'mélanger' }, h('span', { class: 'k-bowl-em' }, '🥣'), h('span', { class: 'k-spoon' }, '🥄'));
+      const bar = h('div', { class: 'pb k-pb' }, h('i', { style: { width: '0%' } }));
+      onTap(bowl, () => { k++; bowl.classList.remove('spin'); void bowl.offsetWidth; bowl.classList.add('spin'); Sfx.play('tick'); bar.firstChild.style.width = Math.min(100, k / need * 100) + '%'; if (k === need) api.finish(null); });
+      api.key(bowl); if (window.__TEST__) bowl._multi = need;
+      st.append(bowl, bar);
+    }
+  };
+  /* 3. pour qui ? */
+  const guest = {
+    say: ['C’est prêt !', 'À qui veux-tu l’offrir ?'], caption: 'À qui offres-tu ton plat ?',
+    render(st, api) {
+      st.append(h('div', { class: 'k-dish' }, r.e), h('div', { class: 'row four' }, GUESTS.map(([n, e]) => {
+        const b = card(h('span', { style: { fontSize: 'clamp(40px,7vw,60px)' } }, e), n); api.key(b);
+        onTap(b, () => { run.guest = n; Sfx.play('star'); api.finish(null); });
+        return b;
+      })));
+    }
+  };
+  const res = [];
+  for (const [i, it] of [prep, stir, guest].entries()) {
+    Shell.now(i); const x = await Engine.play(it, run); if (run.abort || RUN !== run) return; res.push(x); Shell.mark(i, 'ok');
+  }
+  const g = garden(); Object.entries(r.ing).forEach(([id, n]) => { if (!BASE[id]) g.pantry[id] = Math.max(0, (g.pantry[id] || 0) - n); }); g.dishes = (g.dishes || 0) + 1;
+  const stars = res[0].first ? 3 : 2; const sticker = addStars(stars); save();
+  Celebrate.show({ stars, sticker, note: `${r.e} ${r.n} pour ${run.guest || 'toi'} !`, noteSay: [`Miam ! ${run.guest === 'le chien' ? 'Le chien' : run.guest || 'Tout le monde'} se régale !`], again: () => Shell.close(), home: () => { Shell.onClose = null; Shell.close(); } });
+}
+GAMES.cuisine = { id: 'cuisine', title: 'La cuisine', sub: 'Recettes du jardin', icon: '🍳', color: 'orange', open: () => kitchenView(), info: () => ({ lv: `${garden().dishes || 0} plat${(garden().dishes || 0) > 1 ? 's' : ''}`, pct: Math.min(1, (garden().dishes || 0) / 8) }) };
+GAMES.jardin = { id: 'jardin', title: 'Le jardin', sub: 'Planter et arroser', icon: '🌻', color: 'leaf', open: () => gardenView(), info: () => ({ lv: `💧 × ${garden().drops}`, pct: garden().plots.filter(Boolean).length / 6 }) };
+
+/* ---------------- L'heure (P1) ---------------- */
+const hw = hh => hh === 1 ? 'une heure' : `${nw(hh)} heures`;
+const timeSay = (hh, half) => `${hw(hh)}${half ? ' et demie' : ''}`;
+function clockSVG(hh, mm, o = {}) {
+  const ha = ((hh % 12) + mm / 60) * 30, ma = mm * 6; const nums = [];
+  for (let i = 1; i <= 12; i++) { const a = i * 30 * Math.PI / 180; nums.push(`<text x="${100 + 72 * Math.sin(a)}" y="${100 - 72 * Math.cos(a) + 8}" text-anchor="middle" font-size="22" font-weight="700" fill="#1F2E45" font-family="system-ui,sans-serif">${i}</text>`); }
+  const ticks = Array.from({ length: 60 }, (_, i) => { const a = i * 6 * Math.PI / 180, r1 = i % 5 ? 88 : 84; return `<line x1="${100 + r1 * Math.sin(a)}" y1="${100 - r1 * Math.cos(a)}" x2="${100 + 92 * Math.sin(a)}" y2="${100 - 92 * Math.cos(a)}" stroke="#9AA6BC" stroke-width="${i % 5 ? 1.5 : 3}"/>`; }).join('');
+  const hand = (ang, len, w, col) => `<line x1="100" y1="100" x2="${100 + len * Math.sin(ang * Math.PI / 180)}" y2="${100 - len * Math.cos(ang * Math.PI / 180)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 200 200" class="clock" aria-hidden="true"><circle cx="100" cy="100" r="96" fill="#fff" stroke="#3AA2EE" stroke-width="7"/>${ticks}${nums.join('')}${o.noHour ? '' : hand(ha, 46, 9, '#E8604C')}${hand(ma, 74, 5, '#1F6FCC')}<circle cx="100" cy="100" r="7" fill="#1F2E45"/></svg>`;
+}
+function timeCard(hh, half) { return h('span', { class: 'time-txt' }, `${hh} h${half ? ' 30' : ''}`); }
+GAMES.heure = {
+  id: 'heure', title: 'L’heure', sub: 'Lire l’horloge', icon: '🕒', color: 'sky', stage: '#E8F3FF', n: 6,
+  levels: [
+    { name: 'Les heures pile', tag: 'P1', ref: 'Lire l’heure pile sur une horloge à aiguilles', mode: 'read', half: false, opts: 3, skill: 'he1' },
+    { name: 'Place la petite aiguille', tag: 'P1', ref: 'Placer la petite aiguille pour une heure pile', mode: 'set', half: false, skill: 'he2' },
+    { name: 'Les demi-heures', tag: 'P1', ref: 'Lire l’heure et demie', mode: 'read', half: true, opts: 3, skill: 'he3' },
+    { name: 'Pile ou et demie ?', tag: 'P1', ref: 'Distinguer heure pile et heure et demie', mode: 'read', half: 'mix', opts: 4, skill: 'he4' },
+    { name: 'Règle l’horloge', tag: 'P1', ref: 'Régler une horloge (heures pile et demies)', mode: 'set', half: 'mix', skill: 'he5' }
+  ],
+  make(ctx) {
+    const L = ctx.L; const hh = rint(1, 12); const half = L.half === 'mix' ? Math.random() < .5 : !!L.half;
+    if (L.mode === 'read') {
+      const opts = [[hh, half]]; const alt = [[hh % 12 + 1, half], [(hh + 10) % 12 + 1, half], [hh, !half], [(hh + 5) % 12 + 1, half], [hh % 12 + 1, !half]];
+      for (const a of shuffle(alt)) { if (opts.length >= L.opts) break; if ((L.half === 'mix' || a[1] === half) && !opts.some(o => o[0] === a[0] && o[1] === a[1])) opts.push(a); }
+      return {
+        say: 'Quelle heure est-il ?', caption: 'Quelle heure est-il ?',
+        render(st, api) {
+          let target;
+          st.append(h('div', { class: 'clock-wrap', html: clockSVG(hh, half ? 30 : 0) }), h('div', { class: 'row' + (opts.length >= 4 ? ' four' : '') }, shuffle(opts).map(([a, b]) => {
+            const c = card(timeCard(a, b), timeSay(a, b), 'txt'); if (a === hh && b === half) { target = c; api.key(c); }
+            onTap(c, () => api.answer(a === hh && b === half, { el: c, correctEl: target, praise: `Oui ! Il est ${timeSay(hh, half)}.`, feedback: half ? 'Regarde la petite aiguille rouge : elle est entre deux nombres. On dit l’heure du nombre d’avant, et demie.' : 'Regarde la petite aiguille rouge : elle montre l’heure.' }));
+            return c;
+          })));
+        }
+      };
+    }
+    /* set : placer la petite aiguille (et demie si besoin) */
+    return {
+      say: `Mets l’horloge sur ${timeSay(hh, half)}.`, caption: `Il est ${hh} h${half ? ' 30' : ''} : place la petite aiguille`,
+      render(st, api) {
+        let selH = null, selHalf = false;
+        const wrap = h('div', { class: 'clock-wrap set' });
+        const draw = () => { wrap.innerHTML = clockSVG(selH || 12, selHalf ? 30 : 0, { noHour: selH == null }); hits.forEach(x => wrap.append(x)); };
+        const hits = Array.from({ length: 12 }, (_, i) => {
+          const n = i + 1, a = n * 30 * Math.PI / 180;
+          const b = h('button', { class: 'clock-hit', 'aria-label': String(n), style: { left: (50 + 36 * Math.sin(a)) + '%', top: (50 - 36 * Math.cos(a)) + '%' } });
+          onTap(b, () => { selH = n; Sfx.play('tick'); draw(); });
+          return b;
+        });
+        const tog = L.half === 'mix' ? onTap(h('button', { class: 'hint-btn half-btn' }, 'et demie ?'), () => { selHalf = !selHalf; tog.classList.toggle('on', selHalf); tog.textContent = selHalf ? 'et demie ✓' : 'et demie ?'; Sfx.play('tick'); draw(); }) : null;
+        const go = onTap(h('button', { class: 'go-btn' }, icon('check'), 'Fini'), () => {
+          if (selH == null) { Voice.say('Touche d’abord un nombre pour placer la petite aiguille.'); return; }
+          const ok = selH === hh && selHalf === half;
+          api.answer(ok, { el: wrap, praise: `Oui ! Il est ${timeSay(hh, half)}.`, feedback: selH !== hh ? `La petite aiguille doit montrer le ${nw(hh)}.` : half ? 'Pour la demie, la grande aiguille va en bas, sur le six.' : 'Pour l’heure pile, la grande aiguille reste en haut, sur le douze.' });
+        });
+        if (window.__TEST__) { go._auto = () => { selH = hh; selHalf = half; }; api.key(go); }
+        draw();
+        st.append(h('div', { class: 'big-num', style: { fontSize: 'clamp(30px,6vw,48px)' } }, `${hh} h${half ? ' 30' : ''}`), wrap, h('div', { class: 'row' }, tog, go));
+      }
+    };
+  }
+};
+
+/* ---------------- Les fêtes (jeux de saison) ---------------- */
+const FETE = {
+  halloween: { bg: '#FCE9D6', count: ['🎃', 'citrouille', 'citrouilles', 'f'], odd: ['👻', '🦇', '🕷️', '🎃', '🍬', '🧙'], words: [['bonbon', '🍬'], ['chat', '🐈‍⬛'], ['lune', '🌙'], ['citrouille', '🎃'], ['fantôme', '👻'], ['sorcière', '🧙']], potion: ['araignées', '🕷️'] },
+  nicolas: { bg: '#FFF1E6', count: ['🍊', 'mandarine', 'mandarines', 'f'], odd: ['🎁', '🍊', '🍪', '🥕', '⭐', '🍫'], words: [['cadeau', '🎁'], ['carotte', '🥕'], ['étoile', '⭐'], ['chocolat', '🍫'], ['âne', '🫏'], ['biscuit', '🍪']], potion: ['biscuits', '🍪'] },
+  noel: { bg: '#E9F4FF', count: ['⭐', 'étoile', 'étoiles', 'f'], odd: ['🎄', '⭐', '🎁', '❄️', '🔔', '⛄'], words: [['sapin', '🎄'], ['neige', '❄️'], ['cadeau', '🎁'], ['étoile', '⭐'], ['cloche', '🔔'], ['bonhomme de neige', '⛄']], potion: ['boules', '🔴'] }
+};
+const feteOf = () => FETE[(season() || { id: 'halloween' }).id];
+function feteCount(max) {
+  const F = feteOf(); const [e, s, p] = F.count; const n = rint(1, max);
+  return {
+    say: `Combien de ${p} ?`, caption: `Combien de ${p} ?`,
+    render(st, api) {
+      let target;
+      st.append(h('div', { class: 'field' }, Array.from({ length: n }, () => h('span', { class: 'obj' }, e))), h('div', { class: 'row' }, numChoices(n, max).map(v => {
+        const b = card(h('span', { style: { fontFamily: 'var(--font-display)' } }, String(v)), String(v)); if (v === n) { target = b; api.key(b); }
+        onTap(b, () => api.answer(v === n, { el: b, correctEl: target, praise: `Oui ! ${nwf(n)} ${n > 1 ? p : s} !`, feedback: 'Compte encore, en touchant chaque objet avec ton doigt.' }));
+        return b;
+      })));
+    }
+  };
+}
+function feteOdd() {
+  const F = feteOf(); const [a, b] = sample(F.odd, 2);
+  const items = shuffle([...Array(4).fill(a), b]);
+  return {
+    say: 'Trouve celui qui n’est pas comme les autres !', caption: 'L’intrus',
+    render(st, api) {
+      let target;
+      st.append(h('div', { class: 'row' }, items.map(x => { const c = card(h('span', { style: { fontSize: 'clamp(44px,8vw,70px)' } }, x), ''); if (x === b) { target = c; api.key(c); } onTap(c, () => api.answer(x === b, { el: c, correctEl: target })); return c; })));
+    }
+  };
+}
+function feteWord() {
+  const F = feteOf(); const opts = sample(F.words, 3); const t = pick(opts);
+  return {
+    say: ['Lis les mots.', `Où est écrit : ${t[0]} ?`], caption: `Touche le mot « ${t[0]} »`,
+    render(st, api) {
+      let target;
+      st.append(h('div', { class: 'k-dish', style: { fontSize: 'clamp(60px,12vw,100px)' } }, t[1]), h('div', { class: 'row' }, opts.map(o => { const c = card(colorWord(o[0]), o[0], 'txt'); if (o === t) { target = c; api.key(c); } onTap(c, () => api.answer(o === t, { el: c, correctEl: target, praise: `Oui ! C’est écrit ${t[0]}.` })); return c; })));
+    }
+  };
+}
+function fetePotion(max) {
+  const F = feteOf(); const [p, e] = F.potion; const total = rint(5, max), have = rint(1, total - 1);
+  return {
+    say: [`Il faut ${nwf(total)} ${p} dans la marmite.`, `Il y en a déjà ${nwf(have)}.`, 'Combien faut-il en ajouter ?'], caption: `${have} + ? = ${total}`,
+    render(st, api) {
+      let target;
+      st.append(h('div', { class: 'field' }, Array.from({ length: have }, () => h('span', { class: 'obj' }, e)), h('span', { class: 'obj', style: { opacity: .35 } }, '🫕')), h('div', { class: 'big-num', style: { fontSize: 'clamp(30px,6vw,52px)' } }, `${have} + ? = ${total}`),
+        h('div', { class: 'row' }, numChoices(total - have, Math.max(5, total - 1)).map(v => { const c = card(h('span', { style: { fontFamily: 'var(--font-display)' } }, String(v)), String(v)); if (v === total - have) { target = c; api.key(c); } onTap(c, () => api.answer(v === total - have, { el: c, correctEl: target, praise: `Oui ! ${nwf(have)} plus ${nwf(total - have)}, ça fait ${nwf(total)}.`, feedback: `Compte à partir de ${nwf(have)} jusqu’à ${nwf(total)}.` })); return c; })));
+    }
+  };
+}
+GAMES.feteP = {
+  id: 'feteP', get title() { return (season() || SEASONS[0]).name; }, sub: 'Jeux de fête', get icon() { return (season() || SEASONS[0]).icon; }, color: 'plum', get stage() { return feteOf().bg; }, n: 6,
+  levels: [
+    { name: 'Compte jusqu’à 3', tag: 'M1–M2', ref: 'Dénombrer jusqu’à 3', skill: 'fp1', max: 3 },
+    { name: 'L’intrus', tag: 'M1–M2', ref: 'Repérer l’intrus', skill: 'fp2' },
+    { name: 'Compte jusqu’à 6', tag: 'M3', ref: 'Dénombrer jusqu’à 6', skill: 'fp3', max: 6 }
+  ],
+  make(ctx) { return ctx.L.max ? (ctx.i % 3 === 2 ? feteOdd() : feteCount(ctx.L.max)) : feteOdd(); }
+};
+GAMES.feteG = {
+  id: 'feteG', get title() { return (season() || SEASONS[0]).name; }, sub: 'Jeux de fête', get icon() { return (season() || SEASONS[0]).icon; }, color: 'plum', get stage() { return feteOf().bg; }, n: 6,
+  levels: [
+    { name: 'Les mots de la fête', tag: 'P1', ref: 'Reconnaître des mots écrits', skill: 'fg1', mode: 'word' },
+    { name: 'La marmite (jusqu’à 10)', tag: 'P1', ref: 'Compléter pour atteindre un total ≤ 10', skill: 'fg2', mode: 'potion', max: 10 },
+    { name: 'Mélange de la fête', tag: 'P1', ref: 'Mots, intrus et compléments mélangés', skill: 'fg3', mode: 'mix', max: 10 }
+  ],
+  make(ctx) { const m = ctx.L.mode; if (m === 'word') return feteWord(); if (m === 'potion') return fetePotion(ctx.L.max); return [feteWord, () => fetePotion(10), feteOdd][ctx.i % 3](); }
+};
+
+/* ---------------- Histoires ---------------- */
+const MOTS_OUTILS = new Set(['le', 'la', 'les', 'un', 'une', 'des', 'de', 'du', 'et', 'est', 'a', 'il', 'elle', 'ils', 'sur', 'dans', 'au', 'à', 'son', 'sa', 'ses', 'mon', 'ma', 'tu', 'je', 'qui', 'pour', 'avec', 'y', 'en', 'lui', 'ne', 'pas', 'c’est', 'il y a', 'ce', 'mais', 'très']);
+const GRAPHS = Object.keys(G2L).sort((a, b) => b.length - a.length);
+function canDecode(word, li) {
+  const w = word.toLowerCase().replace(/[’']/g, '').replace(/[^a-zàâçéèêëîïôûùœ-]/g, '');
+  if (!w) return false;
+  let i = 0;
+  while (i < w.length) {
+    const rest = w.slice(i);
+    if (i > 0 && /^(e|s|t|d|x|z|es|ent|ts|ds)$/.test(rest)) return true;
+    const g = GRAPHS.find(x => rest.startsWith(x));
+    if (!g) return false;
+    const k = G2L[g]; if (LIDX[k] == null || LIDX[k] > li) return false;
+    i += g.length;
+  }
+  return true;
+}
+const STORIES = {
+  grands: [
+    { id: 'lama', t: 'Le lama de Lila', cover: '🦙', pages: [['🧒🦙', 'Lila a un lama.'], ['🦙🌾', 'Le lama mâche une salade.'], ['🦙😢', 'Oh non ! Le lama a mal à la patte.'], ['🧒💋🦙', 'Lila lui fait un bisou.'], ['🦙😄', 'Le lama rit. Il va mieux !']], q: ['Qui a mal à la patte ?', [['le lama', '🦙'], ['Lila', '🧒'], ['le chat', '🐱']]] },
+    { id: 'chat', t: 'Le chat et la souris', cover: '🐱', pages: [['🐱🛏️', 'Le chat dort sur le lit.'], ['🐭', 'Une petite souris passe.'], ['🐱👁️', 'Le chat ouvre un œil.'], ['🐭🕳️', 'Vite ! La souris file dans son trou.'], ['🐱💤', 'Le chat se rendort.']], q: ['Où dort le chat ?', [['sur le lit', '🛏️'], ['dans un arbre', '🌳'], ['sur un bateau', '⛵']]] },
+    { id: 'moto', t: 'La moto de papa', cover: '🏍️', pages: [['👨🏍️', 'Papa a une moto rouge.'], ['🏍️💨', 'Il roule sur la route.'], ['🐻', 'Sur la route, il y a un ours !'], ['🐻😱', 'L’ours a peur de la moto.'], ['🐻🌲', 'Il file dans la forêt.']], q: ['Qui a peur ?', [['l’ours', '🐻'], ['papa', '👨'], ['la vache', '🐄']]] },
+    { id: 'fusee', t: 'La fusée de Luca', cover: '🚀', pages: [['🧒🚀', 'Luca a une fusée.'], ['🚀🌙', 'La fusée va sur la lune.'], ['👽', 'Sur la lune, il y a un ami vert.'], ['🧒💃👽', 'Ils dansent ensemble.'], ['🚀🏠', 'Puis Luca rentre à la maison pour le dîner.']], q: ['Où va la fusée ?', [['sur la lune', '🌙'], ['dans la mer', '🌊'], ['à l’école', '🏫']]] },
+    { id: 'pomme', t: 'La pomme du jardin', cover: '🍎', pages: [['🌳🍎', 'Il y a une pomme sur le pommier.'], ['🐦🍎', 'Un merle la regarde.'], ['🍎⬇️', 'Pof ! La pomme tombe.'], ['🦔🍎', 'Un hérisson la ramasse.'], ['🦔🐦', 'Il la partage avec le merle.']], q: ['Qui ramasse la pomme ?', [['le hérisson', '🦔'], ['le merle', '🐦'], ['le lapin', '🐰']]] }
+  ],
+  petits: [
+    { id: 'poussin', t: 'Le petit poussin perdu', cover: '🐥', pages: [['🐥', 'Un petit poussin cherche sa maman.', '🐥', 'le poussin'], ['🐥🐱', 'Il demande au chat : tu as vu ma maman ? Le chat dit : non !', '🐱', 'le chat'], ['🐥🐷', 'Il demande au cochon. Le cochon dit : groin groin, non !', '🐷', 'le cochon'], ['🐥🦆', 'Coin coin ! C’est le canard. Ce n’est pas maman !', '🦆', 'le canard'], ['🐥🐔', 'Cot cot ! Voilà maman poule ! Le poussin est content.', '🐔', 'maman poule']] },
+    { id: 'arc', t: 'Les couleurs de l’arc-en-ciel', cover: '🌈', pages: [['🍓🫐🍋', 'Lumi cherche quelque chose de rouge.', '🍓', 'la fraise rouge'], ['🍋🥒🫐', 'Maintenant, quelque chose de jaune !', '🍋', 'le citron jaune'], ['🫐🥦🍓', 'Et quelque chose de bleu ?', '🫐', 'les myrtilles bleues'], ['🥦🍋🍓', 'Et quelque chose de vert ?', '🥦', 'le brocoli vert'], ['🌈', 'Rouge, jaune, bleu, vert : voilà l’arc-en-ciel !', '🌈', 'l’arc-en-ciel']] },
+    { id: 'nuit', t: 'Bonne nuit, Lumi', cover: '🌙', pages: [['🦉🌙', 'Le soir tombe. Lumi regarde le ciel.', '🌙', 'la lune'], ['⭐', 'Une étoile s’allume.', '⭐', 'l’étoile'], ['⭐⭐', 'Deux étoiles !', '⭐', 'une étoile'], ['⭐⭐⭐', 'Trois étoiles qui brillent !', '⭐', 'une étoile'], ['🦉💤', 'Lumi ferme les yeux. Bonne nuit, Lumi !', '🦉', 'Lumi']] }
+  ]
+};
+function storyLines() {
+  const out = [];
+  Object.values(STORIES).flat().forEach(s => { out.push(s.t); s.pages.forEach(pg => { out.push(pg[1]); if (pg[3]) out.push(`Touche ${pg[3]} !`, `Oui, c’est ${pg[3]} !`); }); if (s.q) { out.push(s.q[0]); s.q[1].forEach(o => out.push(`Oui ! ${cap1(o[0])} !`)); } });
+  Object.values(STORIES).flat().forEach(s => s.pages.forEach(pg => pg[1].split(/\s+/).forEach(w => { const c = w.replace(/[.,!?:;]/g, ''); if (c) out.push(c.toLowerCase()); })));
+  return out;
+}
+function storyLibrary() {
+  const world = S.world; const p = P(); const read = p.stories || (p.stories = {});
+  const ov = ovScreen(world === 'grands' ? 'La bibliothèque des histoires' : 'Le coin des histoires', null, 'story-screen');
+  ov.body.append(h('div', { class: 'st-list' }, STORIES[world].map(s => {
+    const b = h('button', { class: 'st-book' + (read[s.id] ? ' read' : '') }, h('span', { class: 'st-cover' }, s.cover), h('b', null, s.t), read[s.id] ? h('span', { class: 'st-done' }, '✓ lue') : null);
+    onTap(b, () => { ov.el.remove(); readStory(s); });
+    return b;
+  })));
+  Voice.say(world === 'grands' ? 'Choisis une histoire à lire.' : 'Choisis une histoire !');
+}
+async function readStory(s) {
+  Sfx.ensure(); const world = S.world; const reader = world === 'grands'; const li = P().lecture.unlocked || 0;
+  const run = { gid: 'histoires', abort: false, res: [] }; RUN = run;
+  Shell.open({ bg: '#FFFDF5', level: '📖 ' + s.t, onClose: () => storyLibrary() });
+  const n = s.pages.length + (s.q ? 1 : 0); Shell.setDots(n);
+  for (let i = 0; i < s.pages.length; i++) {
+    const [scene, text, target, tname] = s.pages[i];
+    Shell.now(i);
+    const it = reader ? {
+      say: i === 0 ? [s.t + '.', 'Lis la page. Les mots en couleur, tu sais les lire ! Touche un mot si tu as besoin d’aide.'] : 'Lis la page.',
+      caption: 'Lis la page, puis touche la flèche',
+      render(st, api) {
+        const words = text.split(/\s+/);
+        const line = h('p', { class: 'st-text' }, words.map(w => {
+          const bare = w.replace(/[.,!?:;]/g, ''); const dec = canDecode(bare, li) || MOTS_OUTILS.has(bare.toLowerCase());
+          const b = h('button', { class: 'st-w' + (dec ? ' dec' : '') }, dec ? colorWord(w) : w);
+          onTap(b, () => { Voice.say(bare.toLowerCase()); b.classList.add('heard'); });
+          return b;
+        }));
+        const listen = onTap(h('button', { class: 'hint-btn' }, icon('speaker'), 'Écouter la page'), () => Voice.say(text));
+        const go = onTap(h('button', { class: 'go-btn' }, 'Page suivante', icon('next')), () => api.finish(null)); api.key(go);
+        st.append(h('div', { class: 'st-scene' }, scene), line, h('div', { class: 'row' }, listen, go));
+      }
+    } : {
+      say: [text, 400, `Touche ${tname} !`], caption: text,
+      render(st, api) {
+        const items = uniq(Array.from(scene).filter(c => c.codePointAt(0) > 0x2100 && c !== '\uFE0F' && c !== '\u200D'));
+        const opts = shuffle(uniq([target, ...sample(['🐶', '🐸', '🍎', '🚗', '🌸', '⚽', '🐟'], 2), ...items.filter(x => x !== target)])).slice(0, 4);
+        if (!opts.includes(target)) opts[0] = target;
+        let tgt;
+        st.append(h('p', { class: 'st-text small' }, text), h('div', { class: 'row' + (opts.length >= 4 ? ' four' : '') }, shuffle(opts).map(e => {
+          const c = card(h('span', { style: { fontSize: 'clamp(48px,9vw,80px)' } }, e), ''); if (e === target) { tgt = c; api.key(c); }
+          onTap(c, () => api.answer(e === target, { el: c, correctEl: tgt, praise: `Oui, c’est ${tname} !` }));
+          return c;
+        })));
+      }
+    };
+    const r = await Engine.play(it, run); if (run.abort || RUN !== run) return;
+    run.res.push(r); Shell.mark(i, r.first === false ? 'half' : 'ok');
+  }
+  if (s.q) {
+    Shell.now(s.pages.length);
+    const [qq, opts] = s.q;
+    const r = await Engine.play({
+      say: ['Une question sur l’histoire :', qq], caption: qq,
+      render(st, api) {
+        let tgt;
+        st.append(h('div', { class: 'row' }, shuffle(opts).map(o => { const c = card(h('span', { style: { fontSize: 'clamp(44px,8vw,70px)' } }, o[1]), o[0]); if (o === opts[0]) { tgt = c; api.key(c); } onTap(c, () => api.answer(o === opts[0], { el: c, correctEl: tgt, praise: `Oui ! ${cap1(opts[0][0])} !` })); return c; })));
+      }
+    }, run);
+    if (run.abort || RUN !== run) return;
+    run.res.push(r); Shell.mark(s.pages.length, r.first ? 'ok' : 'half'); recordSkill('hi1', !!r.first);
+  }
+  const p = P(); (p.stories || (p.stories = {}))[s.id] = (p.stories[s.id] || 0) + 1;
+  const sc = run.res.filter(r => r.first != null); const ok = sc.filter(r => r.first).length;
+  const stars = !sc.length ? 3 : ok === sc.length ? 3 : ok >= sc.length - 1 ? 2 : 1;
+  const sticker = addStars(stars); save();
+  Celebrate.show({ stars, sticker, note: `Histoire lue : ${s.t}`, again: () => readStory(s), next: () => Shell.close(), nextLabel: 'Autre histoire', home: () => { Shell.onClose = null; Shell.close(); } });
+}
+GAMES.histoires = { id: 'histoires', title: 'Les histoires', sub: 'Lire et écouter', icon: '📖', color: 'plum', open: () => storyLibrary(), info: () => { const n = Object.keys(P().stories || {}).length, t = STORIES[S.world].length; return { lv: `${n} sur ${t} lue${n > 1 ? 's' : ''}`, pct: n / t }; } };
+
+/* ---------------- L'atelier des cartes ---------------- */
+const CARD_TO = [['papa', '👨'], ['maman', '👩'], ['mamie', '👵'], ['papi', '👴'], ['Lumi', '🦉']];
+const CARD_MSG = [['Je t’aime', '❤️'], ['Merci', '🙏'], ['Bonne nuit', '🌙'], ['Bravo', '👏'], ['Bon anniversaire', '🎂'], ['Tu es super', '⭐']];
+const CARD_STK = ['🌈', '🦄', '🚀', '🌸', '⭐', '🐱', '🦋', '🍓', '⚽', '🎈', '🦖', '🌻'];
+const CARD_BG = ['#FFE3EF', '#E3F2FF', '#E9F6D5', '#FFF1C9', '#ECE4FF'];
+function cardTo() { const sib = S.current === 'luca' ? ['Lola', '👧'] : ['Luca', '👦']; return [...CARD_TO, sib]; }
+async function makeCard() {
+  Sfx.ensure(); const world = S.world; const reader = world === 'grands'; const k = kid();
+  const run = { gid: 'atelier', abort: false, res: [] }; RUN = run;
+  Shell.open({ bg: '#FFF0F6', level: '🎨 Atelier des cartes', onClose: () => atelierView() });
+  const steps = reader ? 4 : 3; Shell.setDots(steps); const out = {};
+  const chooser = (say, caption, list, key, wordMode) => ({
+    say, caption,
+    render(st, api) {
+      st.append(h('div', { class: 'row' + (list.length >= 4 ? ' four' : '') }, list.map(o => {
+        const c = card(wordMode ? colorWord(o[0]) : h('span', { style: { fontSize: 'clamp(44px,8vw,70px)' } }, o[1]), o[0], wordMode ? 'txt' : ''); api.key(c);
+        onTap(c, () => { out[key] = o; Sfx.play('pop'); Voice.say(o[0]); setTimeout(() => api.finish(null), 500); });
+        return c;
+      })));
+    }
+  });
+  const items = [
+    chooser(reader ? ['Pour qui est ta carte ?', 'Lis les prénoms.'] : 'Pour qui est ta carte ?', 'Pour qui est ta carte ?', cardTo(), 'to', reader),
+    chooser(reader ? ['Qu’est-ce que tu veux écrire ?', 'Lis les messages.'] : 'Qu’est-ce que tu veux lui dire ?', 'Ton message', CARD_MSG, 'msg', reader)
+  ];
+  if (reader) items.push({
+    get say() { return ['Maintenant, écris le prénom.', 'Touche les lettres dans l’ordre.']; },
+    caption: 'Écris le prénom avec les lettres',
+    render(st, api) {
+      const name = out.to[0].toLowerCase(); const letters = [...name]; let pos = 0;
+      const slots = h('div', { class: 'slots' }, letters.map(() => h('span', { class: 'slot' })));
+      const tiles = shuffle([...letters, ...sample('abcdefilmnoprstu'.split('').filter(c => !letters.includes(c)), 2)]).map(c => {
+        const b = h('button', { class: 'ltile ' + (VOY_RE.test(c) ? 'voy' : 'con') }, c);
+        onTap(b, async () => {
+          if (b.classList.contains('used')) return;
+          if (c === letters[pos]) { b.classList.add('used'); slots.children[pos].textContent = c; slots.children[pos].classList.add('fill'); pos++; Sfx.play('tick'); if (pos >= letters.length) api.answer(true, { el: slots, praise: `Bravo ! Tu as écrit ${out.to[0]} !` }); else markNext(); }
+          else api.step(false, { el: b, feedback: 'Pas cette lettre. Écoute bien le prénom et cherche la lettre suivante.' });
+        });
+        return b;
+      });
+      const markNext = () => { $$('[data-key]', st).forEach(e => delete e.dataset.key); const t = tiles.find(b => !b.classList.contains('used') && b.textContent === letters[pos]); if (t) api.key(t); };
+      markNext();
+      st.append(h('div', { class: 'k-dish' }, out.to[1]), slots, h('div', { class: 'tiles-row' }, tiles));
+    }
+  });
+  items.push({
+    say: 'Décore ta carte ! Touche trois autocollants, puis une couleur.', caption: 'Décore ta carte',
+    render(st, api) {
+      const stk = []; let bg = CARD_BG[0];
+      const prev = h('div', { class: 'gcard-prev' });
+      const draw = () => { prev.style.background = bg; prev.innerHTML = ''; prev.append(h('div', { class: 'gc-stk' }, stk.join(' ')), h('b', null, out.msg[0]), h('span', null, 'Pour ' + out.to[0])); };
+      const row = h('div', { class: 'stk-row' }, CARD_STK.map(e => { const b = h('button', { class: 'k-item' }, e); onTap(b, () => { if (stk.length >= 3) stk.shift(); stk.push(e); Sfx.play('pop'); draw(); }); return b; }));
+      const cols = h('div', { class: 'stk-row' }, CARD_BG.map(c => onTap(h('button', { class: 'col-dot', style: { background: c }, 'aria-label': 'couleur' }), () => { bg = c; Sfx.play('tick'); draw(); })));
+      const go = onTap(h('button', { class: 'go-btn' }, icon('check'), 'Ma carte est finie'), () => { if (!stk.length) { Voice.say('Mets au moins un autocollant !'); return; } out.stk = stk.slice(); out.bg = bg; api.finish(null); });
+      if (window.__TEST__) { stk.push('⭐'); api.key(go); }
+      draw(); st.append(prev, row, cols, h('div', { class: 'row' }, go));
+    }
+  });
+  for (const [i, it] of items.entries()) { Shell.now(i); const r = await Engine.play(it, run); if (run.abort || RUN !== run) return; run.res.push(r); Shell.mark(i, 'ok'); }
+  const p = P(); const cards = p.cards || (p.cards = []);
+  const c = { to: out.to[0], msg: out.msg[0], stk: out.stk, bg: out.bg, from: k.name, at: Date.now() }; cards.unshift(c); if (cards.length > 12) cards.pop();
+  const sticker = addStars(reader && run.res[2] && run.res[2].first === false ? 2 : 3); save();
+  showCard(c, true);
+  Celebrate.show({ stars: 3, sticker, note: 'Ta carte est rangée dans l’atelier. Montre-la !', again: () => makeCard(), home: () => { Shell.onClose = null; Shell.close(); } });
+}
+function cardSay(c) { return [`Pour ${c.to} :`, `${c.msg} !`, `De la part de ${c.from}.`]; }
+function showCard(c, quiet) {
+  const m = h('div', { class: 'modal gcard-modal', role: 'dialog', 'aria-label': 'Carte' });
+  const el = h('div', { class: 'gcard-big', style: { background: c.bg } }, h('div', { class: 'gc-stk' }, c.stk.join(' ')), h('b', null, c.msg + ' !'), h('span', null, `Pour ${c.to}`), h('small', null, `De la part de ${c.from}`));
+  m.append(el); onTap(m, () => { m.remove(); Voice.stop(); });
+  if (!quiet) { document.body.append(m); Voice.say(cardSay(c)); confetti(1500); }
+  else setTimeout(() => { if ($('.celebrate')) { document.body.append(m); Voice.say(cardSay(c)); setTimeout(() => m.remove(), 6000); } }, 2600);
+}
+function atelierView() {
+  const p = P(); const cards = p.cards || [];
+  const ov = ovScreen('L’atelier des cartes', null, 'atelier-screen');
+  ov.body.append(onTap(h('button', { class: 'go-btn', style: { margin: '6px auto 14px' } }, '✏️ Faire une nouvelle carte'), () => { ov.el.remove(); makeCard(); }),
+    cards.length ? h('div', { class: 'gc-list' }, cards.map(c => onTap(h('button', { class: 'gcard-mini', style: { background: c.bg } }, h('span', null, c.stk.join('')), h('b', null, c.msg), h('small', null, 'pour ' + c.to)), () => showCard(c)))) : h('p', { style: { textAlign: 'center', color: 'var(--ink-soft)' } }, 'Pas encore de carte.'));
+  Voice.say(cards.length ? 'Fais une nouvelle carte, ou touche une carte pour la montrer.' : 'Fais une jolie carte pour quelqu’un que tu aimes !');
+}
+GAMES.atelier = { id: 'atelier', title: 'L’atelier des cartes', sub: 'Écrire un message', icon: '🎨', color: 'pink', open: () => atelierView(), info: () => { const n = (P().cards || []).length; return { lv: `${n} carte${n > 1 ? 's' : ''}`, pct: Math.min(1, n / 5) }; } };
+
+/* ---------------- Tableau des notions (espace parents) ---------------- */
+function notionRows(id) {
+  const keep = S.current; S.current = id; const p = P(); S.current = keep;
+  const label = {};
+  Object.values(GAMES).forEach(g => (g.levels || []).forEach(L => { if (L.skill) label[L.skill] = [typeof g.title === 'string' ? g.title : g.id, L.name]; }));
+  if (typeof MODS !== 'undefined') MODS.forEach(M => M.levels.forEach((L, i) => { label[`calc:${M.id}:${i}`] = ['Calcul · ' + M.name, L.name]; }));
+  label.hi1 = ['Histoires', 'Comprendre une histoire lue'];
+  const rows = Object.entries(p.skills || {}).filter(([k]) => label[k]).map(([k, s]) => ({ k, g: label[k][0], n: label[k][1], ok: s.ok, tot: s.n, pct: s.n ? s.ok / s.n : 0 }));
+  Object.entries((p.lecture || {}).gp || {}).forEach(([g, s]) => rows.push({ k: 'gp:' + g, g: 'Lecture', n: `Le son « ${g} »`, ok: s.ok, tot: s.n, pct: s.n ? s.ok / s.n : 0 }));
+  rows.forEach(r => { r.st = r.tot < 4 ? 'découverte' : r.pct >= .8 && r.tot >= 6 ? 'acquis' : 'en cours'; });
+  return rows;
+}
+function notionsCard(id) {
+  const rows = notionRows(id); const name = KIDS_DEF[id].name;
+  const box = h('div', { class: 'pcard' }, h('h3', null, `Les notions de ${name}`));
+  if (!rows.length) { box.append(h('p', null, 'Pas encore assez de réponses.')); return box; }
+  const weak = rows.filter(r => r.st === 'en cours' && r.tot >= 4 && r.pct < .8).sort((a, b) => a.pct - b.pct).slice(0, 3);
+  const cnt = s => rows.filter(r => r.st === s).length;
+  box.append(h('p', null, `✅ ${cnt('acquis')} acquises · 🔄 ${cnt('en cours')} en cours · 🌱 ${cnt('découverte')} en découverte`));
+  if (weak.length) box.append(h('p', null, h('b', null, 'À renforcer : '), weak.map(r => `${r.g} – ${r.n} (${Math.round(r.pct * 100)} %)`).join(' · ')));
+  const tb = h('table', { class: 'notions' }, h('thead', null, h('tr', null, ['Activité', 'Notion', 'Réponses', 'Réussite', 'État'].map(t => h('th', null, t)))),
+    h('tbody', null, rows.sort((a, b) => a.g.localeCompare(b.g) || a.n.localeCompare(b.n)).map(r => h('tr', { class: 'st-' + r.st.replace('é', 'e').replace(' ', '-') }, h('td', null, r.g), h('td', null, r.n), h('td', null, String(r.tot)), h('td', null, Math.round(r.pct * 100) + ' %'), h('td', null, r.st === 'acquis' ? '✅ acquis' : r.st === 'en cours' ? '🔄 en cours' : '🌱 découverte')))));
+  box.append(h('div', { class: 'notions-wrap' }, tb));
+  return box;
+}
+
+/* ---------------- Phrases à enregistrer (inventaire de la voix) ---------------- */
+function maisonVoiceLines() {
+  const out = [];
+  Object.values(ROOMS).flat().forEach(r => out.push(r.name));
+  SEASONS.forEach(s => out.push(s.name));
+  ['Voici ton jardin !', 'Plante des graines, puis arrose-les chaque jour.', 'Pour arroser, il faut des gouttes d’eau : tu en gagnes une à chaque jeu terminé.', 'Tu as arraché la mauvaise herbe !', 'Elle te donne une goutte d’eau.', 'L’escargot part se promener ailleurs !', 'Elle a déjà bu aujourd’hui. Reviens demain !', 'Tu n’as plus de gouttes d’eau.', 'Termine un jeu pour en gagner une !', 'Ta plante est prête !', 'Touche-la pour la cueillir.', 'Glou glou ! Une petite pousse sort de la terre.', 'Glou glou ! Elle grandit. Reviens demain pour l’arroser encore.', 'Lis les sachets, et choisis ce que tu veux planter.', 'Touche un sachet.', 'Qu’est-ce que tu veux planter ? Touche une graine.', 'Arrose-les pour les faire pousser !', 'Parcours du jour terminé ! Tu gagnes trois gouttes d’eau pour ton jardin.',
+    'Bienvenue dans la cuisine !', 'Choisis une recette.', 'Il te manque des ingrédients du jardin :', 'Va planter et arroser !', 'Lis la recette.', 'Mets les bons ingrédients dans le bol, puis touche Mélanger.', 'Écoute la recette :', 'Mets-les dans le bol !', 'Parfait, tout est dans le bol !', 'Touche le bol pour mélanger !', 'C’est prêt !', 'À qui veux-tu l’offrir ?', 'Miam ! Tout le monde se régale !', 'Relis la recette.', 'Vide le bol et recommence.',
+    'Quelle heure est-il ?', 'Touche d’abord un nombre pour placer la petite aiguille.', 'Pour la demie, la grande aiguille va en bas, sur le six.', 'Pour l’heure pile, la grande aiguille reste en haut, sur le douze.', 'Regarde la petite aiguille rouge : elle est entre deux nombres. On dit l’heure du nombre d’avant, et demie.', 'Regarde la petite aiguille rouge : elle montre l’heure.',
+    'Trouve celui qui n’est pas comme les autres !', 'Lis les mots.', 'Compte encore, en touchant chaque objet avec ton doigt.', 'Combien faut-il en ajouter ?',
+    'Choisis une histoire à lire.', 'Choisis une histoire !', 'Lis la page. Les mots en couleur, tu sais les lire ! Touche un mot si tu as besoin d’aide.', 'Lis la page.', 'Une question sur l’histoire :',
+    'Pour qui est ta carte ?', 'Lis les prénoms.', 'Qu’est-ce que tu veux écrire ?', 'Lis les messages.', 'Qu’est-ce que tu veux lui dire ?', 'Maintenant, écris le prénom.', 'Touche les lettres dans l’ordre.', 'Pas cette lettre. Écoute bien le prénom et cherche la lettre suivante.', 'Décore ta carte ! Touche trois autocollants, puis une couleur.', 'Mets au moins un autocollant !', 'Fais une nouvelle carte, ou touche une carte pour la montrer.', 'Fais une jolie carte pour quelqu’un que tu aimes !'].forEach(x => out.push(x));
+  for (let n = 0; n <= 12; n++) out.push(`Tu as ${nwf(n)} goutte${n > 1 ? 's' : ''} d’eau.`);
+  Object.entries(SEEDS).forEach(([id, s]) => { out.push(s.w, `Tu as planté ${s.p}.`, `Tu as cueilli ${s.p} !`); for (let n = 1; n <= 30; n++) out.push(`Tu en as ${nwf(n)} dans ta cuisine.`); for (let n = 1; n <= 6; n++) out.push(`${nwf(n)} ${n > 1 ? ING(id).p : s.w}.`); });
+  [...Object.keys(BASE), ...Object.keys(SEEDS)].forEach(id => { const I = ING(id); out.push(I.w); for (let n = 1; n <= 6; n++) { out.push(`${nwf(n)} ${n > 1 ? I.p : I.s.replace(/^une? /, '')}`, `${nwf(n)} ${n > 1 ? I.p : I.s.replace(/^une? /, '')}.`); } out.push(`Oups, il ne faut pas de ${I.w} dans cette recette. Vide le bol et recommence.`, `Il manque des ${I.p}. Relis la recette.`, `Il y a trop de ${I.p}. Vide le bol et recommence.`); });
+  out.push('Il manque des ingrédients. Relis la recette.');
+  GUESTS.forEach(([n]) => { out.push(n, `Miam ! ${n === 'le chien' ? 'Le chien' : n} se régale !`); });
+  for (let hh = 1; hh <= 12; hh++) [false, true].forEach(hf => { out.push(`Oui ! Il est ${timeSay(hh, hf)}.`, `Mets l’horloge sur ${timeSay(hh, hf)}.`); }), out.push(`La petite aiguille doit montrer le ${nw(hh)}.`);
+  Object.values(FETE).forEach(F => {
+    const [, s, p] = F.count; out.push(`Combien de ${p} ?`); for (let n = 1; n <= 6; n++) out.push(`Oui ! ${nwf(n)} ${n > 1 ? p : s} !`);
+    F.words.forEach(([w]) => out.push(`Où est écrit : ${w} ?`, `Oui ! C’est écrit ${w}.`));
+    const [pp] = F.potion; for (let t = 5; t <= 10; t++) { out.push(`Il faut ${nwf(t)} ${pp} dans la marmite.`); for (let a = 1; a < t; a++) out.push(`Il y en a déjà ${nwf(a)}.`, `Oui ! ${nwf(a)} plus ${nwf(t - a)}, ça fait ${nwf(t)}.`, `Compte à partir de ${nwf(a)} jusqu’à ${nwf(t)}.`); }
+  });
+  out.push(...storyLines());
+  STORIES.grands.concat(STORIES.petits).forEach(s => out.push(s.t + '.'));
+  ['luca', 'lola'].forEach(id => { const keep = S.current; S.current = id; const k = kid(); cardTo().forEach(o => out.push(o[0], `Bravo ! Tu as écrit ${o[0]} !`, `Pour ${o[0]} :`)); CARD_MSG.forEach(m => out.push(m[0], `${m[0]} !`)); out.push(`De la part de ${k.name}.`); S.current = keep; });
+  return out;
+}
+WORLD_TILES.grands.push('heure', 'histoires', 'atelier', 'jardin', 'cuisine', 'feteG');
+WORLD_TILES.petits.push('histoires', 'atelier', 'jardin', 'cuisine', 'feteP');
 
 boot();
 </script>
