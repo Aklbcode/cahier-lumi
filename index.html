@@ -810,10 +810,10 @@ const Remote = {
   ref(k) { return this.refs[k] || (this.refs[k] = this.db.doc('data/users/' + this.uid + '/cahier-' + k)); },
   async init() {
     try {
-      if (!window.claude || typeof window.claude.use !== 'function') { this.state = 'off'; return; }
+      if (!window.claude || typeof window.claude.use !== 'function') { this.state = 'off'; applyGifts(); return; }
       const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
-      if (!db || !user) { this.state = 'off'; return; }
-      const uid = await user.id(); if (!uid) { this.state = 'off'; return; }
+      if (!db || !user) { this.state = 'off'; applyGifts(); return; }
+      const uid = await user.id(); if (!uid) { this.state = 'off'; applyGifts(); return; }
       this.db = db; this.uid = uid; S.at = S.at || {};
       let any = false;
       for (const k of syncDocs()) { const r = await this.pull(k, true); if (r !== 'absent') any = true; }
@@ -826,11 +826,12 @@ const Remote = {
         } catch (e) { }
       }
       this.ready = true; this.state = 'on';
+      applyGifts();
       try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { }
       Voice.choose(); if (!Shell.isOpen() && !$('.modal, .parent')) renderHome();
       this.save();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.refresh(S.current); });
-    } catch (e) { this.db = null; this.state = 'off'; }
+    } catch (e) { this.db = null; this.state = 'off'; applyGifts(); }
   },
   /* récupère le document k s'il est plus récent sur le compte */
   async pull(k, quiet) {
@@ -846,7 +847,7 @@ const Remote = {
   async refresh(id) {
     if (!this.ready) return;
     const a = await this.pull('reglages'), b = await this.pull(id);
-    if (a === 'updated' || b === 'updated') { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { } if (!Shell.isOpen() && !$('.modal, .parent, .who-screen')) renderHome(); }
+    if (a === 'updated' || b === 'updated') { applyGifts(); try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { } if (!Shell.isOpen() && !$('.modal, .parent, .who-screen')) renderHome(); }
   },
   async save() {
     if (!this.db) return;
@@ -1560,6 +1561,8 @@ function boot() {
   Voice.init(); VoicePack.init(); Shell.build(); Keys.init();
   const app = h('div', { id: 'app', class: 'app' }); document.body.append(app);
   Track.init();
+  if (!window.claude || typeof window.claude.use !== 'function') Remote.state = 'off';
+  if (Remote.state !== 'pending') applyGifts();
   renderHome();
   let dev = ''; try { dev = localStorage.getItem(DEVICE_KEY) || ''; } catch (e) { }
   whoScreen(true, KIDS_DEF[dev] ? dev : null);
@@ -1734,6 +1737,24 @@ function rewardSay(r) {
   if (r.level) out.push(`Tu passes au niveau ${nw(r.level)} !`, `Tu es ${k.g === 'f' ? 'une' : 'un'} ${r.title.toLowerCase()} !`, ...(r.gear ? [`Tu gagnes ${gearName(r.gear, k)} !`] : []));
   if (r.treasure) out.push('Et voici un nouveau trésor :', r.treasure[1] + ' !');
   return out;
+}
+
+/* ---------- Cadeaux du parent : versés une seule fois par enfant (mémorisés dans sa progression) ---------- */
+const GIFTS = [{ id: 'cadeau-2026-10-21', kid: 'luca', stars: 27, treasures: 4, gear: ['sac', 'chapeau'] }];
+function applyGifts() {
+  let given = false; const keep = S.current;
+  GIFTS.forEach(g => {
+    if (!KIDS_DEF[g.kid]) return;
+    S.current = g.kid; const p = P(); p.gifts = p.gifts || [];
+    if (p.gifts.includes(g.id)) return;
+    addStars(g.stars || 0);
+    if (g.treasures) p.treasures = Math.max(p.treasures || 0, g.treasures);
+    (g.gear || []).forEach(id => { avState().gear[id] = true; });
+    p.gifts.push(g.id); given = true;
+  });
+  S.current = keep;
+  if (given) save();
+  return given;
 }
 
 /* ---------- Écran « Qui joue ? » ---------- */
