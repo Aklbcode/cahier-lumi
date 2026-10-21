@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Grandstander:wght@500;700;800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playwrite+BE+WAL:wght@300;400&display=swap">
 <style>
+[hidden]{display:none!important}
 /* Layout: un cahier d'école posé sur une table ensoleillée — tuiles rondes et dodues, une grande scène par jeu, lignage Seyès pour l'écrit */
 :root{
   --ground:#E8F4EF;
@@ -1002,7 +1003,11 @@ const Voice = {
     return (async () => {
       if (busy) await sleep(90);
       const c = Sfx.ctx; let tEnd = 0, gap = 0;
-      const waitUntil = async (t, early) => { while (my === this.tok && c && c.currentTime < t - early) await sleep(Math.max(10, Math.min(120, (t - early - c.currentTime) * 1000))); };
+      /* attente sur l'horloge audio, avec garde-fou en temps réel (contexte audio suspendu sur iPad/Safari) */
+      const waitUntil = async (t, early) => {
+        if (!c) return; const wallEnd = performance.now() + Math.max(0, t - early - c.currentTime) * 1000 + 600;
+        while (my === this.tok && c.currentTime < t - early && performance.now() < wallEnd) { if (c.state === 'suspended') { try { c.resume(); } catch (e) { } } await sleep(Math.max(10, Math.min(120, (t - early - c.currentTime) * 1000))); }
+      };
       for (let i = 0; i < units.length; i++) {
         if (my !== this.tok) return;
         const u = units[i];
