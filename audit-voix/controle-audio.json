@@ -1,0 +1,13 @@
+{
+  "clips": 10654,
+  "packs": 125,
+  "bytes": 145326336,
+  "sampleRate": 24000,
+  "allOriginalKeysCovered": true,
+  "decoded": 10654,
+  "durationMinSeconds": 0.6,
+  "durationMedianSeconds": 1.608,
+  "durationMaxSeconds": 5.088,
+  "peakMax": 0.8682,
+  "failed": []
+}

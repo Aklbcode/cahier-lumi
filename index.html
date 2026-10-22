@@ -786,9 +786,11 @@ table.notions tr.st-acquis td:last-child{color:#2E9B5C;font-weight:700}
 @media (max-width:760px){.house-rooms{grid-template-columns:repeat(3,1fr)}.daily-row{grid-template-columns:1fr}.g-field{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:460px){.house-rooms{grid-template-columns:repeat(2,1fr)}}
 
+.voice-tools{display:flex;gap:8px;flex:none;align-items:center}.voice-slow{display:flex;flex-direction:column;justify-content:center;gap:0;color:#277056}.voice-slow span{font-size:25px}.voice-slow small{font-size:10px;font-weight:700}.voice-replay.is-speaking{outline:3px solid #65cda1;outline-offset:3px}.voice-tests{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}#voice-status{min-height:1.5em;color:#277056;font-weight:700}#rate{max-width:220px}.voice-intro{line-height:1.6}@media(max-width:540px){.voice-tools{flex-direction:column;gap:6px}.voice-tools .round-btn{width:44px;height:44px}.voice-tools .round-btn svg{width:24px;height:24px}.voice-slow span{font-size:21px}.game-bottom{gap:8px}.game-bottom .game-av{width:52px}.voice-tests .pbtn{flex:1 1 140px}.prow input[type=range]{max-width:160px}}
 </style>
 </head>
 <body>
+<script src="speech-engine.js?v=6"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -889,14 +891,16 @@ function defState() {
       { id: 'lola', name: 'Lola', world: 'petits' }
     ],
     current: 'luca',
-    settings: { voiceURI: '', rate: 0.95, pitch: 1.05, sfx: true, timerMin: 0, voiceMode: 'lumi' },
+    settings: { voiceURI: '', rate: 0.95, pitch: 1.0, sfx: true, timerMin: 0, voiceMode: 'lumi', voiceRevision: 2 },
     progress: {}
   };
 }
 let S = defState();
 function migrate(o) {
   const d = defState();
+  const oldVoiceRevision = (o.settings || {}).voiceRevision;
   o.settings = Object.assign(d.settings, o.settings || {});
+  if (oldVoiceRevision !== 2) { if (o.settings.pitch === 1.05) o.settings.pitch = 1; o.settings.voiceRevision = 2; }
   o.progress = o.progress || {};
   /* v1 → v2 : les profils « Grand ours » (Grands) et « Petit loup » (Petits) deviennent Luca et Lola */
   const old = Array.isArray(o.profiles) ? o.profiles : [];
@@ -1018,160 +1022,23 @@ function recordSkill(key, ok) { if (!key) return; const sk = P().skills; const s
 const FEMALE = ['charline', 'denise', 'eloise', 'vivienne', 'brigitte', 'celeste', 'coralie', 'jacqueline', 'josephine', 'yvette', 'ariane', 'sylvie', 'amélie', 'amelie', 'audrey', 'aurélie', 'aurelie', 'marie', 'virginie', 'juliette', 'julie', 'hortense', 'chantal', 'céline', 'celine', 'caroline', 'manon', 'camille', 'claire', 'google français', 'google francais', 'female', 'femme'];
 const MALE = ['thomas', 'henri', 'paul', 'antoine', 'claude', 'nicolas', 'jérôme', 'jerome', 'alain', 'gérard', 'gerard', 'rémi', 'remy', 'yves', 'jacques', 'maurice', 'louis', 'fabrice', 'guillaume', 'jean', 'daniel', 'mathieu', 'félix', 'felix', 'gilles', 'olivier', 'hugo', 'christophe', 'alexandre', 'fabien', 'lucien', 'sébastien', 'sebastien', 'thierry', 'vincent', 'jules', 'arnaud', 'tristan', 'gerald', 'male', 'homme'];
 const NOVELTY = ['eddy', 'flo', 'grandma', 'grandpa', 'reed', 'rocko', 'sandy', 'shelley', 'bells', 'bubbles', 'jester', 'organ', 'trinoids', 'whisper', 'zarvox', 'boing', 'cellos', 'superstar', 'wobble', 'bad news', 'good news', 'albert', 'fred', 'junior', 'kathy', 'ralph'];
-/* Découpage en phrases : identique au script qui a produit les enregistrements */
-const speechBucket = r => (r == null || r >= .9) ? 'n' : (r >= .78 ? 'm' : 's');
-function speechSegments(text) {
-  const t = String(text).replace(/\s+/g, ' ').trim(); const out = []; let cur = '';
-  for (let i = 0; i < t.length; i++) {
-    cur += t[i];
-    if ('.!?…:'.includes(t[i]) && t[i + 1] === ' ') { push(); i++; }
+/* Le moteur vocal reste indépendant des jeux et des sauvegardes. */
+const { Voice, VoicePack, speechJoin, speechSegments, speechBucket } = LumiSpeech.create({
+  settings: () => S.settings, female: FEMALE, male: MALE, novelty: NOVELTY,
+  ensureAudio: () => Sfx.ensure(),
+  onState({ status, text, mode }) {
+    Sfx.duck(status === 'speaking' || status === 'loading');
+    const label = $('#voice-status');
+    if (label) label.textContent = status === 'loading' ? 'Préparation de la voix…' : status === 'speaking' ? (mode === 'recorded' ? 'Voix de Lumi : ' : 'Voix de l’appareil : ') + text : status === 'error' ? text : 'Prête à écouter.';
+    const buttons = $$('.voice-replay'); buttons.forEach(b => b.classList.toggle('is-speaking', status === 'speaking'));
   }
-  push();
-  function push() { const raw = cur.trim(); cur = ''; if (!raw) return; const end = raw[raw.length - 1]; const s = raw.replace(/\.+$/, '').trim(); if (s && !/^[\s.!?…,;:]+$/.test(s)) out.push({ t: s, end }); }
-  return out;
-}
-/* Recolle les morceaux d'une même phrase (« Oui ! Le », 7, « est ici ! ») en un seul texte :
-   une phrase entière se dit d'un trait, sans coupure au milieu. Les nombres restent des pauses. */
-function speechJoin(parts) {
-  const out = []; let cur = null;
-  const flush = () => { if (cur) { cur.t = cur.t.replace(/\s+/g, ' ').replace(/\s+([,.…])/g, '$1').replace(/([!?:])(?=[^\s])/g, '$1 ').trim(); if (cur.t) out.push(cur); } cur = null; };
-  for (const p of (Array.isArray(parts) ? parts.flat(3) : [parts])) {
-    if (p == null || p === '') continue;
-    if (typeof p === 'number') { flush(); out.push(p); continue; }
-    const o = typeof p === 'object' ? p : { t: p }; const t = String(o.t == null ? '' : o.t); const r = o.rate || 1;
-    if (cur && cur.rate === r) cur.t += ' ' + t; else { flush(); cur = { t, rate: r }; }
-  }
-  flush(); return out;
-}
-const VoicePack = {
-  base: 'voix/', idx: null, packs: [], order: {}, loading: {}, bufs: new Map(), hits: 0, misses: new Set(),
-  async init() {
-    try { const r = await fetch(this.base + 'index.json'); if (!r.ok) return; const j = await r.json(); this.idx = j.clips; this.packs = j.packs; this.order = j.order || {}; this.scopes = j.scopes || {}; this.loadPack(0); this.prefetch(S.world); }
-    catch (e) { this.idx = null; }
-  },
-  usable() { return !!this.idx && S.settings.voiceMode !== 'device' && !!Sfx.ctx; },
-  loadPack(i) {
-    if (!this.loading[i]) this.loading[i] = fetch(this.base + this.packs[i]).then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
-    return this.loading[i];
-  },
-  prefetch(world) { if (!this.idx) return; (this.order[world] || []).forEach((i, n) => setTimeout(() => this.loadPack(i), n * 400)); },
-  prefetchScope(sc) { if (!this.idx) return; ((this.scopes || {})[sc] || []).forEach((i, n) => setTimeout(() => this.loadPack(i), n * 300)); },
-  async get(k) {
-    if (this.bufs.has(k)) return this.bufs.get(k);
-    const e = this.idx && this.idx[k]; if (!e) return null;
-    const ab = await Promise.race([this.loadPack(e[0]), sleep(5000).then(() => null)]);
-    if (!ab) return null;
-    try {
-      const b = await new Promise((res, rej) => { const pr = Sfx.ctx.decodeAudioData(ab.slice(e[1], e[1] + e[2]), res, rej); if (pr && pr.then) pr.then(res, rej); });
-      this.bufs.set(k, b); if (this.bufs.size > 500) this.bufs.delete(this.bufs.keys().next().value);
-      return b;
-    } catch (err) { return null; }
-  },
-  miss(k) { this.misses.add(k); }
-};
-const Voice = {
-  ok: 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined',
-  voices: [], voice: null, tok: 0,
-  init() {
-    if (!this.ok) return;
-    const load = () => { try { this.voices = speechSynthesis.getVoices().filter(v => /^fr/i.test(v.lang)); this.choose(); } catch (e) { } };
-    load();
-    try { speechSynthesis.addEventListener('voiceschanged', load); } catch (e) { speechSynthesis.onvoiceschanged = load; }
-    setTimeout(load, 600); setTimeout(load, 2000);
-    setInterval(() => { try { if (speechSynthesis.speaking && speechSynthesis.paused) speechSynthesis.resume(); } catch (e) { } }, 4000);
-  },
-  score(v) {
-    const n = (v.name || '').toLowerCase(); let s = 0;
-    if (/fr[-_]be/i.test(v.lang)) s += 4; else if (/fr[-_]fr/i.test(v.lang)) s += 3; else if (/fr[-_]ch/i.test(v.lang)) s += 2; else if (/fr[-_]ca/i.test(v.lang)) s += 1;
-    if (/natural|neural|online/.test(n)) s += 12;
-    if (/premium/.test(n)) s += 11;
-    if (/enhanced|amélioré|ameliore/.test(n)) s += 9;
-    if (/google/.test(n)) s += 7;
-    if (FEMALE.some(f => n.includes(f))) s += 6;
-    if (MALE.some(m => new RegExp('\\b' + m + '\\b').test(n))) s -= 30;
-    if (NOVELTY.some(m => new RegExp('\\b' + m + '\\b').test(n))) s -= 18;
-    return s;
-  },
-  ranked() { return [...this.voices].sort((a, b) => this.score(b) - this.score(a)); },
-  choose() {
-    const want = S.settings.voiceURI;
-    let v = want && this.voices.find(x => x.voiceURI === want);
-    if (!v) v = this.ranked()[0];
-    this.voice = v || null;
-  },
-  stop() { this.tok++; (this.srcs || []).forEach(x => { try { x.stop(); } catch (e) { } }); this.srcs = []; if (this.ok) { try { speechSynthesis.cancel(); } catch (e) { } } },
-  unlock() { const c = Sfx.ensure(); if (!c) return; try { const b = c.createBuffer(1, 1, 22050); const s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); } catch (e) { } },
-  /* parts : texte, nombre (pause en ms) ou {t, rate} — dits à la suite.
-     Voix naturelle : chaque phrase est jouée depuis les enregistrements neuronaux (VoicePack) ;
-     une phrase absente des enregistrements est dite par la voix de l'appareil. */
-  say(parts) {
-    let busy = false; try { busy = this.ok && (speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { }
-    this.stop();
-    const my = this.tok;
-    const units = [];
-    for (const o of speechJoin(parts)) {
-      if (typeof o === 'number') { units.push(o); continue; }
-      const t = o.t;
-      if (!t.trim() || /^[\s.!?…,;:]+$/.test(t)) { if (/[.…]/.test(t)) units.push(220); continue; }
-      speechSegments(t).forEach(sg => units.push({ t: sg.t, end: sg.end, rate: o.rate || 1, k: speechBucket(o.rate) + '|' + sg.t }));
-    }
-    const pack = VoicePack.usable();
-    const bufs = pack ? units.map(u => typeof u === 'object' ? VoicePack.get(u.k) : null) : [];
-    /* Enchaînement fluide : chaque clip est programmé sur l'horloge audio, juste après le précédent
-       (petite respiration après un point, presque rien entre deux morceaux d'une même phrase). */
-    return (async () => {
-      if (busy) await sleep(90);
-      const c = Sfx.ctx; let tEnd = 0, gap = 0;
-      /* attente sur l'horloge audio, avec garde-fou en temps réel (contexte audio suspendu sur iPad/Safari) */
-      const waitUntil = async (t, early) => {
-        if (!c) return; const wallEnd = performance.now() + Math.max(0, t - early - c.currentTime) * 1000 + 600;
-        while (my === this.tok && c.currentTime < t - early && performance.now() < wallEnd) { if (c.state === 'suspended') { try { c.resume(); } catch (e) { } } await sleep(Math.max(10, Math.min(120, (t - early - c.currentTime) * 1000))); }
-      };
-      for (let i = 0; i < units.length; i++) {
-        if (my !== this.tok) return;
-        const u = units[i];
-        if (typeof u === 'number') { gap += u / 1000; continue; }
-        const buf = pack ? await bufs[i] : null;
-        if (my !== this.tok) return;
-        if (buf && c) {
-          VoicePack.hits++;
-          const at = Math.max(c.currentTime + 0.015, tEnd + gap);
-          this.schedule(buf, at); tEnd = at + buf.duration;
-          await waitUntil(tEnd, 0.12);
-        } else {
-          if (pack) VoicePack.miss(u.k);
-          await waitUntil(tEnd, 0); if (gap) await sleep(gap * 1000);
-          if (my !== this.tok) return;
-          await this.utter(u.t, u.rate, my); tEnd = c ? c.currentTime : 0;
-        }
-        gap = /[.!?…]/.test(u.end) ? 0.17 : u.end === ':' ? 0.1 : 0.02;
-      }
-      await waitUntil(tEnd, 0);
-    })();
-  },
-  schedule(buf, at) {
-    try { const src = Sfx.ctx.createBufferSource(); src.buffer = buf; src.connect(Sfx.ctx.destination); src.start(at); (this.srcs = this.srcs || []).push(src); src.onended = () => { this.srcs = (this.srcs || []).filter(x => x !== src); }; }
-    catch (e) { }
-  },
-  utter(text, rate, my) {
-    return new Promise(res => {
-      if (!text || /^[\s.!?…,;:]+$/.test(text)) return res();
-      if (!this.ok) { setTimeout(res, Math.min(2200, 300 + text.length * 50)); return; }
-      let fin = false; const done = () => { if (fin) return; fin = true; clearTimeout(to); res(); };
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = (this.voice && this.voice.lang) || 'fr-FR';
-      if (this.voice) u.voice = this.voice;
-      u.rate = clamp(rate * S.settings.rate, 0.5, 1.6); u.pitch = S.settings.pitch; u.volume = 1;
-      u.onend = done; u.onerror = done;
-      const to = setTimeout(done, 1600 + text.length * 120 / u.rate);
-      try { speechSynthesis.speak(u); } catch (e) { done(); }
-    });
-  }
-};
+});
 
 /* ---------- Effets sonores (synthétisés, aucun fichier) ---------- */
 const Sfx = {
-  ctx: null,
+  ctx: null, output: null,
+  bus() { if (!this.output && this.ctx) { this.output = this.ctx.createGain(); this.output.connect(this.ctx.destination); } return this.output || this.ctx.destination; },
+  duck(active) { if (this.ctx) this.bus().gain.setTargetAtTime(active ? .14 : 1, this.ctx.currentTime, .04); },
   ensure() {
     try {
       if (!this.ctx) { const C = window.AudioContext || window.webkitAudioContext; if (C) this.ctx = new C(); }
@@ -1186,7 +1053,7 @@ const Sfx = {
     if (o.slide) osc.frequency.exponentialRampToValueAtTime(Math.max(40, f * o.slide), t0 + dur);
     const vol = o.vol || .16;
     g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + (o.att || .012)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-    osc.connect(g).connect(c.destination); osc.start(t0); osc.stop(t0 + dur + .05);
+    osc.connect(g).connect(this.bus()); osc.start(t0); osc.stop(t0 + dur + .05);
   },
   play(name) {
     if (!S.settings.sfx) return;
@@ -1260,7 +1127,8 @@ const Shell = {
     this.lvlEl = h('div', { class: 'lvl' });
     this.capEl = h('div', { class: 'caption' });
     const close = onTap(h('button', { class: 'round-btn', 'aria-label': 'Quitter le jeu', html: ICON.close }), () => this.close());
-    const spk = onTap(h('button', { class: 'round-btn', 'aria-label': 'Réécouter la consigne', style: { color: '#3AA2EE' }, html: ICON.speaker }), () => this.replay());
+    const spk = onTap(h('button', { class: 'round-btn voice-replay', 'aria-label': 'Réécouter la consigne', style: { color: '#3AA2EE' }, html: ICON.speaker }), () => this.replay());
+    const slow = onTap(h('button', { class: 'round-btn voice-slow', 'aria-label': 'Réécouter plus lentement' }, h('span', { 'aria-hidden': 'true' }, '🐢'), h('small', null, 'Plus lent')), () => Voice.slower(() => this.replay()));
     this.avEl = h('div', { class: 'av-live game-av', role: 'button', 'aria-label': 'Réécouter la consigne' });
     onTap(this.avEl, () => this.replay());
     this.trackEl = h('div', { class: 'dots-track' }, this.dotsEl);
@@ -1268,12 +1136,12 @@ const Shell = {
     this.el = h('div', { class: 'screen', hidden: true, role: 'dialog', 'aria-label': 'Jeu' },
       h('div', { class: 'game-top' }, close, this.trackEl, this.lvlEl),
       h('div', { class: 'stage-wrap' }, this.stage),
-      h('div', { class: 'game-bottom' }, spk, this.capEl, this.avEl));
+      h('div', { class: 'game-bottom' }, h('div', { class: 'voice-tools' }, spk, slow), this.capEl, this.avEl));
     document.body.append(this.el);
   },
   isOpen() { return this.el && !this.el.hidden; },
   open({ bg, level, onClose }) {
-    this.clearCeleb();
+    Voice.stop(); this.clearCeleb();
     this.el.hidden = false; this.bg = bg || '#C8EBA1'; this.stage.style.background = this.bg;
     this.lvlEl.textContent = level || ''; this.lvlEl.hidden = !level;
     this.onClose = onClose || null; this.dotsEl.innerHTML = ''; this.caption('');
@@ -1314,7 +1182,7 @@ const Keys = {
       const it = Shell.item;
       if (it && it.onKey && it.onKey(e) === true) { e.preventDefault(); return; }
       const st = Shell.stage;
-      if (e.key === ' ') { e.preventDefault(); Shell.replay(); return; }
+      if (e.key === ' ') { e.preventDefault(); if (e.shiftKey) Voice.slower(() => Shell.replay()); else Shell.replay(); return; }
       const kp = $('.keypad', st);
       if (kp) {
         if (/^[0-9]$/.test(e.key)) { const b = $$('button', kp).find(x => x.textContent === e.key); if (b) b.click(); e.preventDefault(); return; }
@@ -1341,6 +1209,7 @@ const Engine = {
       st.style.background = item.bg || Shell.bg;
       let finished = false, wrongs = 0, stepWrongs = 0;
       const alive = () => !finished && !run.abort && RUN === run;
+      const sealAnswer = () => { Shell.item = null; $$('button, input, select, textarea, [role="button"]', st).forEach(el => { if ('disabled' in el) el.disabled = true; el.style.pointerEvents = 'none'; }); };
       const exam = !!run.exam;
       const api = {
         stage: st, alive, exam,
@@ -1351,7 +1220,7 @@ const Engine = {
           if (!alive()) return false;
           if (exam) {
             /* Défi : une seule réponse, aucun indice de justesse */
-            finished = true;
+            finished = true; sealAnswer();
             if (o.el) flash(o.el, 'picked');
             Sfx.play('tap');
             Sfx.play('key'); await Voice.say(pick(DEFI_ACK));
@@ -1360,7 +1229,7 @@ const Engine = {
             return true;
           }
           if (ok) {
-            finished = true;
+            finished = true; sealAnswer();
             if (o.el) flash(o.el, 'ok-flash');
             Sfx.play(o.sfx || 'good'); Lumi.react('happy');
             await Voice.say(o.praise || item.praise || pick(PRAISE));
@@ -1555,7 +1424,7 @@ const Celebrate = {
 function parentGate(onOk, title = 'Espace parents') {
   const a = rint(6, 9), b = rint(5, 9), ans = a + b; let typed = '';
   const out = h('div', { class: 'gate-q' }, `${a} + ${b} = ?`);
-  const close = () => m.remove();
+  const close = () => { Voice.stop(); m.remove(); };
   const kp = h('div', { class: 'keypad', style: { margin: '10px auto 0' } });
   const upd = () => { out.textContent = `${a} + ${b} = ${typed || '?'}`; };
   '1234567890'.split('').forEach(d => kp.append(onTap(h('button', null, d), () => { if (typed.length < 3) typed += d; upd(); })));
@@ -1610,7 +1479,7 @@ function gameTile(gid) {
     : h('button', { class: `tile sm c-${g.color}`, 'aria-label': g.title, 'data-gid': gid },
       h('div', { class: 'tl-top' }, h('b', null, g.title), g.sub ? h('span', { class: 'sub' }, g.sub) : null),
       h('div', { class: 'tl-bot' }, h('div', { class: 'tl-row' }, h('span', { class: 'lv' }, inf.lv), h('span', { class: 'em2', 'aria-hidden': 'true' }, g.icon)), h('div', { class: 'pb' }, h('i', { style: { width: Math.round(clamp(inf.pct, 0, 1) * 100) + '%' } }))));
-  onTap(t, () => { Sfx.play('tap'); Voice.say(g.title); CURRENT_ACT = gid; lastPlayed()[gid] = dayNo(); setTimeout(() => runGame(gid), 380); });
+  onTap(t, () => { Sfx.play('tap'); Voice.stop(); CURRENT_ACT = gid; lastPlayed()[gid] = dayNo(); setTimeout(() => runGame(gid), 100); });
   return t;
 }
 function renderHome() {
@@ -1639,7 +1508,7 @@ function parentArea() {
   const el = h('div', { class: 'parent', role: 'dialog', 'aria-label': 'Espace parents' });
   const w = h('div', { class: 'wrap' });
   el.append(w); document.body.append(el);
-  const close = () => { el.remove(); renderHome(); };
+  const close = () => { Voice.stop(); el.remove(); renderHome(); };
   let sel = S.current;
   const draw = () => {
     w.innerHTML = '';
@@ -1696,32 +1565,43 @@ function parentArea() {
 
     /* Voix */
     const vc = h('div', { class: 'pcard' }, h('h3', null, 'Voix de Lumi'));
-    const vm = h('select', { id: 'voice-mode', 'aria-label': 'Type de voix' }, h('option', { value: 'lumi', selected: S.settings.voiceMode !== 'device' }, 'Voix naturelle enregistrée (recommandé)'), h('option', { value: 'device', selected: S.settings.voiceMode === 'device' }, 'Voix de l’appareil'));
-    vm.addEventListener('change', () => { S.settings.voiceMode = vm.value; save(); Voice.say('Bonjour, je suis Lumi. On apprend ensemble ?'); });
-    vc.append(h('div', { class: 'prow' }, h('label', { for: 'voice-mode' }, 'Type de voix'), vm),
-      h('p', null, VoicePack.idx ? `Voix neuronale française enregistrée à l’avance (${Object.keys(VoicePack.idx).length} phrases), identique sur tablette et sur PC. Les rares phrases non enregistrées sont dites par la voix de l’appareil ci-dessous.` : 'Les enregistrements ne sont pas chargés : la voix de l’appareil est utilisée.'),
-      h('h3', { style: { fontSize: '17px', marginTop: '12px' } }, 'Voix de l’appareil (secours)'));
+    const vm = h('select', { id: 'voice-mode', 'aria-label': 'Type de voix' },
+      h('option', { value: 'lumi', selected: S.settings.voiceMode !== 'device' }, 'Lumi · voix française féminine'),
+      h('option', { value: 'device', selected: S.settings.voiceMode === 'device' }, 'Voix de cet appareil'));
+    const pitchRows = [];
+    const refreshVoice = () => { pitchRows.forEach(el => el.hidden = vm.value !== 'device'); };
+    vm.addEventListener('change', () => { Voice.stop(); S.settings.voiceMode = vm.value; refreshVoice(); save(); Voice.say('Bonjour, je suis Lumi. On apprend ensemble ?'); });
+    vc.append(h('p', { class: 'voice-intro' }, 'Une voix féminine française, un débit posé et des pauses entre les consignes. Le bouton tortue permet à l’enfant de réécouter plus lentement.'),
+      h('div', { class: 'prow' }, h('label', { for: 'voice-mode' }, 'Voix principale'), vm),
+      h('p', null, VoicePack.idx ? 'Voix féminine française enregistrée à l’avance. La vitesse est réglable sans rendre la voix plus grave. Une phrase absente de la banque utilise la voix de l’appareil pour toute la consigne.' : 'Chargement des enregistrements. Si le chargement échoue, une voix française de l’appareil prend le relais.'));
     const ranked = Voice.ranked();
-    if (!Voice.ok || !ranked.length) vc.append(h('p', null, 'Aucune voix française n’est disponible dans ce navigateur. Les jeux restent jouables, mais sans voix. Essayez Safari, Edge ou Chrome à jour.'));
+    const fallback = h('div', null, h('h4', null, 'Voix de l’appareil et de secours'));
+    if (!Voice.ok || !ranked.length) fallback.append(h('p', null, 'Aucune voix française de secours n’est disponible. Les enregistrements de Lumi restent utilisables une fois chargés.'));
     else {
-      const vs = h('select', { id: 'voice-sel', 'aria-label': 'Voix' }, h('option', { value: '' }, 'Automatique (meilleure voix féminine)'),
-        ranked.map((v, i) => h('option', { value: v.voiceURI, selected: S.settings.voiceURI === v.voiceURI }, `${i === 0 ? '★ ' : ''}${v.name} (${v.lang})`)));
-      vs.addEventListener('change', () => { S.settings.voiceURI = vs.value; Voice.choose(); save(); Voice.say('Bonjour, je suis Lumi. On apprend ensemble ?'); });
-      vc.append(h('div', { class: 'prow' }, h('label', { for: 'voice-sel' }, 'Voix'), vs),
-        h('p', null, 'Voix choisie : ', h('b', null, Voice.voice ? Voice.voice.name : '—')));
+      const vs = h('select', { id: 'voice-sel', 'aria-label': 'Voix de l’appareil' }, h('option', { value: '', selected: !S.settings.voiceURI }, 'Automatique · voix féminine en priorité'),
+        ranked.map(v => h('option', { value: v.voiceURI, selected: S.settings.voiceURI === v.voiceURI }, `${v.name} (${v.lang})`)));
+      vs.addEventListener('change', () => { S.settings.voiceURI = vs.value; Voice.choose(); save(); Voice.say('Bonjour, je suis Lumi. On apprend ensemble ?', { device: true }); });
+      fallback.append(h('div', { class: 'prow' }, h('label', { for: 'voice-sel' }, 'Voix de secours'), vs));
     }
-    const rate = h('input', { type: 'range', id: 'rate', min: '0.7', max: '1.2', step: '0.05', value: String(S.settings.rate) });
-    rate.addEventListener('change', () => { S.settings.rate = +rate.value; save(); Voice.say('Voici ma vitesse.'); });
-    const pitch = h('input', { type: 'range', id: 'pitch', min: '0.85', max: '1.3', step: '0.05', value: String(S.settings.pitch) });
-    pitch.addEventListener('change', () => { S.settings.pitch = +pitch.value; save(); Voice.say('Voici ma voix.'); });
-    const sfx = h('input', { type: 'checkbox', id: 'sfx', checked: S.settings.sfx });
-    sfx.addEventListener('change', () => { S.settings.sfx = sfx.checked; save(); });
-    vc.append(h('div', { class: 'prow' }, h('label', { for: 'rate' }, 'Vitesse'), rate),
-      h('div', { class: 'prow' }, h('label', { for: 'pitch' }, 'Hauteur'), pitch),
-      h('div', { class: 'prow' }, h('label', { for: 'sfx' }, 'Bruitages'), sfx),
-      h('div', { class: 'prow' }, onTap(h('button', { class: 'pbtn' }, '▶ Tester la voix'), () => Voice.say(['Bonjour ! Je suis Lumi.', 'Écoute le son... ', { t: 'ou', rate: .8 }, '... comme dans loup.']))),
-      h('p', null, 'La voix vient du navigateur. Les plus naturelles : « Charline » (voix belge) ou « Denise » dans Microsoft Edge, « Audrey » ou « Amélie » sur Mac et iPad (Safari). Sur Mac, des voix de meilleure qualité se téléchargent dans Réglages Système › Accessibilité › Contenu énoncé › Voix du système › Gérer les voix.'));
-    w.append(vc);
+    vc.append(fallback);
+    const speedText = h('output', { for: 'rate' }, Math.round(clamp(S.settings.rate,.75,1.1)*100) + ' %');
+    const rate = h('input', { type: 'range', id: 'rate', 'aria-label': 'Vitesse de la voix', min: '0.75', max: '1.1', step: '0.05', value: String(clamp(S.settings.rate,.75,1.1)) });
+    rate.addEventListener('input', () => { speedText.textContent = Math.round(+rate.value*100) + ' %'; });
+    rate.addEventListener('change', () => { S.settings.rate=+rate.value; save(); Voice.say('Je parle doucement, avec des pauses. À toi de jouer !'); });
+    const pitch = h('input', { type: 'range', id: 'pitch', 'aria-label': 'Hauteur de la voix de l’appareil', min: '0.95', max: '1.1', step: '0.05', value: String(clamp(S.settings.pitch,.95,1.1)) });
+    pitch.addEventListener('change', () => { S.settings.pitch=+pitch.value; save(); Voice.say('Voici ma voix.',{device:true}); });
+    const pitchRow = h('div', { class: 'prow' }, h('label', { for: 'pitch' }, 'Hauteur · appareil seulement'), pitch); pitchRows.push(pitchRow);
+    const sfx = h('input', { type: 'checkbox', id: 'sfx', checked: S.settings.sfx }); sfx.addEventListener('change', () => { S.settings.sfx=sfx.checked; save(); });
+    vc.append(h('div', { class: 'prow' }, h('label', { for: 'rate' }, 'Vitesse · toutes les voix'), rate, speedText), pitchRow,
+      h('div', { class: 'prow' }, h('label', { for: 'sfx' }, 'Bruitages, atténués pendant la voix'), sfx),
+      h('div', { class: 'voice-tests' },
+        onTap(h('button', { class: 'pbtn' }, '▶ Une consigne'), () => Voice.say('Écoute. Regarde les images. Puis choisis ta réponse.')),
+        onTap(h('button', { class: 'pbtn' }, '▶ Sons et mots'), () => Voice.say(['Écoute le son', {t:'ou',rate:.8}, 350, 'comme dans loup.'])),
+        onTap(h('button', { class: 'pbtn' }, '▶ Calcul'), () => Voice.say('Cinq plus trois, cela fait huit.')),
+        onTap(h('button', { class: 'pbtn' }, '■ Arrêter la voix'), () => Voice.stop())),
+      h('p', { id: 'voice-status', role: 'status', 'aria-live': 'polite' }, 'Prête à écouter.'),
+      h('p', null, 'Pour les sons, les syllabes et les mots, la prononciation est préparée séparément. La qualité de la voix de secours dépend des voix françaises installées sur l’appareil.'));
+    refreshVoice(); w.append(vc);
 
     /* Minuteur */
     const tc = h('div', { class: 'pcard' }, h('h3', null, 'Temps d’écran'));
@@ -2036,7 +1916,7 @@ function avatarCard() {
 function chestView() {
   const p = P(); const n = p.treasures || 0; const left = STARS_PER_TREASURE - (p.stars % STARS_PER_TREASURE);
   const m = h('div', { class: 'modal', role: 'dialog', 'aria-label': 'Mon coffre aux trésors' });
-  const close = () => m.remove();
+  const close = () => { Voice.stop(); m.remove(); };
   m.append(h('div', { class: 'sheet chest' }, h('h3', null, `🧰 Le coffre de ${kid().name}`),
     h('p', { class: 'chest-sub' }, `${n} trésor${n > 1 ? 's' : ''} sur ${TREASURES.length}`),
     h('div', { class: 'album' }, TREASURES.map(([e, name], i) => i < n
@@ -2986,17 +2866,17 @@ const similar = (a, b) => a === b || SIMILAR.some(g => g.includes(a) && g.includ
 
 /* Prononciations pour la synthèse vocale */
 const SAY_SYL = {
-  ca: 'ka', co: 'ko', cou: 'cou', can: 'camp', coi: 'quoi', ki: 'qui', 'ké': 'quai', ga: 'ga', go: 'go', gou: 'goût', gon: 'gond', gan: 'gant', gui: 'gui', 'gué': 'gué',
-  ru: 'rue', fu: 'fût', ju: 'jus', chu: 'chut', 'fé': 'fée', 'né': 'nez', 'té': 'thé', 'dé': 'dé',
+  ca: 'ka', co: 'ko', cou: 'cou', can: 'camp', coi: 'quoi', ki: 'qui', 'ké': 'ké', ga: 'ga', go: 'go', gou: 'goût', gon: 'gond', gan: 'gant', gui: 'gui', 'gué': 'gué',
+  ru: 'rue', fu: 'fût', ju: 'jus', chu: 'chu', 'fé': 'fée', 'né': 'nez', 'té': 'thé', 'dé': 'dé',
   mo: 'mot', so: 'seau', fo: 'faux', cho: 'chaud', vo: 'veau', po: 'pot', to: 'tôt', 'do': 'dos', bo: 'beau',
   rou: 'roue', vou: 'vous', nou: 'nous', jou: 'joue', tou: 'tout', dou: 'doux', bou: 'bout', lou: 'loup',
   lon: 'long', ron: 'rond', fon: 'fond', von: 'vont', pon: 'pont', jon: 'jonc',
   man: 'ment', lan: 'lent', ran: 'rang', san: 'sang', fan: 'faon', chan: 'champ', van: 'vent', jan: 'gens', pan: 'paon', tan: 'temps', dan: 'dans', ban: 'banc',
   boi: 'bois', doi: 'doigt', poi: 'pois', foi: 'foi', loi: 'loi', moi: 'moi', noi: 'noix', roi: 'roi', soi: 'soi', toi: 'toi', voi: 'voix', joi: 'joie', choi: 'choix',
-  min: 'main', lin: 'lin', rin: 'rein', sin: 'saint', fin: 'fin', vin: 'vingt', nin: 'nain', pin: 'pin', tin: 'teint', din: 'daim', bin: 'bain', jin: 'gin', chin: 'chin',
-  'lè': 'lait', 'mè': 'mais', 'pè': 'paix', 'fè': 'fait', 'rè': 'raie', 'sè': 'sait', 'tè': 'tait', 'vè': 'vais', 'nè': 'naît', 'jè': 'jet', 'dè': 'dès', 'bè': 'baie', 'chè': 'chai',
+  min: 'main', lin: 'lin', rin: 'rein', sin: 'saint', fin: 'fin', vin: 'vingt', nin: 'nain', pin: 'pin', tin: 'teint', din: 'daim', bin: 'bain', jin: 'jin', chin: 'chin',
+  'lè': 'lait', 'mè': 'mais', 'pè': 'paix', 'fè': 'fait', 'rè': 'raie', 'sè': 'sait', 'tè': 'tait', 'vè': 'vais', 'nè': 'naît', 'jè': 'jet', 'dè': 'dès', 'bè': 'baie', 'chè': 'chè',
   meu: 'meuh', deu: 'deux', neu: 'nœud', seu: 'ceux', veu: 'veut',
-  le: 'le', re: 'reu', me: 'me', se: 'se', fe: 'feu', che: 'cheu', ve: 'veu', ne: 'ne', je: 'je', pe: 'peu', te: 'te', de: 'de', be: 'beu', gue: 'gueu'
+  le: 'le', re: 're', me: 'me', se: 'se', fe: 'fe', che: 'che', ve: 've', ne: 'ne', je: 'je', pe: 'pe', te: 'te', de: 'de', be: 'be', gue: 'gue'
 };
 const spokenSyl = s => SAY_SYL[s] || s;
 const PH = k => LESSONS[LIDX[k]].ph;
@@ -3069,6 +2949,18 @@ function itIntro(L) {
   };
 }
 /* Consonne : « quelle image commence comme lion ? » (son initial) ; voyelle : « où entends-tu a ? » */
+/* Écarter les choix qui brouillent le son isolé : /a/ de oi, i semi-voyelle,
+   et eu/o ouverts quand le modèle enregistré est fermé. */
+const EAR_I_GLIDES = new Set(['lion', 'avion', 'camion', 'violon', 'radio', 'pingouin']);
+const EAR_CLOSED_O = new Set(['vélo', 'moto', 'kimono', 'radio']);
+const EAR_CLOSED_EU = new Set(['feu', 'jeu', 'bleu', 'deux']);
+function safeEarWord(w, k) {
+  if (k === 'a' && w.keys.has('oi')) return false;
+  if (k === 'i' && EAR_I_GLIDES.has(w.w)) return false;
+  if (k === 'o' && w.keys.has('o') && !EAR_CLOSED_O.has(w.w)) return false;
+  if (k === 'eu' && w.keys.has('eu') && !EAR_CLOSED_EU.has(w.w)) return false;
+  return true;
+}
 function itEcoute(L, ctx, n = 3) {
   const k = L.k; const conf = CONF_PH[k] || []; const isC = !!L.c;
   let good; const bads = [];
@@ -3081,9 +2973,11 @@ function itEcoute(L, ctx, n = 3) {
     const neg = WORDS.filter(w => { const f = firstKey(w); return f !== k && !conf.includes(f) && w.w !== A && picOK(w); });
     for (const w of shuffle(neg)) { if (bads.length >= n - 1) break; if (okBad(w)) bads.push(w); }
   } else {
-    const pos = WORDS.filter(w => w.keys.has(k) && !ctx.usedE.has(w.w) && picOK(w));
-    good = pick(pos.length ? pos : WORDS.filter(w => w.keys.has(k) && picOK(w)));
-    const neg = WORDS.filter(w => !w.keys.has(k) && ![...w.keys].some(x => conf.includes(x)) && picOK(w));
+    const ears = WORDS.filter(w => safeEarWord(w, k));
+    const namedPicture = w => picOK(w) || k === 'eu' && EAR_CLOSED_EU.has(w.w);
+    const pos = ears.filter(w => w.keys.has(k) && !ctx.usedE.has(w.w) && namedPicture(w));
+    good = pick(pos.length ? pos : ears.filter(w => w.keys.has(k) && namedPicture(w)));
+    const neg = ears.filter(w => !w.keys.has(k) && ![...w.keys].some(x => conf.includes(x)) && picOK(w));
     for (const w of shuffle(neg)) { if (bads.length >= n - 1) break; if (okBad(w)) bads.push(w); }
   }
   ctx.usedE.add(good.w);
@@ -4738,7 +4632,7 @@ function dailyEl() {
     const g = GAMES[id]; const ok = d.done.includes(id);
     const b = h('button', { class: 'daily-step' + (ok ? ' ok' : '') + (!ok && d.ids.slice(0, i).every(x => d.done.includes(x)) ? ' next' : ''), 'aria-label': g.title + (ok ? ', fait' : '') },
       h('span', { class: 'ds-n' }, ok ? '✓' : String(i + 1)), h('span', { class: 'ds-em', 'aria-hidden': 'true' }, g.icon), h('span', { class: 'ds-t' }, g.title));
-    onTap(b, () => { Sfx.play('tap'); Voice.say(g.title); CURRENT_ACT = id; lastPlayed()[id] = dayNo(); setTimeout(() => runGame(id), 350); });
+    onTap(b, () => { Sfx.play('tap'); Voice.stop(); CURRENT_ACT = id; lastPlayed()[id] = dayNo(); setTimeout(() => runGame(id), 100); });
     row.append(b);
   });
   box.append(row);
@@ -4824,7 +4718,7 @@ function gardenView() {
   };
   const chooseSeed = i => {
     const m = h('div', { class: 'modal', role: 'dialog', 'aria-label': 'Choisis une graine' });
-    const close = () => m.remove();
+    const close = () => { Voice.stop(); m.remove(); };
     const sh = h('div', { class: 'sheet seeds' }, h('h3', null, world === 'grands' ? 'Lis les sachets de graines' : 'Choisis une graine'));
     const row = h('div', { class: 'seed-row' }, seedsFor(world).map(id => {
       const sd = SEEDS[id];
