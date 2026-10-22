@@ -817,10 +817,13 @@ table.notions tr.st-acquis td:last-child{color:#2E9B5C;font-weight:700}
 
 .series-reward p{font-size:23px;font-weight:800;margin:0 0 8px}.series-earned{font-size:58px;line-height:1.05}.series-stars{display:grid;grid-template-columns:repeat(5,1fr);gap:0 8px;font-size:29px;color:rgba(255,255,255,.25);line-height:1.1}.series-stars .filled{color:#ffdf65}.series-reward small{display:block;margin-top:6px;font-size:16px}.celebrate{overflow:auto;gap:12px}.celebrate:has(.series-reward) .cel-av{width:100px}.celebrate:has(.series-reward) h2{font-size:clamp(28px,5vw,42px)}@media(max-height:550px){.celebrate:has(.series-reward) .cel-av{display:none}.celebrate .acts button{font-size:18px;padding:9px 18px}.celebrate{gap:8px}}
 
+
+.reward-counter{display:flex;align-items:center;gap:6px;border-radius:999px;padding:8px 12px;background:#fff4cc;color:#775413;min-height:46px;flex:none;font-size:19px}.reward-counter b{font-size:17px}.character-object{position:relative}.character-object.locked{background:#f3f3f6;color:#78838e}.character-object.locked>span{filter:grayscale(.75);opacity:.55}.object-lock{position:absolute;top:6px;right:6px;font-size:15px;font-style:normal}.new-treasure{display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(255,255,255,.15);border-radius:18px;padding:10px 16px}.new-treasure>span{font-size:45px}.new-treasure small{margin:0}.series-earned{font-size:44px}.top .wrap{gap:8px}@media(max-width:560px){.brand b{font-size:18px;white-space:normal}.brand .lumi{width:32px}.brand{gap:5px}.chip{padding-right:6px}.chip>span:last-child{display:none}.reward-counter{padding:8px;gap:4px}.reward-counter b{font-size:15px}.icon-btn{width:42px;height:42px}.top .wrap{padding-inline:10px;gap:6px}}
+
 </style>
 </head>
 <body>
-<script src="speech-engine.js?v=10"></script>
+<script src="speech-engine.js?v=12"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -1244,14 +1247,15 @@ const Engine = {
       const st = Shell.stage;
       st.innerHTML = ''; st.className = 'stage ' + (item.cls || '');
       st.style.background = item.bg || Shell.bg;
-      let finished = false, wrongs = 0, stepWrongs = 0;
+      let finished = false, wrongs = run.session && !run.exam ? run.session.partialWrongs || 0 : 0, stepWrongs = 0;
+      if(run.session && !run.exam && run.session.partialHelped)item.helped=true;
       const alive = () => !finished && !run.abort && RUN === run;
       const sealAnswer = () => { Shell.item = null; $$('button, input, select, textarea, [role="button"]', st).forEach(el => { if ('disabled' in el) el.disabled = true; el.style.pointerEvents = 'none'; }); };
       const exam = !!run.exam;
       const api = {
         stage: st, alive, exam,
         say: p => alive() ? Voice.say(p) : Promise.resolve(),
-        help() { item.helped = true; },
+        help() { item.helped = true; if(run.session && !run.exam){run.session.partialHelped=true;save();} },
         key(el) { if (el && window.__TEST__) el.dataset.key = '1'; },
         async answer(ok, o = {}) {
           if (!alive()) return false;
@@ -1271,7 +1275,7 @@ const Engine = {
             Sfx.play(o.sfx || 'good'); Lumi.react('happy');
             await Voice.say(o.praise || item.praise || pick(PRAISE), { feedback: 'correct' });
             await sleep(o.wait != null ? o.wait : 250);
-            resolve({ first: wrongs === 0 && !item.helped, wrongs });
+            resolve({ first: wrongs === 0 && !item.helped, wrongs, helped: !!item.helped });
             return true;
           }
           return api.wrong(o, false);
@@ -1282,20 +1286,20 @@ const Engine = {
           return api.wrong(o, true);
         },
         async wrong(o, isStep) {
-          wrongs++; stepWrongs++;
+          wrongs++; stepWrongs++; if(run.session && !run.exam){run.session.partialWrongs=wrongs;save();}
           Sfx.play('bad'); if (o.el) flash(o.el, 'shake'); Lumi.react('oops');
           const n = isStep ? stepWrongs : wrongs;
           if (o.correctEl && n >= 2) {
             $$('.reveal', st).forEach(e => e.classList.remove('reveal'));
             o.correctEl.classList.add('reveal');
             await Voice.say(o.reveal || 'Regarde, c’est celui qui brille. Touche-le !', { feedback: 'retry' });
-          } else await Voice.say(o.feedback || pick(TRY), { feedback: 'retry' });
+          } else if(n>=2 && typeof api.strategy==='function'){api.help();api.strategy();await Voice.say('Regarde la place qui brille.',{feedback:'retry'});} else await Voice.say(o.feedback || pick(TRY), { feedback: 'retry' });
           return false;
         },
-        finish(first) { if (!alive()) return; finished = true; resolve({ first }); }
+        finish(first, details = {}) { if (!alive()) return; finished = true; resolve({ first, wrongs, ...details, helped: !!item.helped }); }
       };
       Shell.item = item;
-      try { item.render(st, api); fixSquares(st); } catch (e) { console.error(e); finished = true; resolve({ first: null }); return; }
+      try { if(run.session&&!run.exam)withSeed(run.session.seed+(run.session.next||0)*997+31,()=>item.render(st,api));else item.render(st, api); fixSquares(st); } catch (e) { console.error(e); finished = true; resolve({ first: null }); return; }
       Shell.caption(item.caption != null ? item.caption : (typeof item.say === 'string' ? item.say : Array.isArray(item.say) ? item.say.filter(x => typeof x === 'string' && x.trim()).join(' ') : ''));
       if (item.say && item.autoSay !== false) setTimeout(() => { if (alive()) Voice.say(item.say); }, item.delay != null ? item.delay : 300);
     });
@@ -1322,25 +1326,28 @@ async function runGame(gid) {
   Sfx.ensure();
   const gp = gameProg(gid); gp.lvl = clamp(gp.lvl, 0, g.levels.length - 1);
   const L = g.levels[gp.lvl];
-  const run = { gid, abort: false, res: [] }; RUN = run;
+  const session=resumeSession('game',{gid,li:gp.lvl});
+  const run = { gid, key:'game:'+gid, session, abort: false, res: [...session.res] }; RUN = run;
   Shell.open({ bg: g.stage, level: g.title });
   const n = L.n || g.n || 6;
   Shell.setDots(n);
   const ctx = { g, L, li: gp.lvl, i: 0, n, used: [], bag: {} };
   for (let i = 0; i < n; i++) {
     ctx.i = i; Shell.now(i);
-    let item; try { item = g.make(ctx); } catch (e) { console.error(gid, e); break; }
+    let item; try { item = withSeed(session.seed+i*997,()=>g.make(ctx)); } catch (e) { console.error(gid, e); toast('Ce jeu ne se charge pas. Reviens aux jeux.'); return; }
+    if(i<session.next){Shell.mark(i,session.res[i].first?'ok':'half');continue;}
     const r = await Engine.play(item, run);
     if (run.abort || RUN !== run) return;
-    run.res.push(r);
+    run.res.push(r); checkpoint(run,i+1);
     if (r.first != null) { Shell.mark(i, r.first ? 'ok' : 'half'); recordSkill(L.skill || g.skill, r.first); }
     else Shell.mark(i, 'ok');
   }
   if (run.abort || RUN !== run) return;
   finishGame(run, g, gp);
 }
-function scoreOf(res) { const sc = res.filter(r => r.first != null); const n = sc.length || 1; const ok = sc.filter(r => r.first).length; return { pct: ok / n, stars: ok / n >= .9 ? 3 : ok / n >= .67 ? 2 : 1 }; }
+function scoreOf(res) { const sc = res.filter(r => r.first != null); const n = sc.length || 1; const ok = sc.filter(r => r.first).length; const errors = sc.reduce((sum, r) => sum + (r.first ? 0 : Math.max(1, r.wrongs || 0)), 0); return { pct: ok / n, errors, stars: errors === 0 ? 3 : errors === 1 ? 2 : 1 }; }
 function finishGame(run, g, gp) {
+  clearResume(run);
   const { pct, stars } = scoreOf(run.res);
   gp.rounds++; gp.best[gp.lvl] = Math.max(gp.best[gp.lvl] || 0, stars);
   let up = false, down = false;
@@ -1399,14 +1406,15 @@ const Celebrate = {
     if (again) acts.append(onTap(h('button', null, icon('again'), 'Rejouer'), () => { Shell.clearCeleb(); again(); }));
     acts.append(onTap(h('button', null, icon('home'), 'Choisir un jeu'), () => { Shell.clearCeleb(); home(); }));
     const reward = sticker ? h('div', { class: 'series-reward' },
-      h('div', { class: 'series-earned', 'aria-hidden': 'true' }, sticker.diamond ? '💎' : '⭐'),
-      h('p', null, sticker.diamond ? 'Un diamant !' : 'Une étoile !'),
-      h('div', { class: 'series-stars', 'aria-label': sticker.diamond ? 'Dix étoiles transformées en un diamant' : `${sticker.stars} étoile${sticker.stars > 1 ? 's' : ''} sur dix` }, Array.from({length:10},(_,i)=>h('span',{class:i < (sticker.diamond ? 10 : sticker.stars) ? 'filled' : '', 'aria-hidden':'true'},'★'))),
-      h('small', null, '10 étoiles → 💎')) : null;
+      h('div', { class: 'series-earned', 'aria-hidden': 'true' }, '⭐'.repeat(sticker.earned)),
+      h('p', null, sticker.earned === 1 ? 'Une étoile !' : sticker.earned === 2 ? 'Deux étoiles !' : 'Trois étoiles !'),
+      sticker.treasure ? h('div', { class: 'new-treasure' }, h('span', { 'aria-hidden': 'true' }, sticker.treasure.em), h('b', null, sticker.treasure.label), h('small', null, 'Trésor débloqué !')) :
+        h('div', { class: 'series-stars', 'aria-label': `${sticker.stars} étoiles sur dix avant le prochain trésor` }, Array.from({length:10},(_,i)=>h('span',{class:i < sticker.stars ? 'filled' : '', 'aria-hidden':'true'},'★'))),
+      h('small', null, '10 étoiles → un trésor')) : null;
     Shell.el.append(h('div', { class: 'celebrate', role: 'dialog', 'aria-label': 'Activité terminée' },
       h('div', { class: 'cel-av', html: avatarSVG(S.current, { mood: 'happy', gear: gearOn() }) }), h('h2', null, 'Tu as terminé !'), reward, acts));
     save();
-    Voice.say(sticker ? ['Tu as terminé !', sticker.diamond ? 'Tes dix étoiles deviennent un diamant !' : 'Voici une étoile pour ta série terminée.'] : 'Tu as terminé ! Merci d’avoir joué.');
+    Voice.say(sticker ? ['Tu as terminé !', ...rewardSay(sticker)] : 'Tu as terminé ! Merci d’avoir joué.');
   }
 };
 
@@ -1481,6 +1489,7 @@ function renderHome(theme = HOME_THEME) {
   const head = h('header', { class: 'top' }, h('div', { class: 'wrap' },
     onTap(h('button', { class: 'brand', 'aria-label': 'Accueil des jeux' }, h('span', { html: lumiSVG() }), h('div', { style: { minWidth: 0 } }, h('b', null, 'Le Cahier de Lumi'))), () => { Voice.stop(); renderHome(null); }),
     onTap(h('button', { class: 'chip', 'aria-label': 'Mon personnage' }, h('span', { class: 'av', html: avatarSVG(k.id, { crop: 'head', gear: gearOn().filter(g => g === 'chapeau' || g === 'couronne') }) }), h('span', null, k.name)), () => { Sfx.play('tap'); characterView(); }),
+    onTap(h('button', { class: 'reward-counter', 'aria-label': rewardCounterLabel() }, h('span', { 'aria-hidden': 'true' }, '⭐'), h('b', { class: 'reward-value' }, seriesRewards().stars + '/10')), () => characterView()),
     onTap(h('button', { class: 'icon-btn', 'aria-label': 'Espace parents', html: ICON.lock }), () => parentGate(parentArea))));
   const themes = themesOf(world), current = themes.find(t => t.id === theme);
   HOME_THEME = current ? current.id : null;
@@ -1618,7 +1627,7 @@ function parentArea() {
       h('p', null, h('b', null, 'Calcul. '), 'Progression concret → imagé → symbolique : collections, cadres de dix, ligne numérique, puis écritures chiffrées. Compléments à 10, doubles et passage par la dizaine avant la mémorisation. La multiplication est introduite par des groupes égaux et des quadrillages (attendu de 2e primaire, en découverte).'),
       h('p', null, h('b', null, 'Autonomie. '), 'Toutes les consignes sont lues par Lumi et réécoutables (haut-parleur ou chouette). Pendant l’entraînement, après deux erreurs, la bonne réponse est montrée pour que l’enfant apprenne de son erreur. Chez les Petits, une étape est acquise à 80 % du premier coup ; après deux parties difficiles, le jeu propose une étape plus facile.'),
       h('p', null, h('b', null, 'Validation (Grands). '), 'En lecture et en calcul, l’entraînement aidé ne valide rien. Il est suivi d’une courte activité autonome : 6 questions nouvelles, à 4 choix ou au clavier, sans aide ni correction, avec une seule réponse. Il faut 5 bonnes réponses sur 6 pour valider (moins d’une chance sur 200 de réussir au hasard). Raté, l’enfant refait la leçon puis retente le défi.'),
-      h('p', null, h('b', null, 'Personnages. '), 'Luca et Lola jouent avec leur propre personnage, dessiné d’après leur photo (la photo elle-même n’est pas enregistrée). Le personnage les accompagne dans chaque exercice : il avance sur le chemin des questions et réagit aux réponses. Tous les objets sont disponibles dans « Mon personnage ». L’enfant peut en choisir jusqu’à trois, indépendamment de ses réponses. Une étoile est offerte par série terminée, indépendamment du score. Dix étoiles deviennent un diamant. Aucun rang ni niveau de récompense n’est affiché, et les anciens grands totaux ne sont pas repris.'),
+      h('p', null, h('b', null, 'Personnages. '), 'Luca et Lola jouent avec leur propre personnage, dessiné d’après leur photo (la photo elle-même n’est pas enregistrée). Le personnage les accompagne dans chaque exercice : il avance sur le chemin des questions et réagit aux réponses. Les accessoires et les trésors sont réunis dans « Mon personnage ». L’enfant peut équiper jusqu’à trois objets disponibles. Chaque série donne trois étoiles sans erreur, deux avec une erreur, une au-delà. Dix étoiles débloquent un trésor ; les étoiles restantes sont conservées dans le petit compteur du haut. Aucun rang ni niveau de récompense n’est affiché.'),
       h('p', null, h('b', null, 'Tablette et ordinateur. '), 'Le monde de Lola est pensé pour la tablette : grandes cibles, labyrinthes à parcourir du doigt. Le monde de Luca est pensé pour l’ordinateur : barre d’espace pour réécouter la consigne, Entrée pour valider, chiffres et lettres au clavier, flèches pour le robot et les labyrinthes, Échap pour quitter un jeu.'),
       h('p', null, h('b', null, 'Grands jeux et logique. '), 'Repris des « Petits Explorateurs » et réécrits : le petit robot (programmer un trajet), le marché (préparer une commande et payer juste en euros), les jardins en miroir (symétrie), la rivière des mots (assembler des syllabes), la première lettre, les mots en balade (remettre les lettres en ordre), le labyrinthe (labyrinthes) et l’œil de lynx (repérer une différence). « Tape les syllabes » existait déjà : c’est le même jeu, accessible aux deux enfants.'),
       h('p', null, h('b', null, 'Repères. '), 'Les niveaux suivent le tronc commun de la Fédération Wallonie-Bruxelles. Pour les Petits, le référentiel des compétences initiales fixe des attendus pour la M1 et la M2 ensemble, puis pour la M3 : les étiquettes « M1–M2 » et « M3 » reprennent ce découpage, et les niveaux progressent à l’intérieur de chaque palier. Pour les Grands, les référentiels de français et de mathématiques de 1re primaire (étiquette P1 ; P2 pour la multiplication, en découverte).')));
@@ -1691,23 +1700,24 @@ const TREASURES = [
   ['🌋', 'le volcan'], ['🏰', 'le château'], ['⛵', 'le voilier'], ['🦕', 'le dinosaure'], ['🌻', 'le tournesol'],
   ['🍭', 'la sucette géante'], ['🚀', 'la fusée'], ['👑', 'la couronne de diamants'], ['💰', 'le sac de pièces'], ['🐉', 'le dragon d’or']
 ];
+const TREASURE_ORDER = [0,1,9,...Array.from({length:40},(_,i)=>i).filter(i=>![0,1,9].includes(i))];
 const kid = (id = S.current) => KIDS_DEF[id] || KIDS_DEF.luca;
 function avState() { const p = P(); p.av = p.av || { gear: {} }; return p.av; }
 function gearName(g, k = kid()) { return g.name[k.g]; }
 function objectChoices(k = kid()) {
   return [...GEAR.map(g => ({ id: g.id, name: gearName(g, k), label: ({sac:'Sac',chapeau:'Chapeau',loupe:'Loupe',cape:'Cape',pet:k.pet==='dragon'?'Dragon':'Lapin',couronne:'Couronne',etoiles:'Étincelles',baguette:'Baguette'})[g.id], em: g.id === 'pet' && k.pet !== 'dragon' ? '🐰' : g.em })),
-    ...TREASURES.map(([em, name], i) => ({ id: 'objet-' + i, em, name, label: ['Pièce','Diamant','Cristal','Clé','Boussole','Carte','Coquillage','Étoile','Vase','Anneau','Os','Trèfle','Plume','Longue-vue','Médaille','Coupe','Perle','Arc-en-ciel','Planète','Œuf','Parchemin','Ancre','Cadeau','Miel','Étoile','Nounours','Cerf-volant','Violon','Soucoupe','Papillon','Volcan','Château','Voilier','Dinosaure','Tournesol','Sucette','Fusée','Couronne','Pièces','Dragon'][i] }))];
+    ...TREASURE_ORDER.map(i => { const [em,name]=TREASURES[i]; return ({ id: 'objet-' + i, em, name, label: ['Pièce','Diamant','Cristal','Clé','Boussole','Carte','Coquillage','Étoile','Vase','Anneau','Os','Trèfle','Plume','Longue-vue','Médaille','Coupe','Perle','Arc-en-ciel','Planète','Œuf','Parchemin','Ancre','Cadeau','Miel','Étoile','Nounours','Cerf-volant','Violon','Soucoupe','Papillon','Volcan','Château','Voilier','Dinosaure','Tournesol','Sucette','Fusée','Couronne','Pièces','Dragon'][i] }); })];
 }
 function gearOn(id = S.current) {
   const keep = S.current; S.current = id; const st = avState(); S.current = keep;
   const valid = new Set(objectChoices(kid(id)).map(o => o.id));
   if (!Array.isArray(st.equipped)) st.equipped = GEAR.filter(g => st.gear && st.gear[g.id] === true).map(g => g.id);
-  st.equipped = [...new Set(st.equipped)].filter(x => valid.has(x)).slice(0, 3);
+  st.equipped = [...new Set(st.equipped)].filter(x => valid.has(x) && objectUnlocked(x, id)).slice(0, 3);
   if (st.equipped.includes('couronne')) st.equipped = st.equipped.filter(x => x !== 'chapeau');
   return st.equipped.slice();
 }
 function toggleObject(id) {
-  if (!objectChoices().some(o => o.id === id)) return false;
+  if (!objectChoices().some(o => o.id === id) || !objectUnlocked(id)) return false;
   const st = avState(); let selected = gearOn();
   if (selected.includes(id)) selected = selected.filter(x => x !== id);
   else {
@@ -1815,21 +1825,66 @@ const Avatar = {
   live(cls = '') { const d = h('div', { class: 'av-live ' + cls }); d.innerHTML = avatarSVG(S.current, { gear: gearOn() }); return d; }
 };
 
-/* One star per completed series, regardless of score. Historical totals stay private. */
-function seriesRewards() {
-  const p = P();
-  if (!p.rewards || !Number.isInteger(p.rewards.stars) || p.rewards.stars < 0 || p.rewards.stars > 9) p.rewards = { stars: 0, diamonds: 0 };
-  return p.rewards;
+/* Small star counter, one treasure for each ten stars; preserves existing saves. */
+function seriesRewards(id = S.current) {
+  const keep = S.current; S.current = id; const p = P(); S.current = keep;
+  let r = p.rewards;
+  if (!r || r.v !== 2) {
+    const old = r || {};
+    const count = Math.min(TREASURES.length, Math.max(0, Math.floor(Number(old.diamonds) || 0), Math.floor(Number(p.treasures) || 0)));
+    const equipped = p.av && Array.isArray(p.av.equipped) ? p.av.equipped : [];
+    r = p.rewards = { v: 2, stars: Number.isInteger(old.stars) && old.stars >= 0 ? old.stars % 10 : 0,
+      unlocked: [...new Set([...Array.from({length:count},(_,i) => 'objet-' + i), ...equipped.filter(x => /^objet-\d+$/.test(x) && +x.slice(6) < TREASURES.length)])] };
+  }
+  r.stars = Number.isInteger(r.stars) && r.stars >= 0 ? r.stars % 10 : 0;
+  r.unlocked = [...new Set(Array.isArray(r.unlocked) ? r.unlocked : [])].filter(x => /^objet-\d+$/.test(x) && +x.slice(6) < TREASURES.length);
+  return r;
+}
+function objectUnlocked(id, child = S.current) { return !id.startsWith('objet-') || seriesRewards(child).unlocked.includes(id); }
+function rewardCounterLabel() { const n = seriesRewards().stars; return `${n} étoile${n > 1 ? 's' : ''} sur dix avant le prochain trésor`; }
+function updateRewardCounter() {
+  const el = $('.reward-counter'); if (!el) return;
+  const stars = seriesRewards().stars;
+  $('.reward-value', el).textContent = stars + '/10';
+  el.setAttribute('aria-label', rewardCounterLabel());
 }
 function addStars(n) {
   const rewards = seriesRewards();
-  rewards.stars++;
-  const diamond = rewards.stars === 10;
-  if (diamond) { rewards.stars = 0; rewards.diamonds = (rewards.diamonds || 0) + 1; }
-  return { stars: rewards.stars, diamond };
+  const earned = clamp(Math.round(Number(n) || 1), 1, 3);
+  const total = rewards.stars + earned;
+  let treasure = null;
+  if (total >= 10) {
+    treasure = objectChoices().find(o => o.id.startsWith('objet-') && !rewards.unlocked.includes(o.id)) || null;
+    if (treasure) rewards.unlocked.push(treasure.id);
+  }
+  rewards.stars = total % 10;
+  updateRewardCounter();
+  return { earned, stars: rewards.stars, treasure };
 }
-function rewardSay(r) { return []; }
-function applyGifts() { return false; }
+function rewardSay(r) {
+  if (!r) return [];
+  const out = [r.earned === 1 ? 'Une étoile pour cette série.' : r.earned === 2 ? 'Deux étoiles pour cette série.' : 'Trois étoiles pour cette série.'];
+  if (r.treasure) out.push('Dix étoiles ! Tu as débloqué un trésor.', r.treasure.name);
+  return out;
+}
+function applyGifts() {
+  const keep=S.current; let changed=false;
+  for(const id of ['luca','lola']) { S.current=id; const p=P(); p.gifts=p.gifts||{};
+    if(!p.gifts['20261022-trois-tresors']) {
+      const r=seriesRewards(); r.unlocked=[...new Set([...r.unlocked,...TREASURE_ORDER.slice(0,3).map(i=>'objet-'+i)])]; r.stars=3;
+      p.gifts['20261022-trois-tresors']=Date.now(); changed=true;
+    }
+    if(!p.gameRevision20261022) {
+      p.previousGames20261022={};
+      for(const gid of ['robot','miroir','lynx','lynxG','sudoku','suites','suitesG','memo','memoG']) {
+        if(p.games[gid]) p.previousGames20261022[gid]=p.games[gid];
+        delete p.games[gid];
+      }
+      p.gameRevision20261022=true; changed=true;
+    }
+  }
+  S.current=keep; if(changed) save(); return changed;
+}
 
 /* ---------- Écran « Qui joue ? » ---------- */
 function whoScreen(first, only) {
@@ -1875,11 +1930,12 @@ function characterView() {
       const item = choices.find(o => o.id === selected[i]);
       slots.append(item ? onTap(h('button', { 'aria-label': 'Enlever ' + item.name }, item.em, h('small', null, '×')), () => { toggleObject(item.id); draw(); }) : h('span', { 'aria-label': 'Place libre' }, '＋'));
     }
-    status.textContent = 'Choisis jusqu’à trois objets.';
+    status.textContent = 'Choisis jusqu’à trois objets. Un trésor toutes les 10 étoiles.';
     choices.forEach(o => {
-      const on = selected.includes(o.id);
-      grid.append(onTap(h('button', { class: 'character-object' + (on ? ' on' : ''), 'aria-label': o.name, 'aria-pressed': String(on) },
-        h('span', { 'aria-hidden': 'true' }, o.em), h('small', null, o.label)), () => {
+      const on = selected.includes(o.id), open = objectUnlocked(o.id);
+      grid.append(onTap(h('button', { class: 'character-object' + (on ? ' on' : '') + (open ? '' : ' locked'), 'aria-label': o.name + (open ? '' : ', verrouillé'), 'aria-pressed': String(on) },
+        h('span', { 'aria-hidden': 'true' }, o.em), h('small', null, o.label), open ? null : h('i', { class: 'object-lock', 'aria-hidden': 'true' }, '🔒')), () => {
+          if (!open) { status.textContent = `Encore ${10 - seriesRewards().stars} étoiles pour débloquer un trésor.`; Voice.say('Ce trésor se débloque avec les étoiles. Tu débloques un trésor toutes les dix étoiles.'); return; }
           if (!toggleObject(o.id)) { status.textContent = 'Enlève un objet pour en choisir un autre.'; Voice.say('Tu as déjà trois objets. Enlève un objet pour en choisir un autre.'); return; }
           draw(); grid.querySelectorAll('button')[choices.indexOf(o)].focus({preventScroll:true}); Sfx.play('tap'); Voice.say(on ? 'Objet enlevé.' : o.name);
         }));
@@ -2490,7 +2546,7 @@ GAMES.syllabes = {
 /* ---------- 8. Le collier de perles (suites) ---------- */
 const BEAD_COLS = ['#E8352E', '#2D6CDF', '#FFD21F', '#2DAE4F', '#8E44C9', '#FF8A1F'];
 const BEAD_EMO = ['🍎', '🍌', '⭐', '🌸', '🐟', '🍓', '🔷', '❤️', '🍀'];
-const PATTERNS = { AB: [0, 1], ABC: [0, 1, 2], AAB: [0, 0, 1], ABB: [0, 1, 1], AABB: [0, 0, 1, 1], ABCD: [0, 1, 2, 3], ABAC: [0, 1, 0, 2] };
+const PATTERNS = { AB: [0, 1], ABC: [0, 1, 2], AAB: [0, 0, 1], ABB: [0, 1, 1], AABB: [0, 0, 1, 1], ABCD: [0, 1, 2, 3], ABAC: [0, 1, 0, 2], AABC: [0, 0, 1, 2] };
 function beadEl(sym, kind) {
   if (kind === 'col') return h('span', { class: 'bead', 'aria-hidden': 'true' }, h('span', { style: { width: '80%', height: '80%', borderRadius: '50%', background: sym, boxShadow: 'inset -6px -8px 0 rgba(0,0,0,.18), inset 5px 5px 0 rgba(255,255,255,.35)' } }));
   if (kind === 'num') return h('span', { class: 'seqnum' }, String(sym));
@@ -2569,10 +2625,12 @@ GAMES.suites = {
 const MEMO_POOL = [['🐶', 'le chien'], ['🐱', 'le chat'], ['🐰', 'le lapin'], ['🦊', 'le renard'], ['🐻', 'l’ours'], ['🐼', 'le panda'], ['🐸', 'la grenouille'], ['🐵', 'le singe'], ['🦁', 'le lion'], ['🐯', 'le tigre'], ['🐮', 'la vache'], ['🐷', 'le cochon'], ['🐔', 'la poule'], ['🐧', 'le pingouin'], ['🦉', 'la chouette'], ['🐢', 'la tortue'], ['🐙', 'la pieuvre'], ['🦋', 'le papillon'], ['🐞', 'la coccinelle'], ['🐳', 'la baleine']];
 function memoGrid(pairs) { const map = { 2: [4, 1], 3: [3, 2], 4: [4, 2], 6: [4, 3], 8: [4, 4], 10: [5, 4] }; return map[pairs] || [4, Math.ceil(pairs * 2 / 4)]; }
 function makeMemo(ctx, L, wordsMode) {
-  const pairs = L.pairs;
+  let pairs = L.pairs;
   let deck;
   if (wordsMode && typeof readableWords === 'function') {
-    const ws = sample(readableWords(), pairs);
+    const ws = sample(WORDS.filter(w=>w.req<=(P().lecture.unlocked||0)&&picOK(w)), pairs);
+    if(ws.length<2) return makeMemo(ctx,L,false);
+    pairs=ws.length;
     deck = shuffle(ws.flatMap((w, i) => [{ id: i, show: w.e, say: w.w }, { id: i, show: w.w, say: null, word: w }]));
   } else {
     const items = sample(MEMO_POOL, pairs);
@@ -2597,10 +2655,10 @@ function makeMemo(ctx, L, wordsMode) {
             lock = true;
             const [a, b] = open;
             if (a.c.id === b.c.id) {
-              await sleep(500); a.el.classList.add('done'); b.el.classList.add('done'); found++; Sfx.play('tick'); open = []; lock = false;
-              if (found === pairs) { Sfx.play('good'); Lumi.react('happy'); await Voice.say(pick(['Bravo, tu as trouvé toutes les paires !', 'Super mémoire !', 'Toutes les paires, bravo !'])); api.finish(misses <= Math.ceil(pairs * 1.5)); }
+              await sleep(500); if(!api.alive())return; a.el.classList.add('done'); b.el.classList.add('done'); found++; Sfx.play('tick'); open = []; lock = false;
+              if (found === pairs) { Sfx.play('good'); Lumi.react('happy'); await Voice.say(pick(['Bravo, tu as trouvé toutes les paires !', 'Super mémoire !', 'Toutes les paires, bravo !'])); api.finish(misses === 0, {wrongs:misses}); }
               else if (wordsMode) Voice.say('Une paire !');
-            } else { misses++; await sleep(1000); a.el.classList.remove('up'); b.el.classList.remove('up'); open = []; lock = false; }
+            } else { misses++; await sleep(1000); if(!api.alive())return; a.el.classList.remove('up'); b.el.classList.remove('up'); open = []; lock = false; }
           }
         });
         grid.append(el);
@@ -3197,15 +3255,17 @@ function logDefi(entry) { const lec = P().lecture; lec.log = lec.log || []; lec.
 
 async function runLesson(li) {
   Sfx.ensure();
-  const run = { gid: 'lecture', abort: false, res: [] }; RUN = run;
+  const session=resumeSession('lesson',{li});
+  const run = { gid:'lecture', session, abort:false, res:[...session.res] }; RUN = run;
   Shell.open({ bg: '#FFFFFF', level: `Le son ${LESSONS[li].main}`, onClose: () => openLecture() });
-  const items = buildLesson(li);
+  const items = withSeed(session.seed,()=>buildLesson(li));
   Shell.setDots(items.length);
   for (let i = 0; i < items.length; i++) {
     Shell.now(i);
+    if(run.session&&i<run.session.next){Shell.mark(i,run.session.res[i].first?'ok':'half');continue;}
     const r = await Engine.play(items[i], run);
     if (run.abort || RUN !== run) return;
-    run.res.push(r);
+    run.res.push(r); if(run.session)checkpoint(run,i+1);
     if (r.first != null) { Shell.mark(i, r.first ? 'ok' : 'half'); if (items[i].skill) recordGp(items[i].skill, r.first); }
     else Shell.mark(i, 'ok');
   }
@@ -3223,6 +3283,7 @@ async function runLesson(li) {
     const items2 = buildDefi([li], items.ctx);
     const d = await runDefi(run, items2, false);
     if (!d) return;
+    run.res.push(...d.res);
     d.res.forEach((r, i) => { if (items2[i].skill) recordGp(items2[i].skill, r.first); });
     logDefi({ li, at: Date.now(), ok: d.ok, n: d.n, kind: 'defi' });
     if (d.pass) {
@@ -3238,7 +3299,7 @@ async function runLesson(li) {
       noteSay = `Tu as eu ${nw(d.ok)} sur six. Il en faut cinq. Rejoue la leçon pour t’entraîner, et tu retenteras le défi.`;
     }
   }
-  const sticker = addStars(shown); save();
+  clearResume(run); const sticker = addStars(scoreOf(run.res).stars); save();
   Shell.onClose = () => openLecture();
   Celebrate.show({ stars: shown, sticker, note, noteSay, next, nextLabel: 'Leçon suivante', again: () => runLesson(li), home: () => openLecture() });
 }
@@ -3547,15 +3608,17 @@ function logCalc(e) { const c = calc(); c.log.push(e); if (c.log.length > 80) c.
 async function runModule(mi, lv) {
   Sfx.ensure();
   const M = MODS[mi]; const L = M.levels[lv];
-  const run = { gid: 'calcul', abort: false, res: [] }; RUN = run;
+  const session=resumeSession('module',{mi,lv});
+  const run = { gid:'calcul', key:'calc:'+M.id+':'+lv, session, abort:false, res:[...session.res] }; RUN = run;
   Shell.open({ bg: '#EAF3FF', level: M.name, onClose: () => openCalcul() });
   const n = 8; Shell.setDots(n);
-  const items = genDistinct(L.gen, n, false);
+  const items = withSeed(session.seed,()=>genDistinct(L.gen, n, false));
   for (let i = 0; i < n; i++) {
     Shell.now(i);
+    if(run.session&&i<run.session.next){Shell.mark(i,run.session.res[i].first?'ok':'half');continue;}
     const r = await Engine.play(items[i], run);
     if (run.abort || RUN !== run) return;
-    run.res.push(r); Shell.mark(i, r.first ? 'ok' : 'half'); recordSkill(`calc:${M.id}:${lv}`, r.first);
+    run.res.push(r); checkpoint(run,i+1); Shell.mark(i, r.first ? 'ok' : 'half'); recordSkill(`calc:${M.id}:${lv}`, r.first);
   }
   const { pct, stars } = scoreOf(run.res);
   const mp = modProg(M.id); const c = calc(); const ps = mp.pass[lv];
@@ -3574,6 +3637,7 @@ async function runModule(mi, lv) {
   } else {
     const d = await runDefi(run, genDistinct(L.gen, DEFI.n, true), false);
     if (!d) return;
+    run.res.push(...d.res);
     d.res.forEach(r => recordSkill(`calc:${M.id}:${lv}`, r.first));
     logCalc({ k: [`${M.id}:${lv}`], at: Date.now(), ok: d.ok, n: d.n, kind: 'defi' });
     if (d.pass) {
@@ -3585,7 +3649,7 @@ async function runModule(mi, lv) {
       noteSay = `Tu as eu ${nw(d.ok)} sur six. Il en faut cinq. Rejoue ce niveau pour t’entraîner, et tu retenteras le défi.`;
     }
   }
-  const sticker = addStars(shown); save();
+  clearResume(run); const sticker = addStars(scoreOf(run.res).stars); save();
   Shell.onClose = () => openCalcul();
   Celebrate.show({ stars: shown, sticker, note, noteSay, next, nextLabel: 'Suite', again: () => runModule(mi, lv), home: () => openCalcul() });
 }
@@ -3723,6 +3787,7 @@ GAMES.trace = {
 /* ---------- Sudoku des animaux (logique) ---------- */
 const SUDO_SYM = [['🐱', 'le chat'], ['🐶', 'le chien'], ['🐰', 'le lapin'], ['🐸', 'la grenouille'], ['🦊', 'le renard'], ['🐼', 'le panda'], ['🐵', 'le singe'], ['🐷', 'le cochon']];
 function latin(n) {
+  if(n===2) return Math.random()<.5?[[0,1],[1,0]]:[[1,0],[0,1]];
   let g = n === 3 ? [[0, 1, 2], [1, 2, 0], [2, 0, 1]] : [[0, 1, 2, 3], [2, 3, 0, 1], [1, 0, 3, 2], [3, 2, 1, 0]];
   const perm = shuffle([...Array(n).keys()]); g = g.map(r => r.map(v => perm[v]));
   if (n === 3) { g = shuffle(g); const cp = shuffle([0, 1, 2]); g = g.map(r => cp.map(c => r[c])); }
@@ -3762,8 +3827,8 @@ GAMES.sudoku = {
     const L = ctx.L;
     const n = L.sz; const { sol, g } = makePuzzle(n, L.b); const sym = sample(SUDO_SYM, n);
     return {
-      say: n === 3 ? 'Chaque animal doit être une seule fois sur chaque ligne et sur chaque colonne. Touche une case vide, puis choisis l’animal.' : 'Chaque animal doit être une seule fois sur chaque ligne, chaque colonne et dans chaque carré. Touche une case vide, puis choisis l’animal.',
-      caption: n === 3 ? 'Un seul de chaque par ligne et par colonne' : 'Un seul de chaque par ligne, colonne et carré',
+      say: n < 4 ? 'Chaque animal doit être une seule fois sur chaque ligne et sur chaque colonne. Touche une case vide, puis choisis l’animal.' : 'Chaque animal doit être une seule fois sur chaque ligne, chaque colonne et dans chaque carré. Touche une case vide, puis choisis l’animal.',
+      caption: n < 4 ? 'Un seul de chaque par ligne et par colonne' : 'Un seul de chaque par ligne, colonne et carré',
       render(st, api) {
         let sel = null; let left = g.flat().filter(v => v == null).length;
         const grid = h('div', { class: 'sudoku', style: { gridTemplateColumns: `repeat(${n},auto)` } });
@@ -4602,14 +4667,12 @@ const RECIPES = [
 ];
 const GUESTS = [['papa', '👨'], ['maman', '👩'], ['mamie', '👵'], ['Lumi', '🦉'], ['le chien', '🐶']];
 const recipesFor = world => RECIPES.filter(r => r.who === 'all' || r.who === world);
-function missingOf(r) { const g = garden(); return Object.entries(r.ing).filter(([id, n]) => !BASE[id] && (g.pantry[id] || 0) < n).map(([id, n]) => [id, n - (g.pantry[id] || 0)]); }
+const GARDEN_PAUSED=true;
+function missingOf(r) { if(GARDEN_PAUSED)return [];  const g = garden(); return Object.entries(r.ing).filter(([id, n]) => !BASE[id] && (g.pantry[id] || 0) < n).map(([id, n]) => [id, n - (g.pantry[id] || 0)]); }
 function kitchenView() {
   const g = garden(); const world = S.world;
   const ov = ovScreen('La cuisine', null, 'kitchen-screen');
-  const shelf = h('div', { class: 'k-pantry' }, h('b', null, 'Dans ta cuisine : '),
-    ...Object.entries(g.pantry).filter(([, n]) => n > 0).map(([id, n]) => h('span', { class: 'k-have' }, `${SEEDS[id].e} × ${n}`)),
-    Object.values(g.pantry).some(n => n > 0) ? null : h('span', { class: 'k-none' }, 'rien du jardin pour l’instant'),
-    onTap(h('button', { class: 'pbtn', style: { marginLeft: 'auto' } }, '🌻 Jardin'), () => { ov.el.remove(); gardenView(); }));
+  const shelf = h('div',{class:'k-shelf'},'Tous les ingrédients sont prêts.');
   const list = h('div', { class: 'k-list' }, recipesFor(world).map(r => {
     const miss = missingOf(r); const ok = !miss.length;
     const b = h('button', { class: 'recipe' + (ok ? '' : ' locked'), 'aria-label': r.n },
@@ -4689,8 +4752,8 @@ async function cookRecipe(r) {
   for (const [i, it] of [prep, stir, guest].entries()) {
     Shell.now(i); const x = await Engine.play(it, run); if (run.abort || RUN !== run) return; res.push(x); Shell.mark(i, 'ok');
   }
-  const g = garden(); Object.entries(r.ing).forEach(([id, n]) => { if (!BASE[id]) g.pantry[id] = Math.max(0, (g.pantry[id] || 0) - n); }); g.dishes = (g.dishes || 0) + 1;
-  const stars = res[0].first ? 3 : 2; const sticker = addStars(stars); save();
+  const g = garden(); Object.entries(r.ing).forEach(([id, n]) => { if (!BASE[id] && !GARDEN_PAUSED) g.pantry[id] = Math.max(0, (g.pantry[id] || 0) - n); }); g.dishes = (g.dishes || 0) + 1;
+  const stars = scoreOf(res).stars; const sticker = addStars(stars); save();
   Celebrate.show({ stars, sticker, note: `${r.e} ${r.n} pour ${run.guest || 'toi'} !`, noteSay: [`Miam ! ${run.guest === 'le chien' ? 'Le chien' : run.guest || 'Tout le monde'} se régale !`], again: () => Shell.close(), home: () => { Shell.onClose = null; Shell.close(); } });
 }
 GAMES.cuisine = { id: 'cuisine', title: 'La cuisine', sub: 'Recettes du jardin', icon: '🍳', color: 'orange', open: () => kitchenView(), info: () => ({ lv: `${garden().dishes || 0} plat${(garden().dishes || 0) > 1 ? 's' : ''}`, pct: Math.min(1, (garden().dishes || 0) / 8) }) };
@@ -4934,8 +4997,8 @@ async function readStory(s) {
   }
   const p = P(); (p.stories || (p.stories = {}))[s.id] = (p.stories[s.id] || 0) + 1;
   const sc = run.res.filter(r => r.first != null); const ok = sc.filter(r => r.first).length;
-  const stars = !sc.length ? 3 : ok === sc.length ? 3 : ok >= sc.length - 1 ? 2 : 1;
-  const sticker = sc.length ? addStars(1) : null; save();
+  const stars = scoreOf(run.res).stars;
+  const sticker = sc.length ? addStars(stars) : null; save();
   Celebrate.show({ stars, sticker, note: `Histoire lue : ${s.t}`, again: () => readStory(s), next: () => Shell.close(), nextLabel: 'Autre histoire', home: () => { Shell.onClose = null; Shell.close(); } });
 }
 GAMES.histoires = { id: 'histoires', title: 'Les histoires', sub: 'Lire et écouter', icon: '📖', color: 'plum', open: () => storyLibrary(), info: () => { const n = Object.keys(P().stories || {}).length, t = STORIES[S.world].length; return { lv: `${n} sur ${t} lue${n > 1 ? 's' : ''}`, pct: n / t }; } };
@@ -5001,7 +5064,7 @@ async function makeCard() {
   for (const [i, it] of items.entries()) { Shell.now(i); const r = await Engine.play(it, run); if (run.abort || RUN !== run) return; run.res.push(r); Shell.mark(i, 'ok'); }
   const p = P(); const cards = p.cards || (p.cards = []);
   const c = { to: out.to[0], msg: out.msg[0], stk: out.stk, bg: out.bg, from: k.name, at: Date.now() }; cards.unshift(c); if (cards.length > 12) cards.pop();
-  const sticker = reader ? addStars(1) : null; save();
+  const sticker = reader ? addStars(scoreOf(run.res).stars) : null; save();
   showCard(c, true);
   Celebrate.show({ stars: 3, sticker, note: 'Ta carte est rangée dans l’atelier. Montre-la !', again: () => makeCard(), home: () => { Shell.onClose = null; Shell.close(); } });
 }
@@ -5077,6 +5140,190 @@ function maisonVoiceLines() {
 }
 WORLD_TILES.grands.push('heure', 'histoires', 'atelier', 'jardin', 'cuisine', 'feteG');
 WORLD_TILES.petits.push('histoires', 'atelier', 'jardin', 'cuisine', 'feteP');
+
+/* === Jeux concrets et reprises ciblées — 22 octobre 2026 === */
+const UPGRADE_VOICE_LINES = [
+ 'Regarde les deux images. Touche ce qui a changé.','Une différence trouvée !','Regarde au même endroit dans les deux images.','Bravo ! Tu as trouvé toutes les différences !',
+ 'Le robot porte une lettre. Touche la case voisine pour aller à la maison.','Reste sur le chemin clair. Avance une case à la fois.','La lettre est arrivée !',
+ 'Les ailes du papillon se ressemblent. Choisis une couleur, puis touche le rond vide en face.','Regarde la couleur du rond en face.','Bravo, les ailes se ressemblent !',
+ 'Touche les biscuits pour nourrir le monstre. Quand tu as fini, touche le bouton vert.','Compte les biscuits dans son ventre. Tu peux en ajouter ou en enlever.','Miam ! Juste ce qu’il faut !',
+ 'Touche les blocs pour construire le nombre. Tu peux en ajouter et en enlever.','Compte les blocs. Regarde aussi les places vides.','Les deux parties font le même nombre en tout.',
+ 'Mets la même quantité dans chaque panier. Touche un panier pour ajouter un fruit.','Compare les paniers. Ils doivent avoir autant de fruits.','Les paniers sont prêts !',
+ 'Rapproche les deux cartes. Tu peux les glisser ou les toucher.','Écoute les deux sons, puis la syllabe entière.','Choisis un jeton pour chaque son que tu entends.','Maintenant, choisis les lettres dans l’ordre.',
+ 'Touche un mot pour l’écouter. Ensuite, tourne la page.','Écoute la question et choisis une image.','Tu peux lire ce livre avec les sons déjà rencontrés.',
+ 'Choisis des lettres, des symboles, ou dessine sur ta carte.','Ta carte est enregistrée.','Choisis une carte pour la regarder, ou crée une nouvelle carte.',
+ 'Donne une carotte à chaque lapin. Touche chaque lapin une fois.','Regarde : une carotte pour un lapin. À toi !','Chaque lapin a sa carotte !',
+ 'Une petite activité pour toi.','Regarde la place qui brille.','Réessaie avec les mêmes objets.','Touche chaque objet pour le compter.'
+];
+const upgradeCSS = h('style',null,`
+.stage.upgrade-stage{gap:12px;padding:12px;overflow:auto;justify-content:center}.upgrade-wrap{width:min(100%,760px);display:flex;flex-direction:column;align-items:center;gap:12px}.urow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.ubtn{border:2px solid #d9d9e7;background:white;border-radius:16px;padding:10px 15px;font:700 20px var(--font-display);min-height:48px;cursor:pointer}.ubtn.u-confirm{background:#458e6a;border-color:#397a5b;color:white}.ubtn.active{border-color:#7752cc;background:#f0e9ff}.u-note{font-size:18px;text-align:center;margin:0;color:#555069}.diff-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}.diff-scene{position:relative;border:4px solid white;border-radius:20px;overflow:hidden;box-shadow:0 3px 0 #cadbd5;aspect-ratio:3/2}.diff-scene svg{display:block;width:100%;height:100%}.diff-hit{position:absolute;border:0;background:transparent;min-width:0;min-height:0;border-radius:50%;cursor:pointer}.diff-hit.found{outline:4px solid #219864;background:#ffffff55}.diff-hit.found:after{content:'✓';position:absolute;right:0;top:0;background:white;color:#187e50;border-radius:50%;font-weight:900}.u-dots{display:flex;gap:8px}.u-dots i{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid #87b6a1}.u-dots i.done{background:#40a678}.post-grid{display:grid;gap:5px;background:#bed5c7;border-radius:18px;padding:8px;width:min(100%,340px)}.post-grid button{aspect-ratio:1;border:0;border-radius:12px;background:#91b18a;font-size:clamp(26px,5vw,42px)}.post-grid button.path{background:#fff3cd}.post-grid button.current{outline:4px solid #6a4dba;outline-offset:-4px}.butterfly{width:min(100%,400px);position:relative;aspect-ratio:5/3}.butterfly svg{width:100%;height:100%}.wing-dot{position:absolute;width:12%;aspect-ratio:1;border:3px solid white;border-radius:50%;font-size:22px;color:#504059;min-height:0}.u-swatch{width:49px;height:49px;border:3px solid white;border-radius:50%;box-shadow:0 0 0 2px #bdb6cc}.u-swatch.active{box-shadow:0 0 0 4px #6842b5}.sudoku button{width:clamp(44px,9vw,64px);height:clamp(44px,9vw,64px);font-size:clamp(26px,5vw,40px)}.palette button{width:55px;height:55px;font-size:32px}.monster{position:relative;width:min(250px,60vw);height:145px;background:#9b71dc;border-radius:80px 80px 45px 45px;box-shadow:inset 0 -10px #8356c5;display:flex;justify-content:center;align-items:center}.monster:before{content:'👀';font-size:54px;position:absolute;top:4px}.monster-mouth{background:#472d68;color:white;border:5px solid #d6b5f4;border-radius:30px;width:82%;height:65px;margin-top:50px;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;font-size:23px;line-height:25px;overflow:hidden}.monster.chew{animation:wiggle .3s 2}.block-frame{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px;border:3px solid #c3cfe0;border-radius:18px;background:#fff}.block-frame button{width:46px;height:46px;border:2px dashed #a6bdcf;border-radius:10px;background:#eff4fa}.block-frame button.full{background:#f8bf49;border:2px solid #d99721;box-shadow:inset 0 -5px #e7ab37}.basket{min-width:115px;min-height:100px;background:#fff4d9;border:3px solid #d8b781;border-radius:14px 14px 35px 35px;font-size:28px;padding:8px;max-width:180px}.business-preview{width:min(100%,630px);aspect-ratio:7/4;touch-action:none;display:block;box-shadow:0 5px 18px #40325a22;border-radius:20px;background:white}.business-preview svg{display:block;width:100%;height:100%}.visit-tools{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin:12px auto;max-width:700px}.visit-tools button{min-width:44px;min-height:44px}.visit-editor{display:flex;align-items:center;flex-direction:column;gap:10px}.visit-editor input{font-size:22px;padding:8px;border:2px solid #bcb2d2;border-radius:12px;width:200px}.book-page{width:min(100%,620px);background:#fff;border-radius:24px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:14px}.book-words{display:flex;justify-content:center;gap:9px;flex-wrap:wrap}.book-words button{border:0;background:#fff5d7;font-size:clamp(23px,5vw,34px);padding:7px 10px;border-radius:12px}.book-words button.reading{background:#e7d6ff}.book-scene{font-size:70px;line-height:1.2}.suggestion{margin:12px 0 18px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}.suggestion button{font-size:18px}.sound-join{display:flex;gap:38px;align-items:center;justify-content:center;touch-action:none}.sound-join button{font-size:64px;border:3px solid #c7b7e1;background:#fff;border-radius:20px;padding:14px 24px;touch-action:none;transition:transform .2s}.sound-join.joined{gap:0}.sound-join.joined button{border-color:#53ab85}.sound-token{font-size:30px;min-width:48px;min-height:48px;border:2px solid #a994cf;background:#f3edff;border-radius:50%}.rabbit{font-size:48px;border:3px solid transparent;background:white;border-radius:18px;min-width:80px;min-height:85px}.rabbit.fed{background:#e5f5d5;border-color:#79b653}
+@media(max-width:480px){.diff-pair{gap:8px;grid-template-columns:1fr;max-width:370px}.diff-scene{border-width:2px;border-radius:12px}.upgrade-stage .u-note{font-size:16px}.block-frame button{width:40px;height:40px}.visit-tools{gap:4px}}`);
+document.body.append(upgradeCSS);
+function uButton(text,fn,more={}){return onTap(h('button',{class:'ubtn'+(String(text).startsWith('✓')?' u-confirm':''),...more},text),fn);}
+function uWrap(st,...els){const w=h('div',{class:'upgrade-wrap'},...els);st.append(w);return w;}
+
+/* Two images share the same model; only marked regions change. */
+const DIFF_REGIONS=[
+ {x:8,y:8,w:16,h:22,type:'sun'}, {x:31,y:8,w:22,h:20,type:'cloud'},
+ {x:66,y:20,w:29,h:56,type:'house'}, {x:8,y:28,w:22,h:52,type:'tree'},
+ {x:37,y:55,w:16,h:27,type:'cat'}, {x:55,y:76,w:16,h:21,type:'ball'},
+ {x:25,y:76,w:13,h:22,type:'flower'}, {x:47,y:25,w:15,h:26,type:'kite'},
+ {x:76,y:78,w:16,h:20,type:'mushroom'}, {x:4,y:81,w:15,h:17,type:'duck'}
+];
+function differenceModel(L){const count=L.objects||6;return {regions:DIFF_REGIONS.slice(0,count),changed:sample(Array.from({length:count},(_,i)=>i),L.diff||1),variant:rnd(3),subtle:!!L.subtle};}
+function sceneSVG(m,second){
+ const part=(r,i)=>{const changed=second&&m.changed.includes(i),c=changed?'#9b72d1':'#ec7964';let a='';
+ switch(r.type){
+ case 'sun':a=`<circle cx="40" cy="35" r="24" fill="${changed?'#ffae70':'#ffd35a'}"/><path d="M26 36 Q40 ${changed?22:49} 54 36" fill="none" stroke="#8a5b27" stroke-width="4"/><circle cx="31" cy="27" r="3"/><circle cx="49" cy="27" r="3"/>`;break;
+ case 'cloud':a=`<g fill="white"><ellipse cx="45" cy="35" rx="35" ry="15"/><circle cx="32" cy="25" r="16"/>${changed?'':'<circle cx="54" cy="20" r="19"/>'}</g>`;break;
+ case 'house':a=`<path d="M5 35 L50 3 95 35Z" fill="${c}"/><path d="M16 35H84V95H16Z" fill="#fff1c9"/><path d="M40 58H61V95H40Z" fill="#b98860"/><rect x="23" y="43" width="19" height="18" rx="3" fill="#75bee0"/><rect x="59" y="43" width="18" height="18" rx="3" fill="${changed&&m.subtle?'#d7bfef':'#75bee0'}"/>`;break;
+ case 'tree':a=`<path d="M43 35H58V99H43Z" fill="#a16c4b"/><circle cx="50" cy="35" r="32" fill="${changed?'#e4b750':'#70b287'}"/>${changed?'':'<circle cx="35" cy="29" r="5" fill="#ed7465"/>'}`;break;
+ case 'cat':a=`<path d="M14 26L18 0 38 16H62L81 0 86 28V64Q50 94 14 64Z" fill="${changed?'#d5a077':'#eea762'}"/><circle cx="32" cy="39" r="5"/><circle cx="67" cy="39" r="5"/><path d="M42 57H57L50 64Z" fill="#875e64"/><path d="M27 78Q4 90 9 45" fill="none" stroke="${changed?'#d5a077':'#eea762'}" stroke-width="10"/>${changed?'':'<path d="M45 19V31M55 19V31" stroke="#b47a40" stroke-width="4"/>'}`;break;
+ case 'ball':a=`<circle cx="50" cy="50" r="37" fill="${c}"/><path d="M16 37L83 63M40 15L62 84" stroke="#fff6dd" stroke-width="9"/>`;break;
+ case 'flower':a=`<path d="M50 45V100M50 77Q15 59 24 86" stroke="#5c9d72" fill="#5c9d72" stroke-width="7"/><g fill="${changed?'#9e7dd9':'#ed92b1'}"><circle cx="50" cy="19" r="17"/><circle cx="27" cy="38" r="17"/><circle cx="72" cy="38" r="17"/><circle cx="37" cy="59" r="17"/><circle cx="63" cy="59" r="17"/></g><circle cx="50" cy="39" r="13" fill="#ffdc67"/>`;break;
+ case 'kite':a=`<path d="M50 0L90 37 50 75 10 37Z" fill="${changed?'#69b8ad':'#8e84cb'}"/><path d="M50 0V75M10 37H90" stroke="white" stroke-width="3"/><path d="M50 75Q30 90 55 100" fill="none" stroke="#846d76" stroke-width="3"/>`;break;
+ case 'mushroom':a=`<path d="M40 40H60V95H40Z" fill="#f4ddbc"/><path d="M8 50Q50 -20 92 50Z" fill="${c}"/><circle cx="40" cy="26" r="7" fill="white"/>${changed?'':'<circle cx="66" cy="35" r="7" fill="white"/>'}`;break;
+ default:a=`<ellipse cx="50" cy="60" rx="33" ry="23" fill="${changed?'#a9c5ee':'#ffe080'}"/><circle cx="72" cy="30" r="20" fill="${changed?'#a9c5ee':'#ffe080'}"/><circle cx="79" cy="25" r="3"/><path d="M90 29L100 36 89 41Z" fill="#ed9963"/>`;
+ }
+ return `<svg x="${r.x*4.8}" y="${r.y*3.2}" width="${r.w*4.8}" height="${r.h*3.2}" viewBox="0 0 100 100">${a}</svg>`;
+ };
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320"><rect width="480" height="320" fill="#d8eff8"/><path d="M0 216Q150 187 300 222T480 213V320H0Z" fill="#a6cf9b"/><path d="M380 240L460 320H355L345 240Z" fill="#eddbb2"/>${m.regions.map(part).join('')}</svg>`;
+}
+function differencesItem(ctx){const m=differenceModel(ctx.L);return {cls:'upgrade-stage',say:UPGRADE_VOICE_LINES[0],caption:'Trouve ce qui a changé',render(st,api){const found=new Set(),hits=[[],[]];const dots=h('div',{class:'u-dots'},m.changed.map(()=>h('i')));const pair=h('div',{class:'diff-pair'});
+ for(let side=0;side<2;side++){const scene=h('div',{class:'diff-scene',html:sceneSVG(m,!!side),'aria-label':side?'Deuxième image':'Première image'});m.regions.forEach((r,i)=>{const b=h('button',{class:'diff-hit','aria-label':`Image ${side+1}, zone ${i+1}`,style:{left:r.x+'%',top:r.y+'%',width:r.w+'%',height:r.h+'%'}});hits[side][i]=b;onTap(b,()=>{if(!api.alive()||found.has(i))return;if(!m.changed.includes(i))return api.step(false,{el:b,feedback:'Regarde au même endroit dans les deux images.'});found.add(i);hits.forEach(a=>a[i].classList.add('found'));dots.children[found.size-1].classList.add('done');if(found.size===m.changed.length)api.answer(true,{praise:'Bravo ! Tu as trouvé toutes les différences !'});else api.step(true,{say:'Une différence trouvée !'});});scene.append(b);});pair.append(scene);}
+ api.strategy=()=>{const i=m.changed.find(i=>!found.has(i));if(i!=null)hits.forEach(a=>a[i].classList.add('reveal'));};uWrap(st,pair,dots);}};}
+for(const [id,small] of [['lynx',true],['lynxG',false]]) Object.assign(GAMES[id],{title:'Les différences',icon:'🔎',make:differencesItem,levels:(small?[[1,4],[1,6],[2,6],[2,8],[3,8]]:[[2,6],[2,8],[3,8],[3,10],[4,10],[5,10]]).map(([diff,objects],i)=>({name:diff+' différences',diff,objects,subtle:i>2,n:3,skill:'diff:'+id+':'+i,tag:small?'M1–M3':'P1',ref:'Comparer deux scènes et repérer une modification'}))});
+
+function postModel(L){const n=L.sz||3;const paths=n===3?[[0,1,2,5,8],[0,3,6,7,8],[0,1,4,7,8]]:[[0,1,2,6,10,11,15],[0,4,8,9,10,14,15],[0,1,5,9,13,14,15]];return {n,path:pick(paths).slice(0,L.steps||9)};}
+GAMES.robot={id:'robot',title:'Le robot facteur',sub:'Un chemin, une lettre',icon:'🤖',color:'sky',stage:'#e7f4ee',levels:[2,3,4,5,6,7].map((steps,i)=>({name:'Livrer une lettre',sz:i<4?3:4,steps,n:3,skill:'post:'+i,tag:'P1',ref:'Se déplacer de case en case avec un but concret'})),make(ctx){const m=postModel(ctx.L);return {cls:'upgrade-stage',say:'Le robot porte une lettre. Touche la case voisine pour aller à la maison.',render(st,api){let pos=m.path[0];const goal=m.path.at(-1);const grid=h('div',{class:'post-grid',style:{gridTemplateColumns:`repeat(${m.n},1fr)`}});const draw=()=>[...grid.children].forEach((b,i)=>{b.textContent=i===pos?'🤖':i===goal?'🏠':m.path.includes(i)?'·':'🌿';b.classList.toggle('current',i===pos);b.setAttribute('aria-label',i===pos?'Le robot':i===goal?'La maison':m.path.includes(i)?'Une case du chemin':'Un buisson');});for(let i=0;i<m.n*m.n;i++){const b=h('button',{class:m.path.includes(i)?'path':''});onTap(b,()=>{if(!api.alive()||i===pos)return;const near=Math.abs(Math.floor(i/m.n)-Math.floor(pos/m.n))+Math.abs(i%m.n-pos%m.n)===1;if(near&&m.path.includes(i)){pos=i;draw();if(i===goal)api.answer(true,{praise:'La lettre est arrivée !'});else api.step(true);}else api.step(false,{el:b,feedback:'Reste sur le chemin clair. Avance une case à la fois.'});});grid.append(b);}api.strategy=()=>{const neighbors=m.path.filter(i=>Math.abs(Math.floor(i/m.n)-Math.floor(pos/m.n))+Math.abs(i%m.n-pos%m.n)===1);const next=neighbors.find(i=>m.path.indexOf(i)>m.path.indexOf(pos));if(next!=null)grid.children[next].classList.add('reveal');};draw();uWrap(st,grid,h('p',{class:'u-note'},'🤖  →  🏠'));}};}};
+
+const WING_COLORS=['#ed7898','#f5bf4c','#6cb9d7','#a58ad8'];
+GAMES.miroir={id:'miroir',title:'Le papillon miroir',sub:'Compléter les ailes',icon:'🦋',color:'pink',stage:'#f8edf7',levels:[1,1,2,2,3,4].map((spots,i)=>({name:'Les ailes du papillon',spots,colors:Math.min(4,2+Math.floor(i/2)),n:3,skill:'wing:'+i,tag:'M3–P1',ref:'Associer deux positions symétriques et reproduire des couleurs'})),make(ctx){const L=ctx.L,ys=[27,57,12,73],xs=[20,18,31,31],colors=Array.from({length:L.spots},()=>rnd(L.colors));return {cls:'upgrade-stage',say:'Les ailes du papillon se ressemblent. Choisis une couleur, puis touche le rond vide en face.',render(st,api){let chosen=0,done=new Set();const view=h('div',{class:'butterfly',html:'<svg viewBox="0 0 500 300"><path d="M245 150C180 -50 5 10 55 145C5 290 195 340 245 170Z" fill="#dfcef3"/><path d="M255 150C320 -50 495 10 445 145C495 290 305 340 255 170Z" fill="#dfcef3"/><path d="M250 70V245" stroke="#7a5d9e" stroke-width="20" stroke-linecap="round"/><path d="M250 80Q220 20 205 40M250 80Q280 20 295 40" stroke="#7a5d9e" stroke-width="5" fill="none"/></svg>'});colors.forEach((c,i)=>{view.append(h('span',{class:'wing-dot',style:{left:xs[i]+'%',top:ys[i]+'%',background:WING_COLORS[c]}}));const b=h('button',{class:'wing-dot','aria-label':'Rond vide '+(i+1),style:{left:(88-xs[i])+'%',top:ys[i]+'%',background:'#fff'}},'?');onTap(b,()=>{if(!api.alive()||done.has(i))return;if(chosen===c){done.add(i);b.style.background=WING_COLORS[c];b.textContent='';if(done.size===colors.length)api.answer(true,{praise:'Bravo, les ailes se ressemblent !'});else api.step(true);}else api.step(false,{el:b,feedback:'Regarde la couleur du rond en face.'});});view.append(b);});const pal=h('div',{class:'urow'});WING_COLORS.slice(0,L.colors).forEach((c,i)=>{const b=h('button',{class:'u-swatch'+(!i?' active':''),'aria-label':['Rose','Jaune','Bleu','Violet'][i],style:{background:c}});onTap(b,()=>{chosen=i;[...pal.children].forEach(x=>x.classList.remove('active'));b.classList.add('active');});pal.append(b);});api.strategy=()=>{const i=colors.findIndex((_,i)=>!done.has(i));if(i>=0)pal.children[colors[i]].classList.add('reveal');};uWrap(st,view,pal);}};}};
+
+GAMES.sudoku.levels=[[2,1],[2,2],[3,1],[3,2],[3,3],[3,4],[3,5],[4,3],[4,4],[4,5],[4,6],[4,7],[4,8],[4,10]].map(([sz,b],i)=>({name:`${sz} × ${sz} · ${b} cases`,sz,b,n:2,skill:'sudo:new:'+i,tag:'M3–P1',ref:sz<4?'Un animal par ligne et colonne':'Un animal par ligne, colonne et carré'}));
+GAMES.memoG.levels=[...[2,3,4,6].map(pairs=>({pairs})),...[2,3,4,6,8].map(pairs=>({pairs,words:true}))].map((x,i)=>({...x,name:x.words?'Mots et images':'Les images',n:2,skill:'memo:new:'+i,tag:'P1',ref:x.words?'Associer un mot déchiffrable à son image':'Mémoriser des paires'}));
+GAMES.suitesG.levels=[{pats:['AB'],kind:'col',opts:2,len:6},{pats:['AB'],kind:'emo',opts:2},{pats:['ABC'],kind:'col',opts:3},{pats:['AAB'],kind:'emo',opts:3},{pats:['ABB'],kind:'col',opts:3},{pats:['AABB'],kind:'mix',opts:3},{pats:['ABAC'],kind:'emo',opts:3},{pats:['AABC'],kind:'mix',opts:3,mid:true},{num:true,steps:[1],maxStart:5},{num:true,steps:[1],maxStart:15,mid:true},{num:true,steps:[2],maxStart:10},{num:true,steps:[5],maxStart:10},{num:true,steps:[1,2],down:true,mid:true}].map((x,i)=>({...x,name:x.num?'Les nombres se suivent':'Le motif se répète',n:5,skill:'suite:new:'+i,tag:'P1',ref:'Poursuivre une régularité, du motif simple aux suites numériques'}));
+
+function monsterItem(ctx){const L=ctx.L,a=rint(1,L.max),b=L.op?rint(1,a):0,target=L.op==='+'?a+b:L.op==='-'?a-b:a;const prompt=L.op?`${nw(a)} ${L.op==='+'?'plus':'moins'} ${nw(b)}. Combien de biscuits ?`:`Donne ${nw(a)} ${a===1?'biscuit':'biscuits'} au monstre.`;return {cls:'upgrade-stage',say:[prompt,'Touche les biscuits pour nourrir le monstre. Quand tu as fini, touche le bouton vert.'],render(st,api){let count=0;const belly=h('div',{class:'monster-mouth'}),monster=h('div',{class:'monster'},belly);const draw=()=>{belly.textContent='🍪'.repeat(count);};api.strategy=()=>{belly.textContent='🍪'.repeat(target);monster.classList.add('reveal');setTimeout(()=>{if(api.alive()){draw();monster.classList.remove('reveal');}},2600);};uWrap(st,h('p',{class:'u-note',style:{fontSize:'32px'}},L.op?`${a} ${L.op} ${b} = ?`:'🍪'.repeat(a)),monster,h('div',{class:'urow'},uButton('🍪 Ajouter',()=>{if(count<20){count++;draw();Sfx.play('pop');}}),uButton('− Enlever',()=>{count=Math.max(0,count-1);draw();})),uButton('✓ C’est prêt',()=>{if(!api.alive())return;if(count===target){monster.classList.add('chew');api.answer(true,{praise:'Miam ! Juste ce qu’il faut !'});}else api.answer(false,{feedback:'Compte les biscuits dans son ventre. Tu peux en ajouter ou en enlever.'});}));}};}
+for(const [id,small] of [['monstreP',true],['monstre',false]]) GAMES[id]={id,title:'Le monstre gourmand',sub:'Compter pour le nourrir',icon:'👾',color:'plum',stage:'#efe8f9',make:monsterItem,levels:(small?[{max:2},{max:3},{max:4},{max:5}]:[{max:3},{max:5},{max:8},{max:4,op:'+'},{max:5,op:'-'},{max:5,op:'+'},{max:9,op:'-'}]).map((x,i)=>({...x,n:4,name:'Le goûter du monstre',skill:'monster:'+id+':'+i,tag:small?'M1–M3':'P1',ref:x.op?'Représenter une opération par une action':'Construire une petite collection'}))};
+/* Construct, split and regroup; quantities precede the written operation. */
+function blocksItem(ctx){const L=ctx.L,a=rint(1,L.max),b=L.op?rint(1,L.op==='-'?a:L.max):0,target=L.op==='+'?a+b:L.op==='-'?a-b:a;return {cls:'upgrade-stage',say:L.op?[`${nw(a)} ${L.op==='+'?'plus':'moins'} ${nw(b)}.`,'Touche les blocs pour construire le nombre. Tu peux en ajouter et en enlever.']:[`Construis le nombre ${nw(a)}.`,'Touche les blocs pour construire le nombre. Tu peux en ajouter et en enlever.'],render(st,api){const cells=[],frames=h('div',{class:'urow'});let phase=0,part=0;const parts={};const total=L.max>5||L.op==='+'?20:10;const filled=new Set(Array.from({length:L.op?a:0},(_,i)=>i));const draw=()=>cells.forEach((c,i)=>{c.classList.toggle('full',filled.has(i));c.style.background=filled.has(i)&&L.split?(parts[i]?'#77b8dd':'#f8bf49'):'';c.setAttribute('aria-pressed',filled.has(i));});for(let f=0;f<total/10;f++){const frame=h('div',{class:'block-frame'});for(let j=0;j<10;j++){const i=f*10+j;const c=h('button',{'aria-label':'Bloc '+(i+1)});onTap(c,()=>{if(filled.has(i))filled.delete(i);else {filled.add(i);parts[i]=part;}draw();Sfx.play('tick');});cells.push(c);frame.append(c);}frames.append(frame);}const eq=h('p',{class:'big-num',style:{fontSize:'38px'}},L.op?`${a} ${L.op} ${b} = ?`:String(a));const go=uButton('✓ Vérifier',()=>{if(filled.size!==target)return api.answer(false,{feedback:'Compte les blocs. Regarde aussi les places vides.'});if(phase===0){phase=1;eq.textContent=L.op?`${a} ${L.op} ${b} = ${target}`:L.split?`${[...filled].filter(i=>!parts[i]).length} + ${[...filled].filter(i=>parts[i]).length} = ${target}`:`${filled.size} = ${target}`;go.textContent='✓ Continuer';Voice.say('Les deux parties font le même nombre en tout.');}else api.answer(true);});api.strategy=()=>{const i=cells.findIndex((c,i)=>filled.has(i)!==(i<target));if(i>=0)cells[i].classList.add('reveal');};const switches=L.split?h('div',{class:'urow'},uButton('🟠 Une partie',()=>part=0),uButton('🔵 L’autre partie',()=>part=1)):null;uWrap(st,eq,frames,switches,go);draw();}};}
+for(const [id,small] of [['blocsP',true],['blocs',false]]) GAMES[id]={id,title:'Les nombres à construire',sub:'Ajouter, séparer, enlever',icon:'🧱',color:'sky',stage:'#e9f2fa',make:blocksItem,levels:(small?[{max:2},{max:3},{max:5}]:[{max:5},{max:5,split:true},{max:10},{max:10,split:true},{max:5,op:'+'},{max:10,op:'-'},{max:8,op:'+'},{max:10,op:'+'}]).map((x,i)=>({...x,name:'Construire les nombres',n:4,skill:'blocks:'+id+':'+i,tag:small?'M1–M3':'P1',ref:'Relier quantité manipulée, nombre et opération'}))};
+function basketItem(ctx){const L=ctx.L,groups=L.groups||2,each=rint(1,L.max),fruit=pick(['🍎','🍐','🍊']);return {cls:'upgrade-stage',say:[`Mets ${nw(each)} ${each===1?'fruit':'fruits'} dans chaque panier.`,'Mets la même quantité dans chaque panier. Touche un panier pour ajouter un fruit.'],render(st,api){const counts=Array(groups).fill(0),row=h('div',{class:'urow'});const draw=()=>[...row.children].forEach((b,i)=>{b.textContent=counts[i]?fruit.repeat(counts[i]):'🧺';b.setAttribute('aria-label',`Panier ${i+1}, ${counts[i]} fruits`);});for(let i=0;i<groups;i++){const b=h('button',{class:'basket'});onTap(b,()=>{counts[i]=(counts[i]+1)%(L.max+2);draw();Sfx.play('pop');});row.append(b);}const note=h('p',{class:'u-note'},'Touche un panier pour ajouter. S’il est plein, touche pour vider.');const eq=h('p',{class:'u-note'});let ready=false;const go=uButton('✓ Vérifier',()=>{if(!counts.every(n=>n===each))return api.answer(false,{feedback:'Compare les paniers. Ils doivent avoir autant de fruits.'});if(!ready){ready=true;eq.textContent=Array(groups).fill(each).join(' + ')+' = '+groups*each+(L.multiply?`  ·  ${groups} × ${each} = ${groups*each}`:'');go.textContent='✓ Continuer';Voice.say('Les paniers sont prêts !');}else api.answer(true);});api.strategy=()=>{const i=counts.findIndex(n=>n!==each);if(i>=0){const b=row.children[i];b.classList.add('reveal');const old=b.textContent;b.textContent=fruit.repeat(each);setTimeout(()=>{if(api.alive()){draw();b.classList.remove('reveal');}},2600);}};uWrap(st,note,row,eq,go);draw();}};}
+GAMES.paniers={id:'paniers',title:'Les paniers',sub:'Des groupes égaux',icon:'🧺',color:'teal',stage:'#e9f4e4',make:basketItem,levels:[{groups:2,max:2},{groups:2,max:3},{groups:3,max:3},{groups:2,max:5,multiply:true},{groups:3,max:4,multiply:true},{groups:4,max:3,multiply:true}].map((x,i)=>({...x,name:'Partager en groupes égaux',n:4,skill:'basket:'+i,tag:'P1',ref:'Relier groupes égaux, addition répétée et multiplication'}))};
+GAMES.gestes={id:'gestes',title:'Les petits gestes',sub:'Une carotte pour chacun',icon:'🐰',color:'teal',stage:'#e9f3de',levels:[1,2,3,4,5].map((max,i)=>({max,n:4,name:'Une carotte chacun',skill:'gesture:'+i,tag:i<2?'M1':'M2–M3',ref:'Correspondance terme à terme, distribution équitable'})),make(ctx){const n=rint(Math.max(1,ctx.L.max-1),ctx.L.max);return {cls:'upgrade-stage',say:'Donne une carotte à chaque lapin. Touche chaque lapin une fois.',render(st,api){const row=h('div',{class:'urow'});let done=new Set();for(let i=0;i<n;i++){const b=h('button',{class:'rabbit','aria-label':'Lapin '+(i+1)},'🐰');onTap(b,()=>{if(done.has(i)||!api.alive())return;done.add(i);b.classList.add('fed');b.textContent='🐰🥕';if(done.size===n)api.answer(true,{praise:'Chaque lapin a sa carotte !'});else api.step(true);});row.append(b);}const demo=uButton('👀 Montre-moi',()=>{api.help();Voice.say('Regarde : une carotte pour un lapin. À toi !');const b=row.children[0];b.classList.add('reveal');setTimeout(()=>b.classList.remove('reveal'),2000);});uWrap(st,row,demo);}};}};
+
+/* Join sound cards by dragging or by tapping. Existing dedicated syllable recordings are retained. */
+const originalFusion=itFusion;
+itFusion=function(L,li,mode,t,demo,n=3){if(mode!=='hear'||!demo)return originalFusion(L,li,mode,t,demo,n);const vg=LESSONS[LIDX[t.v]].main,cg=t.w.slice(0,t.w.length-vg.length);return {cls:'upgrade-stage paper',skill:L.k,say:'Rapproche les deux cartes. Tu peux les glisser ou les toucher.',caption:'Colle les sons',render(st,api){let busy=false,joined=false;const c=h('button',{'aria-label':'Le premier son'},cg),v=h('button',{'aria-label':'Le deuxième son'},vg),row=h('div',{class:'sound-join'},c,v);const go=uButton('✓ Continuer',()=>{if(joined)api.finish(null);});go.hidden=true;const merge=async()=>{if(busy||!api.alive())return;busy=true;c.classList.add('reveal');await Voice.say(['Le début de',anc(t.c)]);if(!api.alive())return;c.classList.remove('reveal');v.classList.add('reveal');await Voice.say([vow(t.v)]);if(!api.alive())return;v.classList.remove('reveal');row.classList.add('joined');await Voice.say([sylUnit(t.w)]);if(!api.alive())return;joined=true;go.hidden=false;busy=false;};[c,v].forEach((b,i)=>{onTap(b,merge);let start=null;b.addEventListener('pointerdown',e=>{start=e.clientX;b.setPointerCapture(e.pointerId);});b.addEventListener('pointermove',e=>{if(start==null||joined)return;const dx=clamp(e.clientX-start,-70,70);b.style.transform=`translateX(${dx}px)`;});b.addEventListener('pointerup',e=>{b.style.transform='';if(start!=null&&Math.abs(e.clientX-start)>18)merge();start=null;});});uWrap(st,row,h('p',{class:'u-note'},'→ ←'),go);}};};
+
+/* Encoding includes a sound-token step, then mobile graphemes (ch/ou stay together). */
+const originalDictee=itDictee;
+itDictee=function(W,li){const old=originalDictee(W,li),sounds=W.gs.filter(g=>!g.mute).length;return {...old,render(st,api){let selected=0;const tokens=h('div',{class:'urow'}),row=h('div',{class:'urow'});const countLabel=h('p',{class:'u-note'},'Un jeton pour chaque son');const draw=()=>{tokens.innerHTML='';for(let i=0;i<selected;i++)tokens.append(h('span',{class:'sound-token'},'●'));};const more=uButton('● Ajouter',()=>{if(selected<8){selected++;draw();}}),less=uButton('− Enlever',()=>{selected=Math.max(0,selected-1);draw();});api.strategy=()=>{tokens.innerHTML='';for(let i=0;i<sounds;i++)tokens.append(h('span',{class:'sound-token reveal'},'●'));setTimeout(()=>{if(api.alive())draw();},2200);};const next=uButton('✓ Les lettres',()=>{if(selected!==sounds)return api.step(false,{feedback:'Choisis un jeton pour chaque son que tu entends.'});st.innerHTML='';old.render(st,api);Voice.say(['Maintenant, choisis les lettres dans l’ordre.',W.w]);});row.append(more,less);st.append(onTap(h('button',{class:'ubtn','aria-label':'Écouter le mot'},'🔊'),()=>Voice.say(W.w)),countLabel,tokens,row,next);Voice.say([W.w,300,'Choisis un jeton pour chaque son que tu entends.']);}};};
+
+/* Twelve short original books indexed using the same grapheme inventory as the lessons. */
+const MINI_BOOKS=[
+ ['milo','Milo et la lune','🌙',['Milo a lu.','La lune luit.','Milo a ri.'],'Milo a ri.','🙂'],
+ ['lili','Lili et le lit','🛏️',['Lili a un lit.','Le lit est joli.','Lili rit.'],'Lili a un lit.','🛏️'],
+ ['moto','La moto','🏍️',['Papa a une moto.','La moto roule.','Papa arrive.'],'Papa a une moto.','🏍️'],
+ ['chat','Le chat','🐱',['Le chat est sur le lit.','Le chat a vu la lune.','Le chat dort.'],'Le chat dort.','😴'],
+ ['sac','Le sac','🎒',['Lola a un sac.','Lola met un livre.','Le livre est dans le sac.'],'Le livre est dans le sac.','🎒'],
+ ['poule','La poule','🐔',['La poule est dans la cour.','La poule a un petit.','Le petit suit la poule.'],'Le petit suit la poule.','🐥'],
+ ['velo','Le vélo','🚲',['Luca a un vélo.','Luca roule sur la route.','Luca arrive à la mare.'],'Luca a un vélo.','🚲'],
+ ['lapin','Le lapin','🐰',['Le lapin a faim.','Il a une carotte.','Le lapin mange.'],'Le lapin a faim.','🥕'],
+ ['bateau','Le bateau','⛵',['Le bateau est sur l’eau.','Le vent souffle.','Le bateau avance.'],'Le bateau est sur l’eau.','⛵'],
+ ['jardin','La fleur','🌷',['Lola a une fleur.','La fleur est rouge.','Lola offre la fleur.'],'La fleur est rouge.','🔴'],
+ ['chien','Le chien','🐶',['Le chien joue.','Il court avec la balle.','La balle roule.'],'Il court avec la balle.','⚽'],
+ ['pluie','La pluie','🌧️',['Il pleut sur la ville.','Lola ouvre son parapluie.','Lola rentre à la maison.'],'Il pleut sur la ville.','🌧️']
+].map(([id,title,em,pages,q,answer])=>({id,title,em,pages,q,answer}));
+/* An unknown spelling is never silently marked decodable. Accented variants and inflections must exist in the inventory. */
+function bookTokens(text){return text.toLocaleLowerCase('fr').match(/[a-zàâäéèêëîïôöùûüçœ]+/g)||[];}
+function miniBookRequirement(b){let req=0;for(const t of b.pages.flatMap(bookTokens)){const w=WORDS.find(w=>w.w.toLocaleLowerCase('fr')===t);if(!w)return null;req=Math.max(req,w.req);}return req;}
+function miniBookDecodable(b){const req=miniBookRequirement(b);return req!==null&&req<=(P().lecture.unlocked||0);}
+function miniLibrary(){const ov=ovScreen('Mes petits livres');ov.body.append(h('p',{class:'u-note'},S.world==='petits'?'Des histoires à écouter':'📖 Je lis · 🔊 J’écoute avec Lumi'));const list=h('div',{class:'theme-games'});MINI_BOOKS.forEach(b=>list.append(uButton(`${b.em} ${b.title} ${S.world==='grands'&&miniBookDecodable(b)?'📖':'🔊'}`,()=>{ov.el.remove();readMiniBook(b);})));ov.body.append(list);Voice.say('Touche un mot pour l’écouter. Ensuite, tourne la page.');}
+async function readMiniBook(b){const run={gid:'livres',res:[],abort:false};RUN=run;Shell.open({bg:'#f6eedb',level:b.title,onClose:miniLibrary});Shell.setDots(b.pages.length+1);let assisted=false;
+for(let i=0;i<b.pages.length;i++){Shell.now(i);const text=b.pages[i];const r=await Engine.play({cls:'upgrade-stage',say:'Touche un mot pour l’écouter. Ensuite, tourne la page.',render(st,api){const words=h('div',{class:'book-words'});text.split(' ').forEach(t=>{const bt=uButton(t,()=>{assisted=true;api.help();Voice.say(t.replace(/[.!?]/g,''));});words.append(bt);});const listen=uButton('🔊 Écouter la page',async()=>{if(!api.alive())return;assisted=true;api.help();for(const bt of words.children)bt.classList.add('reading');await Voice.say(text);for(const bt of words.children)bt.classList.remove('reading');});uWrap(st,h('div',{class:'book-page'},h('div',{class:'book-scene'},b.em),words,listen,uButton('→ Tourner la page',()=>api.finish(null))));}},run);if(run.abort||RUN!==run)return;}
+const opts=shuffle([b.answer,...sample(['🐰','🌧️','🚲','🌙','🎒'].filter(x=>x!==b.answer),2)]);Shell.now(b.pages.length);const r=await Engine.play({cls:'upgrade-stage',say:['Écoute la question et choisis une image.',b.q],render(st,api){uWrap(st,h('p',{class:'u-note'},b.q),h('div',{class:'urow'},opts.map(e=>uButton(e,()=>api.answer(e===b.answer),{style:{fontSize:'55px'}}))));}},run);if(run.abort||RUN!==run)return;const p=P();p.bookEvidence=p.bookEvidence||{};p.bookEvidence[b.id]={at:Date.now(),comprehension:r.first,mode:assisted||!miniBookDecodable(b)?'ecoute-accompagnee':'lecture-declaree',autonomousDecodingValidated:false};save();const sticker=addStars(scoreOf([r]).stars);Celebrate.show({sticker,again:()=>readMiniBook(b),home:()=>{Shell.close();miniLibrary();}});}
+GAMES.livres={id:'livres',title:'Mes petits livres',sub:'Lire ou écouter',icon:'📕',color:'plum',open:miniLibrary};
+
+/* Business cards: layers, freehand paths, undo, saved gallery and vector export. */
+const legacyShowCard=showCard;
+function visitEscape(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));}
+function visitSVG(c){return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400"><rect width="700" height="400" rx="24" fill="${CARD_BG.includes(c.bg)?c.bg:CARD_BG[0]}"/><text x="350" y="100" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="50" fill="#58436b">${visitEscape(c.name)}</text>${(c.strokes||[]).map(s=>`<polyline points="${s.points.map(p=>p.map(n=>Number(n).toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${WING_COLORS.includes(s.color)?s.color:'#58436b'}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}${(c.items||[]).map((o,i)=>`<text data-item="${i}" x="${Number(o.x)}" y="${Number(o.y)}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,sans-serif" font-size="${o.letter?58:64}" fill="#58436b">${visitEscape(o.text)}</text>`).join('')}</svg>`;}
+function exportVisit(c){const url=URL.createObjectURL(new Blob([visitSVG(c)],{type:'image/svg+xml'}));const a=h('a',{href:url,download:'ma-carte.svg'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
+showCard=function(c,quiet){if(c.kind!=='visit')return legacyShowCard(c,quiet);const ov=ovScreen('Ma carte de visite',atelierView);ov.body.append(h('div',{class:'business-preview',style:{margin:'20px auto'},html:visitSVG(c)}),h('div',{class:'urow'},uButton('⬇ Enregistrer l’image',()=>exportVisit(c)),uButton('✏️ Modifier',()=>{ov.el.remove();makeCard(c);})))};
+makeCard=function(existing){Voice.stop();Sfx.ensure();const c=existing&&existing.kind==='visit'?JSON.parse(JSON.stringify(existing)):{kind:'visit',name:kid().name,bg:CARD_BG[0],items:[],strokes:[],at:Date.now()};const ov=ovScreen('Ma carte de visite',atelierView),editor=h('div',{class:'visit-editor'}),preview=h('div',{class:'business-preview'}),history=[];let mode='move',selected='A',pen=WING_COLORS[0],gesture=null;
+const snapshot=()=>{history.push(JSON.stringify(c));if(history.length>30)history.shift();};const draw=()=>preview.innerHTML=visitSVG(c);const tools=h('div',{class:'visit-tools'}),palette=h('div',{class:'visit-tools'});const modes=[['letters','Lettres'],['symbols','Symboles'],['draw','Dessiner'],['move','Déplacer']];const setMode=m=>{mode=m;if(m==='letters')selected='A';if(m==='symbols')selected=CARD_STK[0];[...tools.children].forEach((b,i)=>b.classList.toggle('active',modes[i][0]===m));palette.innerHTML='';if(m==='letters')'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(t=>palette.append(uButton(t,()=>{selected=t;[...palette.children].forEach(b=>b.classList.toggle('active',b.textContent===t));})));if(m==='symbols')CARD_STK.forEach(t=>palette.append(uButton(t,()=>{selected=t;[...palette.children].forEach(b=>b.classList.toggle('active',b.textContent===t));})));if(m==='draw')WING_COLORS.forEach(color=>palette.append(uButton('●',()=>{pen=color;},{style:{color}})));};modes.forEach(([m,t])=>tools.append(uButton(t,()=>setMode(m))));const name=h('input',{value:c.name,maxLength:16,'aria-label':'Prénom sur la carte'});name.addEventListener('change',()=>{snapshot();c.name=name.value.slice(0,16);draw();});const point=e=>{const r=preview.getBoundingClientRect();return [clamp((e.clientX-r.left)/r.width*700,0,700),clamp((e.clientY-r.top)/r.height*400,0,400)];};preview.addEventListener('pointerdown',e=>{e.preventDefault();const [x,y]=point(e);preview.setPointerCapture(e.pointerId);if(mode==='letters'||mode==='symbols'){if(c.items.length>=50)return;snapshot();c.items.push({text:selected,x,y,letter:mode==='letters'});draw();return;}if(mode==='draw'){if(c.strokes.length>=100)return;snapshot();const stroke={points:[[x,y]],color:pen};c.strokes.push(stroke);gesture={stroke};draw();return;}const target=e.target.closest('[data-item]');if(target){snapshot();const o=c.items[+target.dataset.item];gesture={item:o,dx:x-o.x,dy:y-o.y};}});preview.addEventListener('pointermove',e=>{if(!gesture)return;const [x,y]=point(e);if(gesture.stroke){if(gesture.stroke.points.length<1500)gesture.stroke.points.push([x,y]);}else{gesture.item.x=x-gesture.dx;gesture.item.y=y-gesture.dy;}draw();});preview.addEventListener('pointerup',()=>gesture=null);preview.addEventListener('pointercancel',()=>gesture=null);
+const colors=h('div',{class:'visit-tools'},CARD_BG.map(bg=>uButton('●',()=>{snapshot();c.bg=bg;draw();},{style:{background:bg},'aria-label':'Fond '+(CARD_BG.indexOf(bg)+1)})));editor.append(name,preview,tools,palette,colors,h('div',{class:'urow'},uButton('↶ Annuler',()=>{if(history.length){Object.assign(c,JSON.parse(history.pop()));name.value=c.name;draw();}}),uButton('✓ Enregistrer ma carte',()=>{const p=P();p.cards=p.cards||[];c.name=name.value.slice(0,16)||kid().name;c.at=Date.now();p.cards.unshift(JSON.parse(JSON.stringify(c)));if(p.cards.length>24)p.cards.length=24;save();Voice.say('Ta carte est enregistrée.');ov.el.remove();atelierView();})));ov.body.append(editor);setMode('move');draw();Voice.say('Choisis des lettres, des symboles, ou dessine sur ta carte.');};
+atelierView=function(){const ov=ovScreen('Mes cartes de visite'),cards=P().cards||[];ov.body.append(uButton('＋ Créer une carte',()=>{ov.el.remove();makeCard();}));const list=h('div',{class:'theme-games',style:{marginTop:'20px'}});cards.forEach(c=>{const b=h('button',{class:'simple-game','aria-label':c.kind==='visit'?'Carte de '+c.name:'Ancienne carte',style:{padding:'8px'}});if(c.kind==='visit')b.append(h('div',{class:'business-preview',html:visitSVG(c)}));else b.append(h('span',null,(c.stk||[]).join(' ')),h('b',null,c.msg));onTap(b,()=>{ov.el.remove();showCard(c);});list.append(b);});ov.body.append(list);Voice.say('Choisis une carte pour la regarder, ou crée une nouvelle carte.');};
+GAMES.atelier.title='Mes cartes de visite';GAMES.atelier.sub='Lettres, symboles et dessins';
+/* Explicit spellings for the short books; no inferred pronunciation from raw letters. */
+const MINI_NOTATION={lola:'l.o-l.a',milo:'m.i-l.o',le:'l.e',la:'l.a',a:'a',lu:'l.u',sur:'s.u.r',il:'i.l',rit:'r.i.*t',roule:'r.ou-l.*e',vu:'v.u',du:'d.u',de:'d.e',avec:'a-v.è.c'};
+const MINI_CONTENT=[
+ ['lune','La lune','🌙',['Lola a vu la lune.','Milo a vu la lune.','La lune a lu.'],'🌙'],
+ ['lama','Le lama','🦙',['Milo a vu le lama.','Le lama a vu Lola.','Lola rit.'],'🦙'],
+ ['chat','Le chat','🐱',['Lola a vu le chat.','Le chat a vu Milo.','Milo rit.'],'🐱'],
+ ['velo','Le vélo','🚲',['Lola a le vélo.','Le vélo roule.','Lola rit.'],'🚲'],
+ ['moto','La moto','🏍️',['Milo a la moto.','La moto roule.','Lola a vu la moto.'],'🏍️'],
+ ['poule','La poule','🐔',['Lola a vu la poule.','La poule a vu Milo.','Milo rit.'],'🐔'],
+ ['pomme','La pomme','🍎',['Milo a la pomme.','Lola a vu la pomme.','Lola a la pomme.'],'🍎'],
+ ['tulipe','La tulipe','🌷',['Lola a la tulipe.','Milo a vu la tulipe.','Milo a la tulipe.'],'🌷'],
+ ['bebe','Le bébé','👶',['Le bébé a la poupée.','Lola a vu le bébé.','Le bébé rit.'],'👶'],
+ ['lapin','Le lapin','🐰',['Lola a vu le lapin.','Le lapin a la carotte.','Milo a vu le lapin.'],'🐰'],
+ ['bateau','Le navire','🚢',['Milo a vu le navire.','Lola a vu le navire.','Le navire a la voile.'],'🚢'],
+ ['dragon','Le dragon','🐉',['Le dragon a vu Lola.','Lola a vu le dragon.','Le dragon rit.'],'🐉']
+];
+MINI_NOTATION.voile='v.oi-l.*e';
+MINI_CONTENT[0][3][2]='Lola rit.';
+MINI_BOOKS.splice(0,MINI_BOOKS.length,...MINI_CONTENT.map(([id,title,em,pages,answer])=>({id,title,em,pages,q:'Quelle image va avec cette histoire ?',answer})));
+miniBookRequirement=function(b){let req=0;for(const t of b.pages.flatMap(bookTokens)){const W=WORDS.find(w=>w.w.toLocaleLowerCase('fr')===t);if(W){req=Math.max(req,W.req);continue;}const notation=MINI_NOTATION[t];if(!notation)return null;const r=reqOf(parseNotation(notation));if(r.req===99)return null;req=Math.max(req,r.req);}return req;};
+
+/* Evidence and scheduled retrieval are independent of stars. Aided attempts never validate autonomous performance. */
+function evidenceKey(item,run){return item.evidenceKey|| (item.skill?'gp:'+item.skill:run.key||'game:'+run.gid);}
+function evidenceUpdate(p,key,r,signature,now=Date.now()){
+ if(r.first==null||r.exam)return;const all=p.evidence||(p.evidence={}),e=all[key]||(all[key]={alone:0,aided:0,later:0,errors:0,seen:[]});
+ const delay=e.last?now-e.last:0,newExample=!e.seen.includes(signature);if(r.first&&!r.helped){e.alone++;if(delay>=20*3600000&&newExample)e.later++;e.due=now+(e.later?7:e.alone>=3?2:1)*86400000;}else{e.aided++;e.errors+=Math.max(1,r.wrongs||0);e.due=now+86400000;}
+ e.last=now;e.seen=[signature,...e.seen.filter(s=>s!==signature)].slice(0,15);e.lastResult=r.first?'alone':'aided';
+}
+const evidencePlay=Engine.play.bind(Engine);
+Engine.play=async function(item,run){const p=P(),key=evidenceKey(item,run),signature=JSON.stringify(item.caption||item.say||'').slice(0,300);const r=await evidencePlay(item,run);if(!run.abort&&RUN===run){evidenceUpdate(p,key,r,signature);save();}return r;};
+function recommendedGame(){const p=P(),world=S.world,ids=themesOf(world).flatMap(t=>t.ids),now=Date.now();if(p.resume){if(p.resume.kind==='lesson')return 'lecture';if(p.resume.kind==='module')return 'calcul';if(ids.includes(p.resume.gid))return p.resume.gid;}
+ const due=Object.entries(p.evidence||{}).filter(([,e])=>e.due<=now).sort((a,b)=>a[1].due-b[1].due);
+ for(const [key]of due){if(key.startsWith('gp:')&&world==='grands')return 'lecture';if(key.startsWith('calc:')&&world==='grands')return 'calcul';if(key.startsWith('game:')&&ids.includes(key.slice(5)))return key.slice(5);}
+ return world==='petits'?'gestes':(P().lecture.unlocked||0)<6?'lecture':'blocs';
+}
+const originalHome=renderHome;
+renderHome=function(theme=HOME_THEME){originalHome(theme);if(HOME_THEME)return;const main=$('.theme-home');if(!main)return;const id=recommendedGame(),g=GAMES[id],resume=P().resume;const box=h('div',{class:'suggestion'},uButton((resume?'▶ Reprendre : ':'🦉 Pour toi : ')+(SIMPLE_GAME_NAMES[id]||g.title),()=>{if(resume&&resume.kind==='lesson')runLesson(resume.li);else if(resume&&resume.kind==='module')runModule(resume.mi,resume.lv);else runGame(id);}));main.insertBefore(box,main.querySelector('.themes-grid'));};
+const oldNotions=notionsCard;
+notionsCard=function(id){const box=oldNotions(id),p=S.progress[id]||{},entries=Object.entries(p.evidence||{});const counts=entries.reduce((a,[,e])=>({alone:a.alone+e.alone,aided:a.aided+e.aided,later:a.later+e.later}),{alone:0,aided:0,later:0});box.append(h('h4',null,'Comment l’enfant réussit'),h('p',null,`${counts.alone} réponses réussies seul · ${counts.aided} reprises ou réponses aidées · ${counts.later} réussites retrouvées un autre jour sur un exemple différent.`),h('p',null,'Ce suivi décrit le jeu. Il ne certifie pas les compétences scolaires. Les étoiles récompensent la série terminée.'));return box;};
+/* Return two specific older correspondences before the new lesson when they are due. */
+const originalBuildLesson=buildLesson;
+buildLesson=function(li){const items=originalBuildLesson(li),due=(P().resume&&P().resume.kind==='lesson'?P().resume.reviewKeys:[]) .map(k=>[k]);for(const [k]of due){const L=LESSONS[LIDX[k.slice(3)]];items.splice(1,0,itLettre(L,li));}return items;};
+
+/* All child entry points keep five themes; the potager is paused, not deleted. */
+for(const world of ['petits','grands']){WORLD_TILES[world]=WORLD_TILES[world].filter(id=>id!=='jardin');THEMES[world].forEach(t=>t.ids=t.ids.filter(id=>id!=='jardin'));}
+function addThemeGame(world,theme,id){WORLD_TILES[world].push(id);THEMES[world].find(t=>t.id===theme).ids.push(id);}
+for(const [world,theme,id]of [['grands','calculer','blocs'],['grands','calculer','paniers'],['grands','jouer','monstre'],['grands','lire','livres'],['petits','calculer','blocsP'],['petits','calculer','gestes'],['petits','jouer','monstreP'],['petits','lire','livres']])addThemeGame(world,theme,id);
+Object.assign(SIMPLE_GAME_NAMES,{robot:'Le robot facteur',miroir:'Le papillon miroir',lynx:'Les différences',lynxG:'Les différences',atelier:'Mes cartes de visite'});
+function upgradeVoiceLines(){const lines=[...UPGRADE_VOICE_LINES];for(let n=0;n<=20;n++){lines.push(`Construis le nombre ${nw(n)}.`,`Donne ${nw(n)} ${n===1?'biscuit':'biscuits'} au monstre.`,`Mets ${nw(n)} ${n===1?'fruit':'fruits'} dans chaque panier.`);for(let b=1;b<=10;b++){lines.push(`${nw(n)} plus ${nw(b)}.`,`${nw(n)} moins ${nw(b)}.`,`${nw(n)} plus ${nw(b)}. Combien de biscuits ?`,`${nw(n)} moins ${nw(b)}. Combien de biscuits ?`);}}MINI_BOOKS.forEach(b=>{lines.push(b.q,...b.pages,...b.pages.flatMap(p=>p.split(' ').map(t=>t.replace(/[.!?]/g,''))));});return lines;}
+
+function withSeed(seed, fn){let x=seed>>>0;const previous=Math.random;Math.random=()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};try{return fn();}finally{Math.random=previous;}}
+function resumeSession(kind,args){const p=P(),old=p.resume;if(old&&old.v===1&&old.kind===kind&&Object.keys(args).every(k=>old[k]===args[k]))return old;const reviewKeys=Object.entries(p.evidence||{}).filter(([k,e])=>k.startsWith('gp:')&&LIDX[k.slice(3)]<(args.li||0)&&e.due<=Date.now()).sort((a,b)=>a[1].due-b[1].due).slice(0,2).map(([k])=>k);p.resume={v:1,kind,...args,seed:Math.floor(Math.random()*4294967295),next:0,res:[],partialWrongs:0,partialHelped:false,reviewKeys};save();return p.resume;}
+function checkpoint(run,next){if(!run.session||run.exam)return;run.session.next=next;run.session.res=[...run.res];run.session.partialWrongs=0;run.session.partialHelped=false;save();}
+function clearResume(run){if(run.session&&P().resume===run.session){delete P().resume;save();}}
+
+
+async function offlineRegistration(){if(!('serviceWorker' in navigator))throw Error('Le mode hors connexion n’est pas disponible dans ce navigateur.');return navigator.serviceWorker.register('./sw.js',{scope:'./'});}
+function offlineParentBox(){const box=h('div',{class:'pcard'},h('h3',null,'Jouer hors connexion')),status=h('p',{'aria-live':'polite'},'Téléchargez les jeux et la voix sur cet appareil. Prévoir environ 210 Mo et laisser cette fenêtre ouverte. La progression reste sur cet appareil.');const go=uButton('Télécharger les jeux et la voix',async()=>{go.disabled=true;try{const reg=await offlineRegistration();await navigator.serviceWorker.ready;const worker=reg.active||reg.waiting||reg.installing;if(!worker)throw Error('Réessayez dans quelques instants.');const channel=new MessageChannel();channel.port1.onmessage=ev=>{const d=ev.data;if(d.complete){status.textContent='Prêt : les jeux et les voix sont disponibles hors connexion sur cet appareil. Rechargez une fois la page avant de couper Internet.';go.disabled=false;}else if(d.error){status.textContent=d.error;go.disabled=false;}else status.textContent='Téléchargement : '+d.done+' / '+d.total;};worker.postMessage({type:'DOWNLOAD'},[channel.port2]);}catch(e){status.textContent=e.message;go.disabled=false;}});box.append(status,go);return box;}
+const baseParentArea=parentArea;
+parentArea=function(){baseParentArea();const w=$('.parent .wrap');if(w)w.append(offlineParentBox());};
+if(typeof navigator!=='undefined'&&'serviceWorker' in navigator&&location.protocol!=='file:')offlineRegistration().catch(()=>{});
+
+function strictWordPool(li,max=8){return WORDS.filter(w=>w.req<=li&&picOK(w)&&w.gs.filter(g=>!g.mute).length<=max);}
+function wordChainPairs(pool){const pairs=[];for(const a of pool)for(const b of pool){if(a===b)continue;const ag=a.gs,bg=b.gs;if(ag.length!==bg.length||ag.some((g,i)=>g.mute!==bg[i].mute||(g.mute&&g.g!==bg[i].g)))continue;const diff=ag.map((g,i)=>!g.mute&&G2L[g.g.toLowerCase()]!==G2L[bg[i].g.toLowerCase()]?i:-1).filter(i=>i>=0);if(diff.length===1)pairs.push({a,b,at:diff[0],ag,bg});}return pairs;}
+GAMES.mots={id:'mots',title:'Je fabrique les mots',sub:'Écouter, découper, écrire',icon:'🔤',color:'plum',stage:'#f5effa',levels:[3,4,5,6,7,8].map((max,i)=>({max,chain:i>=4,name:i>=4?'Changer un son':'Les sons puis les lettres',n:3,skill:'wordshop:'+i,tag:'P1',ref:'Segmenter un mot en sons, encoder et modifier un phonème'})),make(ctx){const li=P().lecture.unlocked||0,pool=strictWordPool(li,ctx.L.max);if(!pool.length)return itLettre(LESSONS[li],li);const pairs=ctx.L.chain?wordChainPairs(pool):[];if(!pairs.length)return itDictee(pick(pool),li);const {a,b,at,ag,bg}=pick(pairs),answer=bg[at].g,choices=shuffle(uniq([answer,ag[at].g,...sample(pool.flatMap(w=>w.gs.filter(g=>!g.mute).map(g=>g.g)),2)])).slice(0,4);if(!choices.includes(answer))choices[0]=answer;return {cls:'upgrade-stage',say:['Écoute le nouveau mot. Change un seul son pour l’écrire.',b.w],render(st,api){const slots=h('div',{class:'urow'},ag.map((g,i)=>h('span',{class:'slot'+(i===at?' next':''),style:{fontSize:'36px',color:g.mute?'#a9a6b3':''}},g.g)));let chosen=null;const row=h('div',{class:'urow'},choices.map(g=>uButton(g,()=>{chosen=g;slots.children[at].textContent=g;})));const go=uButton('✓ Vérifier',()=>{if(chosen===answer)api.answer(true,{praise:b.w});else api.answer(false,{feedback:'Écoute le nouveau mot. Change un seul son pour l’écrire.'});});api.strategy=()=>{slots.children[at].classList.add('reveal');};uWrap(st,uButton('🔊 '+b.e,()=>Voice.say(b.w),{style:{fontSize:'40px'}}),slots,row,go);}};}};
+addThemeGame('grands','lire','mots');
+UPGRADE_VOICE_LINES.push('Écoute le nouveau mot. Change un seul son pour l’écrire.');
 
 boot();
 </script>

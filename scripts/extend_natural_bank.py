@@ -11,9 +11,13 @@ async def main():
  unique={norm(t):t for t in texts if norm(t) not in known}
  pending=[t for t in unique.values() if not voice.path_for(t).exists()]
  sem=asyncio.Semaphore(3)
- for start in range(0,len(pending),25):
-  await voice.generate(pending[start:start+25],sem)
-  print(json.dumps({'generated':min(start+25,len(pending)),'total':len(pending)}),flush=True)
+ done=0
+ async def batch(texts):
+  nonlocal done
+  await voice.generate(texts,sem)
+  done+=len(texts)
+  print(json.dumps({'generated':done,'total':len(pending)}),flush=True)
+ await asyncio.gather(*(batch(pending[start:start+25]) for start in range(0,len(pending),25)))
  packno=len(bank['packs']);offset=0;data=bytearray();added=[]
  for text in unique.values():
   clip=voice.path_for(text).read_bytes();bank['clips']['n|'+text]=[packno,offset,len(clip)];offset+=len(clip);data.extend(clip);added.append(text)

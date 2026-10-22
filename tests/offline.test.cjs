@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
+async function main(){const handlers={},cache=new Map(),messages=[];let offline=false,pending;
+class Reply{constructor(body){this.body=body;this.ok=true;}clone(){return new Reply(this.body)}async json(){return JSON.parse(this.body)}static error(){return {ok:false,error:true}}}
+const scope='https://example.test/cahier-lumi/',key=v=>typeof v==='string'?v:v.url||v.href;
+const bucket={async match(k){return cache.get(key(k))},async put(k,v){cache.set(key(k),v)}};
+const context={URL,Response:Reply,self:{location:{href:scope+'sw.js',origin:'https://example.test'},registration:{scope},addEventListener:(n,f)=>handlers[n]=f,skipWaiting(){},clients:{claim(){}}},caches:{open:async()=>bucket},fetch:async url=>{if(offline)throw Error('offline');const u=key(url);const r=new Reply(u.endsWith('index-belge.json')?JSON.stringify({packs:['test.mp3']}):'asset');r.url=u;return r;}};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../sw.js'),'utf8'),context);
+handlers.message({data:{type:'DOWNLOAD'},ports:[{postMessage:m=>messages.push(m)}],waitUntil:p=>pending=p});await pending;assert.equal(messages.at(-1).complete,true);assert.ok(cache.has(scope+'.offline-ready'));
+offline=true;let result;handlers.fetch({request:{url:scope+'?version=test',method:'GET',mode:'navigate'},respondWith:p=>result=p});assert.equal((await result).body,'asset','Offline navigation falls back to cached index');handlers.fetch({request:{url:scope+'voix/test.mp3?v=changed',method:'GET',mode:'cors'},respondWith:p=>result=p});assert.equal((await result).body,'asset','Audio cache ignores revision query');
+cache.clear();messages.length=0;handlers.message({data:{type:'DOWNLOAD'},ports:[{postMessage:m=>messages.push(m)}],waitUntil:p=>pending=p});await pending;assert.ok(messages.at(-1).error);assert.ok(!cache.has(scope+'.offline-ready'),'Failed downloads never report ready');console.log('Hors connexion : téléchargement, voix, navigation et échec réseau vérifiés.');}
+main().catch(e=>{console.error(e);process.exitCode=1});

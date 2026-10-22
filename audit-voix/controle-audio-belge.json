@@ -1,15 +1,15 @@
 {
   "voice": "fr-BE-CharlineNeural",
-  "clips": 16122,
-  "uniqueRecordings": 10246,
-  "packs": 156,
-  "bytes": 180233520,
+  "clips": 16818,
+  "uniqueRecordings": 10942,
+  "packs": 172,
+  "bytes": 199916160,
   "sampleRate": 24000,
   "allOriginalKeysCovered": true,
-  "decoded": 16122,
+  "decoded": 16818,
   "durationMinSeconds": 0.624,
   "durationMedianSeconds": 1.584,
-  "durationMaxSeconds": 5.352,
+  "durationMaxSeconds": 6.072,
   "peakMax": 0.8163,
   "failed": []
 }

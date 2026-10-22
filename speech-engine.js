@@ -34,7 +34,7 @@
     const settings = adapters.settings || (() => ({}));
     const state = (status, text = '') => { Voice.status=status; Voice.text=text; if (adapters.onState) adapters.onState({status,text,mode:Voice.mode}); };
     const VoicePack = {
-      base:'voix/', revision:'20261022-personnage-2', idx:null, packs:[], order:{}, scopes:{}, loading:{}, packAge:new Map(), urls:new Map(), hits:0, misses:new Set(), label:'', ready:null,
+      base:'voix/', revision:'20261022-concret-1', idx:null, packs:[], order:{}, scopes:{}, loading:{}, packAge:new Map(), urls:new Map(), hits:0, misses:new Set(), label:'', ready:null,
       init() {
         if (this.ready) return this.ready;
         this.ready = (async () => {

@@ -20,8 +20,29 @@ Les tests du lecteur se lancent avec `node tests/speech.test.cjs`. `scripts/buil
 ## Interface simplifiée — 22 octobre 2026
 
 - Cinq thèmes directs : Lire/Écouter, Calculer/Compter, Jouer, Créer, Découvrir.
-- « Mon personnage » regroupe les 48 objets. Tous sont libres ; trois au maximum peuvent être équipés. Un mot par objet. Le choix est enregistré séparément pour chaque enfant.
-- Une étoile par série d’exercices terminée, quel que soit le score. Dix étoiles deviennent un diamant ; le compteur repart à zéro (0–9). Aucun rang, niveau de récompense ou objet à débloquer. Les anciens grands totaux sont conservés en sauvegarde mais ne sont plus affichés ni repris dans ce nouveau cycle. Les points en haut du jeu indiquent seulement l’avancement de l’activité. La fin affiche « Tu as terminé », puis l’étoile ou le diamant. Les nombres cumulés de diamants ne sont pas affichés à l’enfant.
+- « Mon personnage » regroupe les 48 objets. Les accessoires restent libres ; les 40 trésors se débloquent progressivement. Trois objets disponibles au maximum peuvent être équipés. Un mot par objet. Le choix est enregistré séparément pour chaque enfant.
+- Le compteur d’étoiles est visible en haut, juste à côté du cadenas. Chaque série donne trois étoiles sans erreur, deux avec une erreur, une au-delà. Dix étoiles débloquent le prochain trésor ; le reste est conservé (exemple : 9 + 3 → un trésor et 2 étoiles). Aucun diamant comme monnaie. Les anciens diamants deviennent des trésors disponibles, et les trésors déjà équipés ou historiquement gagnés sont conservés. Les grands totaux d’étoiles historiques ne deviennent pas le petit compteur.
 - Les acquisitions et l’adaptation des exercices restent enregistrées et consultables dans l’espace parents. Les anciennes sauvegardes sont conservées.
-- Le jardin s’arrose librement une fois par plante et par jour, sans monnaie à gagner.
+- Le potager est en pause ; son code et ses données sont conservés. La cuisine reste disponible sans récoltes.
 - La vitesse vocale se règle dans l’espace parents ; aucun bouton « Plus lent » dans les jeux.
+
+
+## Jeux concrets et apports de l’analyse du marché
+
+- Différences entre deux scènes originales : cinq étapes pour les petits, six pour les grands.
+- Robot facteur en déplacements directs ; papillon miroir avec une à quatre couleurs à compléter.
+- Sudoku : quatorze étapes, de 2 × 2 à 4 × 4. Mémo des mots : neuf étapes, de deux paires d’images à huit paires mot–image. Les mots sont filtrés par sons rencontrés.
+- Suites : treize étapes chez les grands, depuis une alternance de deux couleurs. Le motif AABC manquant est corrigé.
+- Monstre gourmand : collections puis additions/soustractions. Nombres à construire : blocs à toucher, deux parties colorées, ajouts et retraits. Paniers : groupes égaux, addition répétée et découverte de la multiplication.
+- Petits gestes : une carotte par lapin, collections progressives pour les petits.
+- Fusion : cartes à toucher ou glisser ; enregistrement syllabique dédié conservé. Atelier des mots : jetons pour les sons, graphèmes mobiles puis changement d’un seul son, lettres muettes conservées.
+- Douze mini-livres de trois pages avec lecture mot à mot ou écoute ; leur classement dépend des graphèmes explicitement annotés. Une réussite de compréhension ne certifie jamais le décodage oral.
+- Aides visuelles après des erreurs répétées dans les nouveaux jeux. Suivi séparé des réponses réussies seul, des reprises aidées et des réussites retrouvées un autre jour sur un exemple différent.
+- Activité conseillée, rappels ciblés de sons à revoir, reprise déterministe des séries standard et des entraînements de lecture/calcul. L’exercice en cours redémarre ; ses erreurs et aides restent comptées. Un défi interrompu redémarre entièrement.
+- Cartes de visite : lettres, symboles, dessin libre, déplacement, annulation, galerie et export SVG. Les anciennes cartes restent consultables.
+- Options parents : téléchargement des jeux et de tous les enregistrements pour jouer hors connexion (environ 200 Mo). À faire en ligne ; le stockage du navigateur peut être supprimé par l’utilisateur ou le système.
+- Don unique sur chacun des profils Luca/Lola : trois étoiles et les trois premiers trésors, avec l’anneau en troisième. Les trésors historiques ne sont pas retirés. Les nouveaux parcours de puzzles commencent simplement ; la progression précédente est archivée, sans effacer les acquis de lecture/calcul.
+
+Vérifications : `tests/speech.test.cjs`, `tests/games.test.cjs`, `tests/offline.test.cjs`, couverture des nouvelles phrases et contrôle de tous les fichiers audio. Le test hors connexion simule téléchargements, lecture du cache et panne réseau ; ce n’est pas un essai en mode avion sur chaque appareil. Les essais d’interface utilisent un profil de démonstration sans sauvegarde.
+
+Voir `PROJECT_NOTES.md` pour la reprise ultérieure du potager.
