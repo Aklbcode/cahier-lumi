@@ -4843,7 +4843,7 @@ function gardenView() {
 }
 
 /* ---------------- La cuisine ---------------- */
-const BASE = { oeuf: { e: '🥚', s: 'un œuf', p: 'œufs', w: 'œuf', wp: 'œufs' }, lait: { e: '🥛', s: 'un verre de lait', p: 'verres de lait', w: 'lait', wp: 'laits' }, farine: { e: '🌾', s: 'une cuillère de farine', p: 'cuillères de farine', w: 'farine', wp: 'farines' }, sucre: { e: '🍬', s: 'un sucre', p: 'sucres', w: 'sucre', wp: 'sucres' }, beurre: { e: '🧈', s: 'un morceau de beurre', p: 'morceaux de beurre', w: 'beurre', wp: 'beurres' } };
+const BASE = { oeuf: { e: '🥚', s: 'un œuf', p: 'œufs', w: 'œuf', wp: 'œufs' }, lait: { e: '🥛', s: 'un verre de lait', p: 'verres de lait', w: 'lait', wp: 'lait' }, farine: { e: '🌾', s: 'une cuillère de farine', p: 'cuillères de farine', w: 'farine', wp: 'farine' }, sucre: { e: '🍬', s: 'un sucre', p: 'sucres', w: 'sucre', wp: 'sucres' }, beurre: { e: '🧈', s: 'un morceau de beurre', p: 'morceaux de beurre', w: 'beurre', wp: 'beurre' } };
 const ING = id => BASE[id] || { e: SEEDS[id].e, s: SEEDS[id].s, p: SEEDS[id].p.replace(/^des /, ''), w: SEEDS[id].w, wp: SEEDS[id].p.replace(/^des /, '') };
 const RECIPES = [
   { id: 'crepes', e: '🥞', n: 'Les crêpes', ing: { oeuf: 2, lait: 1, farine: 3 }, who: 'all' },
