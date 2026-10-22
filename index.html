@@ -787,10 +787,40 @@ table.notions tr.st-acquis td:last-child{color:#2E9B5C;font-weight:700}
 @media (max-width:460px){.house-rooms{grid-template-columns:repeat(2,1fr)}}
 
 .voice-tools{display:flex;gap:8px;flex:none;align-items:center}.voice-slow{display:flex;flex-direction:column;justify-content:center;gap:0;color:#277056}.voice-slow span{font-size:25px}.voice-slow small{font-size:10px;font-weight:700}.voice-replay.is-speaking{outline:3px solid #65cda1;outline-offset:3px}.voice-tests{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}#voice-status{min-height:1.5em;color:#277056;font-weight:700}#rate{max-width:220px}.voice-intro{line-height:1.6}@media(max-width:540px){.voice-tools{flex-direction:column;gap:6px}.voice-tools .round-btn{width:44px;height:44px}.voice-tools .round-btn svg{width:24px;height:24px}.voice-slow span{font-size:21px}.game-bottom{gap:8px}.game-bottom .game-av{width:52px}.voice-tests .pbtn{flex:1 1 140px}.prow input[type=range]{max-width:160px}}
+
+/* Accueil enfant : cinq choix, puis les jeux du thème. */
+.theme-home{max-width:1040px;padding-bottom:32px}
+.theme-welcome{display:flex;align-items:center;gap:20px;padding:28px 4px 18px}
+.theme-welcome .lumi{width:76px;flex:none}
+.theme-welcome h1,.theme-heading h1{font-family:var(--font-display);font-size:clamp(27px,4vw,38px);line-height:1.15;margin:0}
+.theme-welcome p{margin:7px 0 0;color:var(--ink-soft);font-size:19px}
+.themes-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:20px;padding:6px 0 24px}
+.theme-card{grid-column:span 2;min-height:176px;border:2px solid color-mix(in srgb,var(--theme-color) 18%,white);border-bottom:6px solid color-mix(in srgb,var(--theme-color) 50%,white);border-radius:28px;background:var(--theme-bg);color:var(--theme-color);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:22px 16px;transition:transform .12s}
+.theme-card:nth-child(-n+2){grid-column:span 3;min-height:200px;flex-direction:row;gap:26px}
+.theme-card:active,.simple-game:active{transform:translateY(3px)}
+.theme-picture{font-size:62px;line-height:1.2;display:block}
+.theme-card:nth-child(-n+2) .theme-picture{font-size:80px}
+.theme-name{font-family:var(--font-display);font-size:clamp(27px,4vw,35px);font-weight:800;line-height:1.15}
+.theme-heading{display:flex;gap:26px;align-items:center;padding:28px 0 22px}
+.theme-heading h1 span{font-size:.9em}
+.theme-back{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--line);border-radius:18px;min-height:58px;padding:6px 18px;font-weight:700;font-size:36px}
+.theme-back span{font-size:17px}
+.theme-games{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;padding-bottom:28px}
+.simple-game{background:white;border:2px solid var(--line);border-bottom:6px solid color-mix(in srgb,var(--game-color) 45%,white);border-radius:24px;min-height:180px;padding:22px 16px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;transition:transform .12s}
+.simple-game-picture{font-size:62px;line-height:1.15}
+.simple-game b{font-family:var(--font-display);font-size:23px;line-height:1.2;max-width:230px}
+@media(max-width:600px){.top .wrap{gap:8px}.brand b{font-size:20px;white-space:normal;text-align:left}.brand .lumi{width:36px}.chip{padding-right:10px}.chip .av{width:30px;height:30px}.theme-welcome{gap:12px;padding:22px 0 16px}.theme-welcome .lumi{width:56px}.theme-welcome p{font-size:17px}.themes-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.theme-card,.theme-card:nth-child(-n+2){grid-column:span 1;min-height:158px;flex-direction:column;gap:12px;padding:18px 10px;border-radius:23px}.theme-card:last-child{grid-column:1/-1;min-height:110px;flex-direction:row;gap:24px}.theme-picture,.theme-card:nth-child(-n+2) .theme-picture{font-size:54px}.theme-name{font-size:27px}.theme-heading{gap:16px;padding:22px 0}.theme-back{padding:4px 12px}.theme-games{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.simple-game{min-height:170px;padding:18px 10px;gap:14px}.simple-game b{font-size:20px}.simple-game-picture{font-size:52px}}
+
+
+.character-sheet{width:min(100%,850px)!important;max-width:850px!important;padding:24px!important}.character-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.character-top h2{margin:0;font-size:25px}.character-preview{width:200px;margin:4px auto}.character-preview svg{width:100%;height:auto}.character-slots{display:flex;justify-content:center;gap:12px}.character-slots>button,.character-slots>span{width:62px;height:62px;border:2px dashed #b5c8d1;border-radius:18px;display:grid;place-items:center;background:#f1f7fa;font-size:32px;position:relative}.character-slots small{position:absolute;right:3px;top:0;font-size:18px;color:#465468}.character-status{text-align:center;min-height:24px;color:var(--ink-soft)}.character-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:10px}.character-object{border:3px solid transparent;background:#f2f6fa;border-radius:18px;padding:12px 6px;min-height:110px;color:var(--ink);display:flex;align-items:center;flex-direction:column;gap:8px}.character-object>span{font-size:36px}.character-object small{font-size:13px;font-weight:700;line-height:1.2}.character-object.on{border-color:#4d9d85;background:#e3f5ec}.character-object.on::after{content:'✓';color:#337a60;font-weight:bold}.character-object:focus-visible{outline:3px solid #3c77c6;outline-offset:2px}@media(max-width:600px){.character-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.character-sheet{padding:16px!important}.character-preview{width:160px}.character-object{min-height:100px}}
+
+
+.series-reward p{font-size:23px;font-weight:800;margin:0 0 8px}.series-earned{font-size:58px;line-height:1.05}.series-stars{display:grid;grid-template-columns:repeat(5,1fr);gap:0 8px;font-size:29px;color:rgba(255,255,255,.25);line-height:1.1}.series-stars .filled{color:#ffdf65}.series-reward small{display:block;margin-top:6px;font-size:16px}.celebrate{overflow:auto;gap:12px}.celebrate:has(.series-reward) .cel-av{width:100px}.celebrate:has(.series-reward) h2{font-size:clamp(28px,5vw,42px)}@media(max-height:550px){.celebrate:has(.series-reward) .cel-av{display:none}.celebrate .acts button{font-size:18px;padding:9px 18px}.celebrate{gap:8px}}
+
 </style>
 </head>
 <body>
-<script src="speech-engine.js?v=7"></script>
+<script src="speech-engine.js?v=10"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -1136,7 +1166,6 @@ const Shell = {
     const voiceNote = h('div', { class: 'game-voice-status', hidden: true, role: 'status', 'aria-live': 'polite', style: { color: '#9a491a', fontSize: '14px', fontWeight: '700', textAlign: 'center' } });
     const close = onTap(h('button', { class: 'round-btn', 'aria-label': 'Quitter le jeu', html: ICON.close }), () => this.close());
     const spk = onTap(h('button', { class: 'round-btn voice-replay', 'aria-label': 'Réécouter la consigne', style: { color: '#3AA2EE' }, html: ICON.speaker }), () => this.replay());
-    const slow = onTap(h('button', { class: 'round-btn voice-slow', 'aria-label': 'Réécouter plus lentement' }, h('span', { 'aria-hidden': 'true' }, '🐢'), h('small', null, 'Plus lent')), () => Voice.slower(() => this.replay()));
     this.avEl = h('div', { class: 'av-live game-av', role: 'button', 'aria-label': 'Réécouter la consigne' });
     onTap(this.avEl, () => this.replay());
     this.trackEl = h('div', { class: 'dots-track' }, this.dotsEl);
@@ -1144,7 +1173,7 @@ const Shell = {
     this.el = h('div', { class: 'screen', hidden: true, role: 'dialog', 'aria-label': 'Jeu' },
       h('div', { class: 'game-top' }, close, this.trackEl, this.lvlEl),
       h('div', { class: 'stage-wrap' }, this.stage),
-      h('div', { class: 'game-bottom' }, h('div', { class: 'voice-tools' }, spk, slow), h('div', { style: { flex: '1', minWidth: '0' } }, this.capEl, voiceNote), this.avEl));
+      h('div', { class: 'game-bottom' }, h('div', { class: 'voice-tools' }, spk), h('div', { style: { flex: '1', minWidth: '0' } }, this.capEl, voiceNote), this.avEl));
     document.body.append(this.el);
   },
   isOpen() { return this.el && !this.el.hidden; },
@@ -1231,7 +1260,7 @@ const Engine = {
             finished = true; sealAnswer();
             if (o.el) flash(o.el, 'picked');
             Sfx.play('tap');
-            Sfx.play('key'); await Voice.say(pick(DEFI_ACK));
+            Sfx.play('key'); await Voice.say(pick(DEFI_ACK), { feedback: 'neutral' });
             await sleep(150);
             resolve({ first: !!ok, exam: true });
             return true;
@@ -1240,7 +1269,7 @@ const Engine = {
             finished = true; sealAnswer();
             if (o.el) flash(o.el, 'ok-flash');
             Sfx.play(o.sfx || 'good'); Lumi.react('happy');
-            await Voice.say(o.praise || item.praise || pick(PRAISE));
+            await Voice.say(o.praise || item.praise || pick(PRAISE), { feedback: 'correct' });
             await sleep(o.wait != null ? o.wait : 250);
             resolve({ first: wrongs === 0 && !item.helped, wrongs });
             return true;
@@ -1249,7 +1278,7 @@ const Engine = {
         },
         async step(ok, o = {}) {
           if (!alive()) return false;
-          if (ok) { stepWrongs = 0; $$('.reveal', st).forEach(e => e.classList.remove('reveal')); Sfx.play('tick'); if (o.el) flash(o.el, 'ok-flash'); if (o.say) Voice.say(o.say); return true; }
+          if (ok) { stepWrongs = 0; $$('.reveal', st).forEach(e => e.classList.remove('reveal')); Sfx.play('tick'); if (o.el) flash(o.el, 'ok-flash'); if (o.say) Voice.say(o.say, { feedback: 'correct' }); return true; }
           return api.wrong(o, true);
         },
         async wrong(o, isStep) {
@@ -1259,8 +1288,8 @@ const Engine = {
           if (o.correctEl && n >= 2) {
             $$('.reveal', st).forEach(e => e.classList.remove('reveal'));
             o.correctEl.classList.add('reveal');
-            await Voice.say(o.reveal || 'Regarde, c’est celui qui brille. Touche-le !');
-          } else await Voice.say(o.feedback || pick(TRY));
+            await Voice.say(o.reveal || 'Regarde, c’est celui qui brille. Touche-le !', { feedback: 'retry' });
+          } else await Voice.say(o.feedback || pick(TRY), { feedback: 'retry' });
           return false;
         },
         finish(first) { if (!alive()) return; finished = true; resolve({ first }); }
@@ -1287,13 +1316,14 @@ if (NO_AR) window.addEventListener('resize', () => fixSquares(document));
 /* ---------- Partie standard (jeux à niveaux) ---------- */
 const GAMES = {};
 async function runGame(gid) {
+  VoicePack.prefetchScope('feedback');
   const g = GAMES[gid]; if (!g) return;
   if (g.open) return g.open();
   Sfx.ensure();
   const gp = gameProg(gid); gp.lvl = clamp(gp.lvl, 0, g.levels.length - 1);
   const L = g.levels[gp.lvl];
   const run = { gid, abort: false, res: [] }; RUN = run;
-  Shell.open({ bg: g.stage, level: `Niveau ${gp.lvl + 1}/${g.levels.length}` });
+  Shell.open({ bg: g.stage, level: g.title });
   const n = L.n || g.n || 6;
   Shell.setDots(n);
   const ctx = { g, L, li: gp.lvl, i: 0, n, used: [], bag: {} };
@@ -1331,100 +1361,52 @@ function finishGame(run, g, gp) {
    6 questions nouvelles, au moins 4 choix (ou clavier), une seule réponse,
    aucune correction ni aide. Validation à 5/6 : au hasard, P(≥5/6) ≈ 0,5 %. */
 const DEFI = { n: 6, pass: 5 };
-/* Le petit défi devient une chasse aux énigmes : six énigmes, une clé par réponse,
-   et le coffre mystère ne s'ouvre qu'à la fin (suspense, sans dire si c'est juste avant). */
-const DEFI_TEASE = ['Est-ce que tu vas trouver ?', 'Attention, celle-ci est rusée !', 'Hmm… qu’est-ce que tu vas répondre ?', 'Tu es prêt pour celle-là ?', 'Tu es prête pour celle-là ?', 'Ouvre bien tes yeux et tes oreilles !', 'Réfléchis bien, prends ton temps.'];
-const DEFI_ACK = ['Une clé de plus pour le coffre !', 'Hop, dans le coffre !', 'Mystère… on verra à la fin !', 'Je garde ta réponse en secret.', 'Réponse notée. Suspense !'];
-const DEFI_NUM = ['Première énigme !', 'Deuxième énigme !', 'Troisième énigme !', 'Quatrième énigme !', 'Cinquième énigme !', 'Dernière énigme !'];
-const DEFI_END = { roll: 'Roulement de tambour… Est-ce que le coffre va s’ouvrir ?', ok: 'Le coffre mystère s’ouvre !', ko: 'Oh, le coffre est encore fermé. Il manque une clé ou deux. On s’entraîne, et on revient l’ouvrir !' };
+/* Le bilan conserve les critères pédagogiques sans récompense ni comparaison. */
+const DEFI_ACK = ['Merci, tu peux continuer.', 'Réponse notée.'];
 function defiIntro(memo) {
-  const f = kid().g === 'f';
-  const ready = f ? 'Tu es prête ?' : 'Tu es prêt ?';
-  const say = memo
-    ? ['Défi mémoire !', 300, 'Est-ce que tu te souviens de ce que tu as appris ?', 300, 'Six énigmes t’attendent. Avec cinq bonnes réponses, tu ouvres le coffre mystère.', 200, 'Cette fois, je ne t’aide pas.', ready]
-    : ['C’est le moment du petit défi !', 300, 'Six énigmes t’attendent. Avec cinq bonnes réponses, tu ouvres le coffre mystère.', 200, 'Cette fois, je ne t’aide pas.', ready];
-  return {
-    say, caption: (memo ? 'Défi mémoire' : 'Petit défi') + ' : 6 énigmes pour ouvrir le coffre',
+  return { say: 'À toi de jouer. Écoute bien et prends ton temps.', caption: 'À toi de jouer',
     render(st, api) {
-      const go = h('button', { class: 'go-btn' }, f ? 'Je suis prête !' : 'Je suis prêt !', icon('next'));
-      onTap(go, () => { Sfx.play('tap'); api.finish(null); });
-      st.append(h('div', { class: 'defi-card' },
-        h('div', { class: 'defi-em', 'aria-hidden': 'true' }, memo ? '🧠🧰' : '🧰'),
-        h('h2', null, memo ? 'Défi mémoire' : 'Petit défi'),
-        h('div', { class: 'defi-pips keys', 'aria-label': '6 énigmes' }, Array.from({ length: DEFI.n }, () => h('i', null, '🔑'))),
-        h('p', null, '6 énigmes · le coffre s’ouvre à la fin')), go);
+      st.append(h('div', { class: 'defi-card' }, h('div', { class: 'defi-em', 'aria-hidden': 'true' }, '🙂'), h('h2', null, 'À toi de jouer')),
+        onTap(h('button', { class: 'go-btn' }, 'On commence', icon('next')), () => api.finish(null)));
     }
   };
 }
-function defiFlash(i, n) {
-  const st = Shell.stage; st.innerHTML = ''; st.className = 'stage';
-  st.append(h('div', { class: 'defi-card defi-flash' }, h('div', { class: 'defi-em', 'aria-hidden': 'true' }, '❓'),
-    h('h2', null, i === n - 1 ? 'Dernière énigme !' : `Énigme ${i + 1}`),
-    h('div', { class: 'defi-pips keys' }, Array.from({ length: n }, (_, k) => h('i', { class: k < i ? 'on' : '' }, '🔑')))));
-}
 async function runDefi(run, items, memo) {
   run.exam = false;
-  Shell.setLevel(memo ? '🧠 Défi mémoire' : '🧰 Petit défi'); Shell.setDots(0);
+  Shell.setLevel('À toi de jouer'); Shell.setDots(0);
   await Engine.play(defiIntro(memo), run);
   if (run.abort || RUN !== run) return null;
   run.exam = true; Shell.setDots(items.length);
-  const res = []; const f = kid().g === 'f';
-  const teases = shuffle(DEFI_TEASE.filter(t => !/prête? pour/.test(t) || (f ? /prête/.test(t) : /prêt /.test(t))));
+  const res = [];
   for (let i = 0; i < items.length; i++) {
     Shell.now(i);
-    defiFlash(i, items.length); Sfx.play('pop');
-    await Voice.say([DEFI_NUM[Math.min(i, 5)] && (i === items.length - 1 ? DEFI_NUM[5] : DEFI_NUM[i]), i % 2 === 0 || i === items.length - 1 ? teases[i % teases.length] : null]);
-    if (run.abort || RUN !== run) return null;
-    await sleep(200);
     const r = await Engine.play(items[i], run);
     if (run.abort || RUN !== run) return null;
     res.push(r); Shell.mark(i, 'rec');
   }
   run.exam = false;
   const ok = res.filter(r => r.first).length;
-  const pass = ok >= DEFI.pass;
-  /* suspense avant le résultat */
-  const st = Shell.stage; st.innerHTML = ''; st.className = 'stage';
-  const chest = h('div', { class: 'defi-chest', 'aria-hidden': 'true' }, '🧰');
-  st.append(h('div', { class: 'defi-card defi-flash' }, chest, h('h2', null, 'Le coffre mystère…')));
-  Sfx.play('roll'); await Voice.say(DEFI_END.roll); await sleep(500);
-  if (run.abort || RUN !== run) return null;
-  chest.textContent = pass ? '🎁' : '🔒'; chest.classList.add(pass ? 'open' : 'shut');
-  if (pass) Sfx.play('star');
-  await Voice.say(pass ? DEFI_END.ok : DEFI_END.ko);
-  if (run.abort || RUN !== run) return null;
-  return { ok, n: items.length, res, pass };
+  return { ok, n: items.length, res, pass: ok >= DEFI.pass };
 }
 function frDate(t) { try { return new Date(t).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' }); } catch (e) { return ''; } }
 
 /* ---------- Écran de fête ---------- */
 const Celebrate = {
-  show({ stars, sticker, note, noteSay, again, home, next, nextLabel }) {
-    const reward = sticker && typeof sticker === 'object' ? sticker : null;
+  show({ sticker, again, home, next, nextLabel }) {
     Shell.clearCeleb(); Voice.stop();
-    const titles = { 3: ['Super champion !', 'Fantastique !', 'Génial, bravo !'], 2: ['Bravo !', 'Très bien !', 'Bien joué !'], 1: ['Bien essayé !', 'Continue comme ça !', 'Tu progresses !'] };
-    const title = pick(titles[stars]);
-    const starsEl = h('div', { class: 'stars3', 'aria-label': `${stars} étoiles sur 3` },
-      [0, 1, 2].map(i => h('span', { class: i < stars ? '' : 'off', style: { animationDelay: (i * .25 + .2) + 's' } }, '⭐')));
     const acts = h('div', { class: 'acts' });
-    if (next) acts.append(onTap(h('button', null, icon('next'), nextLabel || 'Suite'), () => { Shell.clearCeleb(); next(); }));
+    if (next) acts.append(onTap(h('button', null, icon('next'), 'Continuer'), () => { Shell.clearCeleb(); next(); }));
     if (again) acts.append(onTap(h('button', null, icon('again'), 'Rejouer'), () => { Shell.clearCeleb(); again(); }));
-    acts.append(onTap(h('button', null, icon('home'), 'Menu'), () => { Shell.clearCeleb(); home(); }));
-    const k = kid();
-    const el = h('div', { class: 'celebrate', role: 'dialog', 'aria-label': 'Résultat' },
-      h('div', { class: 'cel-av', html: avatarSVG(S.current, { mood: 'cheer', gear: gearOn() }) }), h('h2', null, title), starsEl,
-      note ? h('div', { class: 'unlock' }, note) : null,
-      reward && reward.level ? h('div', { class: 'unlock lvup' }, `🎉 Niveau ${reward.level} : ${reward.title}`, reward.gear ? h('span', null, ` · nouveau : ${gearName(reward.gear, k)}`) : null) : null,
-      reward && reward.treasure ? h('div', { class: 'unlock' }, 'Nouveau trésor : ', h('span', { style: { fontSize: '34px', verticalAlign: 'middle' } }, reward.treasure[0]), ' ', reward.treasure[1]) : null,
-      acts);
-    Shell.el.append(el);
-    Sfx.play('fanfare'); confetti();
-    const parts = [title];
-    if (noteSay) parts.push(...[].concat(noteSay));
-    const bonus = typeof activityDone === 'function' ? activityDone() : null; if (bonus) { parts.push(bonus); el.insertBefore(h('div', { class: 'unlock' }, '🌟 Parcours du jour terminé : +3 💧'), acts); }
+    acts.append(onTap(h('button', null, icon('home'), 'Choisir un jeu'), () => { Shell.clearCeleb(); home(); }));
+    const reward = sticker ? h('div', { class: 'series-reward' },
+      h('div', { class: 'series-earned', 'aria-hidden': 'true' }, sticker.diamond ? '💎' : '⭐'),
+      h('p', null, sticker.diamond ? 'Un diamant !' : 'Une étoile !'),
+      h('div', { class: 'series-stars', 'aria-label': sticker.diamond ? 'Dix étoiles transformées en un diamant' : `${sticker.stars} étoile${sticker.stars > 1 ? 's' : ''} sur dix` }, Array.from({length:10},(_,i)=>h('span',{class:i < (sticker.diamond ? 10 : sticker.stars) ? 'filled' : '', 'aria-hidden':'true'},'★'))),
+      h('small', null, '10 étoiles → 💎')) : null;
+    Shell.el.append(h('div', { class: 'celebrate', role: 'dialog', 'aria-label': 'Activité terminée' },
+      h('div', { class: 'cel-av', html: avatarSVG(S.current, { mood: 'happy', gear: gearOn() }) }), h('h2', null, 'Tu as terminé !'), reward, acts));
     save();
-    parts.push(...rewardSay(reward));
-    setTimeout(() => Voice.say(parts), 350);
+    Voice.say(sticker ? ['Tu as terminé !', sticker.diamond ? 'Tes dix étoiles deviennent un diamant !' : 'Voici une étoile pour ta série terminée.'] : 'Tu as terminé ! Merci d’avoir joué.');
   }
 };
 
@@ -1467,6 +1449,7 @@ const Timer = {
 /* ---------- Accueil ---------- */
 const WORLD_TILES = { petits: [], grands: [] };
 const WORLD_GROUPS = { petits: [], grands: [] };
+let HOME_THEME = null;
 const WORLDS = {
   petits: { name: 'Le monde de Lola', sub: '3 ans · maternelle', em: '🧸', hello: n => `Coucou ${n} ! Choisis un jeu.` },
   grands: { name: 'Le monde de Luca', sub: '5-6 ans · 1re primaire', em: '🎒', hello: n => `Bonjour ${n} ! On lit, on calcule, ou on part à l’aventure ?` }
@@ -1475,7 +1458,7 @@ function tileInfo(gid) {
   const g = GAMES[gid];
   if (g.info) return g.info();
   const gp = gameProg(gid); const L = g.levels.length;
-  return { lv: `Niveau ${gp.lvl + 1}/${L}`, pct: (gp.unlocked + (gp.best[L - 1] ? 1 : 0)) / L };
+  return { lv: g.levels[gp.lvl].name, pct: (gp.unlocked + (gp.best[L - 1] ? 1 : 0)) / L };
 }
 function gameTile(gid) {
   const g = GAMES[gid]; const inf = tileInfo(gid);
@@ -1490,23 +1473,26 @@ function gameTile(gid) {
   onTap(t, () => { Sfx.play('tap'); Voice.stop(); CURRENT_ACT = gid; lastPlayed()[gid] = dayNo(); setTimeout(() => runGame(gid), 100); });
   return t;
 }
-function renderHome() {
+function renderHome(theme = HOME_THEME) {
   const app = $('#app'); app.innerHTML = '';
   const p = prof(); const pr = P(); const k = kid();
   const world = p.world in WORLDS ? p.world : k.world; S.world = world;
   document.body.dataset.world = world;
   const head = h('header', { class: 'top' }, h('div', { class: 'wrap' },
-    h('div', { class: 'brand' }, h('span', { html: lumiSVG() }), h('div', { style: { minWidth: 0 } }, h('b', null, 'Le Cahier de Lumi'), h('small', null, WORLDS[world].name + ' · ' + WORLDS[world].sub))),
-    onTap(h('button', { class: 'chip', 'aria-label': 'Changer de joueur' }, h('span', { class: 'av', html: avatarSVG(k.id, { crop: 'head', gear: gearOn().filter(g => g === 'chapeau' || g === 'couronne') }) }), h('span', null, k.name), h('span', { class: 'stars' }, '⭐ ' + pr.stars)), () => { Sfx.play('tap'); whoScreen(false); }),
+    onTap(h('button', { class: 'brand', 'aria-label': 'Accueil des jeux' }, h('span', { html: lumiSVG() }), h('div', { style: { minWidth: 0 } }, h('b', null, 'Le Cahier de Lumi'))), () => { Voice.stop(); renderHome(null); }),
+    onTap(h('button', { class: 'chip', 'aria-label': 'Mon personnage' }, h('span', { class: 'av', html: avatarSVG(k.id, { crop: 'head', gear: gearOn().filter(g => g === 'chapeau' || g === 'couronne') }) }), h('span', null, k.name)), () => { Sfx.play('tap'); characterView(); }),
     onTap(h('button', { class: 'icon-btn', 'aria-label': 'Espace parents', html: ICON.lock }), () => parentGate(parentArea))));
-  const hello = h('div', { class: 'hello wrap' }, h('span', { html: lumiSVG() }), h('div', { class: 'bubble' }, WORLDS[world].hello(k.name)));
-  app.append(head, avatarCard(), hello);
-  if (typeof houseEl === 'function' && ROOMS[world]) { app.append(dailyEl(), houseEl(world)); return; }
-  const groups = WORLD_GROUPS[world].length ? WORLD_GROUPS[world] : [{ title: null, ids: WORLD_TILES[world] }];
-  groups.forEach(gr => {
-    if (gr.title) app.append(h('h2', { class: 'section-title wrap' }, gr.title, gr.sub ? h('small', null, gr.sub) : null));
-    app.append(h('div', { class: 'tiles wrap' }, gr.ids.filter(id => GAMES[id]).map(gameTile)));
-  });
+  const themes = themesOf(world), current = themes.find(t => t.id === theme);
+  HOME_THEME = current ? current.id : null;
+  const main = h('main', { class: 'theme-home wrap' });
+  app.append(head, main);
+  if (!current) {
+    main.append(h('div', { class: 'theme-welcome' }, h('span', { html: lumiSVG(), 'aria-hidden': 'true' }), h('div', null, h('h1', null, 'À toi de jouer, ' + k.name + ' !'), h('p', null, 'Qu’as-tu envie de faire ?'))),
+      h('div', { class: 'themes-grid', 'aria-label': 'Choisir une activité' }, themes.map(t => onTap(h('button', { class: 'theme-card', 'data-theme': t.id, style: { '--theme-color': t.col, '--theme-bg': t.bg }, 'aria-label': t.name }, h('span', { class: 'theme-picture', 'aria-hidden': 'true' }, t.icon), h('span', { class: 'theme-name' }, t.name)), () => { Sfx.play('tap'); renderHome(t.id); Voice.say(t.say); }))));
+    return;
+  }
+  main.append(h('div', { class: 'theme-heading' }, onTap(h('button', { class: 'theme-back', 'aria-label': 'Retour aux thèmes' }, '‹', h('span', null, 'Retour')), () => { Voice.stop(); renderHome(null); }), h('h1', null, h('span', { 'aria-hidden': 'true' }, current.icon), ' ', current.name)),
+    h('div', { class: 'theme-games', 'aria-label': current.name }, current.ids.map(id => simpleGameTile(id))));
 }
 function whoPicker() { whoScreen(false); }
 
@@ -1529,10 +1515,8 @@ function parentArea() {
       const k = KIDS_DEF[pf.id];
       const worldSel = h('select', { id: 'world-' + pf.id, 'aria-label': 'Univers de ' + k.name }, Object.entries(WORLDS).map(([wk, v]) => h('option', { value: wk, selected: pf.world === wk }, v.name + ' (' + v.sub + ')')));
       worldSel.addEventListener('change', () => { pf.world = worldSel.value; save(); });
-      const keep = S.current; S.current = pf.id; const st = P().stars; S.current = keep;
       pc.append(h('div', { class: 'prow', style: { borderTop: '1px solid var(--line)', paddingTop: '10px' } },
         h('span', { class: 'pav', html: avatarSVG(pf.id, { crop: 'head' }) }), h('b', { style: { minWidth: '60px' } }, k.name),
-        h('span', { style: { color: 'var(--ink-soft)' } }, `niveau ${levelOf(st)} · ⭐ ${st}`),
         h('label', { for: 'world-' + pf.id, style: { minWidth: 0 } }, 'Univers'), worldSel));
     });
     let dev = ''; try { dev = localStorage.getItem(DEVICE_KEY) || ''; } catch (e) { }
@@ -1571,46 +1555,24 @@ function parentArea() {
     w.append(bk);
     if (typeof notionsCard === 'function') S.profiles.forEach(pf => w.append(notionsCard(pf.id)));
 
-    /* Voix */
+    /* Une seule voix pour toute l'application. */
     const vc = h('div', { class: 'pcard' }, h('h3', null, 'Voix de Lumi'));
-    const vm = h('select', { id: 'voice-mode', 'aria-label': 'Type de voix' },
-      h('option', { value: 'lumi', selected: S.settings.voiceMode !== 'device' }, 'Lumi · français de Belgique · voix naturelle'),
-      h('option', { value: 'device', selected: S.settings.voiceMode === 'device' }, 'Voix de cet appareil'));
-    const pitchRows = [];
-    const refreshVoice = () => { pitchRows.forEach(el => el.hidden = vm.value !== 'device'); };
-    vm.addEventListener('change', () => { Voice.stop(); S.settings.voiceMode = vm.value; refreshVoice(); save(); Voice.say('Bonjour, je suis Lumi. On apprend ensemble ?'); });
-    vc.append(h('p', { class: 'voice-intro' }, 'Une voix féminine naturelle en français de Belgique. Les phrases gardent leur fluidité ; des pauses permettent d’écouter les sons. Le bouton tortue ralentit légèrement les mots et allonge les pauses.'),
-      h('div', { class: 'prow' }, h('label', { for: 'voice-mode' }, 'Voix principale'), vm),
-      h('p', null, 'Les sons de lecture utilisent des enregistrements dédiés, à leur vitesse d’origine. Ils ne sont jamais remplacés par une voix de l’appareil. Pour les autres consignes, une voix de secours reste disponible.'));
-    const ranked = Voice.ranked();
-    const fallback = h('div', null, h('h4', null, 'Voix de l’appareil et de secours'));
-    if (!Voice.ok || !ranked.length) fallback.append(h('p', null, 'Aucune voix française de secours n’est disponible. Les enregistrements de Lumi restent utilisables une fois chargés.'));
-    else {
-      const vs = h('select', { id: 'voice-sel', 'aria-label': 'Voix de l’appareil' }, h('option', { value: '', selected: !S.settings.voiceURI }, 'Automatique · voix féminine en priorité'),
-        ranked.map(v => h('option', { value: v.voiceURI, selected: S.settings.voiceURI === v.voiceURI }, `${v.name} (${v.lang})`)));
-      vs.addEventListener('change', () => { S.settings.voiceURI = vs.value; Voice.choose(); save(); Voice.say('Bonjour, je suis Lumi. On apprend ensemble ?', { device: true }); });
-      fallback.append(h('div', { class: 'prow' }, h('label', { for: 'voice-sel' }, 'Voix de secours'), vs));
-    }
-    vc.append(fallback);
+    vc.append(h('p', { class: 'voice-intro' }, 'La même voix féminine en français de Belgique accompagne les consignes, les encouragements et les corrections. Les sons de lecture gardent leur vitesse d’origine.'));
     const speedText = h('output', { for: 'rate' }, Math.round(clamp(S.settings.rate,.75,1.1)*100) + ' %');
     const rate = h('input', { type: 'range', id: 'rate', 'aria-label': 'Vitesse de la voix', min: '0.75', max: '1.1', step: '0.05', value: String(clamp(S.settings.rate,.75,1.1)) });
     rate.addEventListener('input', () => { speedText.textContent = Math.round(+rate.value*100) + ' %'; });
     rate.addEventListener('change', () => { S.settings.rate=+rate.value; save(); Voice.say('Je parle doucement, avec des pauses. À toi de jouer !'); });
-    const pitch = h('input', { type: 'range', id: 'pitch', 'aria-label': 'Hauteur de la voix de l’appareil', min: '0.95', max: '1.1', step: '0.05', value: String(clamp(S.settings.pitch,.95,1.1)) });
-    pitch.addEventListener('change', () => { S.settings.pitch=+pitch.value; save(); Voice.say('Voici ma voix.',{device:true}); });
-    const pitchRow = h('div', { class: 'prow' }, h('label', { for: 'pitch' }, 'Hauteur · appareil seulement'), pitch); pitchRows.push(pitchRow);
     const sfx = h('input', { type: 'checkbox', id: 'sfx', checked: S.settings.sfx }); sfx.addEventListener('change', () => { S.settings.sfx=sfx.checked; save(); });
-    vc.append(h('div', { class: 'prow' }, h('label', { for: 'rate' }, 'Vitesse · consignes et mots'), rate, speedText), pitchRow,
+    vc.append(h('div', { class: 'prow' }, h('label', { for: 'rate' }, 'Vitesse · consignes et mots'), rate, speedText),
       h('div', { class: 'prow' }, h('label', { for: 'sfx' }, 'Bruitages, atténués pendant la voix'), sfx),
       h('div', { class: 'voice-tests' },
         onTap(h('button', { class: 'pbtn' }, '▶ Une consigne'), () => Voice.say('Écoute. Regarde les images. Puis choisis ta réponse.')),
-        onTap(h('button', { class: 'pbtn' }, '▶ Sons et mots'), () => Voice.say(['Écoute le son', vow('a'), 350, 'comme dans ami.'])),
-        onTap(h('button', { class: 'pbtn' }, '▶ Calcul'), () => Voice.say('Cinq plus trois, cela fait huit.')),
+        onTap(h('button', { class: 'pbtn' }, '▶ Un encouragement'), () => Voice.say('Bravo ! Tu as trouvé !', { feedback: 'correct' })),
+        onTap(h('button', { class: 'pbtn' }, '▶ Une correction'), () => Voice.say('Regarde bien et essaie encore.', { feedback: 'retry' })),
         onTap(h('button', { class: 'pbtn' }, '■ Arrêter la voix'), () => Voice.stop())),
       h('div', { class: 'voice-tests', 'aria-label': 'Écouter les sons de référence' }, ['a','i','o','u','é','e','è','ou','on','an','oi','in','eu'].map(k => onTap(h('button', { class: 'pbtn', 'aria-label': 'Écouter le son ' + k }, '▶ ' + k), () => Voice.say([vow(k)])))),
-      h('p', { id: 'voice-status', role: 'status', 'aria-live': 'polite' }, 'Prête à écouter.'),
-      h('p', null, 'Un son n’est pas le nom de la lettre : pour lire, on écoute ce qu’elle fait entendre dans le mot. Si un son ne charge pas, le haut-parleur permet de réessayer.'));
-    refreshVoice(); w.append(vc);
+      h('p', { id: 'voice-status', role: 'status', 'aria-live': 'polite' }, 'Prête à écouter.'));
+    w.append(vc);
 
     /* Minuteur */
     const tc = h('div', { class: 'pcard' }, h('h3', null, 'Temps d’écran'));
@@ -1626,7 +1588,6 @@ function parentArea() {
     sc.append(h('div', { class: 'prow' }, h('label', { for: 'prog-who' }, 'Enfant'), who));
     const keep = S.current; S.current = sel;
     const pr = P();
-    sc.append(h('p', null, `⭐ ${pr.stars} étoiles · niveau ${levelOf(pr.stars)} (${LV_TITLE[KIDS_DEF[sel].g][levelOf(pr.stars) - 1]}) · ${pr.treasures || 0} trésors`));
     for (const wk of ['petits', 'grands']) {
       sc.append(h('h3', { style: { marginTop: '16px', fontSize: '18px' } }, WORLDS[wk].name + ' — ' + WORLDS[wk].sub));
       for (const gid of WORLD_TILES[wk]) {
@@ -1635,12 +1596,12 @@ function parentArea() {
         if (g.report) { sc.append(g.report()); continue; }
         if (!g.levels) { const inf = g.info ? g.info() : null; sc.append(h('div', { style: { marginTop: '8px' } }, h('b', null, `${g.icon} ${g.title}`), inf ? h('span', { style: { color: 'var(--ink-soft)' } }, ` — ${inf.lv}`) : null)); continue; }
         const gp = gameProg(gid);
-        const box = h('div', { style: { marginTop: '8px' } }, h('b', null, `${g.icon} ${g.title}`), h('span', { style: { color: 'var(--ink-soft)' } }, ` — niveau ${gp.lvl + 1}/${g.levels.length}, ${gp.rounds} partie${gp.rounds > 1 ? 's' : ''}`));
+        const box = h('div', { style: { marginTop: '8px' } }, h('b', null, `${g.icon} ${g.title}`), h('span', { style: { color: 'var(--ink-soft)' } }, ` — étape ${gp.lvl + 1}/${g.levels.length}, ${gp.rounds} partie${gp.rounds > 1 ? 's' : ''}`));
         g.levels.forEach((L, i) => {
           const s = pr.skills[L.skill || g.skill]; const pct = s && s.n ? s.ok / s.n : 0;
           box.append(h('div', { class: 'skill' }, h('span', null, h('span', { class: 'tag' }, L.tag || ''), L.ref || L.name), h('div', { class: 'meter' }, h('i', { style: { width: Math.round(pct * 100) + '%' } })), h('span', { class: 'num' }, s && s.n ? Math.round(pct * 100) + '%' : '—')));
         });
-        const lvSel = h('select', { 'aria-label': 'Niveau de ' + g.title, style: { marginTop: '6px', border: '2px solid var(--line)', borderRadius: '10px', padding: '4px 8px' } }, g.levels.map((L, i) => h('option', { value: i, selected: i === gp.lvl }, `Jouer au niveau ${i + 1} : ${L.name}`)));
+        const lvSel = h('select', { 'aria-label': 'Étape de ' + g.title, style: { marginTop: '6px', border: '2px solid var(--line)', borderRadius: '10px', padding: '4px 8px' } }, g.levels.map((L, i) => h('option', { value: i, selected: i === gp.lvl }, L.name)));
         lvSel.addEventListener('change', () => { const pp = S.current; S.current = sel; const x = gameProg(gid); x.lvl = +lvSel.value; x.unlocked = Math.max(x.unlocked, x.lvl); S.current = pp; save(); });
         box.append(lvSel);
         sc.append(box);
@@ -1653,13 +1614,13 @@ function parentArea() {
     /* Méthode */
     w.append(h('div', { class: 'pcard' }, h('h3', null, 'La méthode'),
       h('p', null, h('b', null, 'Lecture. '), 'Approche phonique explicite et systématique : une correspondance lettre-son à la fois, dans un ordre allant des sons les plus faciles et fréquents (voyelles, consonnes qu’on peut prolonger : l, r, m, s, f, ch…) vers les plus complexes (ou, on, an, oi, in…). Chaque leçon enchaîne écoute des sons (conscience phonémique), reconnaissance de la lettre, fusion consonne + voyelle, lecture de mots entièrement déchiffrables (syllabes en couleurs, lettres muettes en gris), écriture des mots avec des étiquettes (encodage) puis lecture de phrases. Inspiration Céline Alvarez / Montessori : chaque leçon comporte une « lettre rugueuse » à repasser du doigt en disant son son (geste, forme et son mémorisés ensemble), l’alphabet mobile distingue les voyelles (bleu) et les consonnes (rouge), et la fusion se montre en faisant glisser la consonne vers la voyelle, lentement, avant de dire la syllabe d’un trait. Les consonnes ne sont jamais prononcées seules (pas de « me », « reu », « peu » qui ajoutent une voyelle parasite) : Lumi les désigne par un mot d’appui (« le son du début de moto ») et les fait entendre dans des syllabes. Dans « lis le mot », les images proposées commencent souvent par la même lettre, pour que l’enfant lise tout le mot au lieu de deviner. Les sons déjà vus reviennent régulièrement (rappel espacé).'),
-      h('p', null, h('b', null, 'La maison (inspirée d’Adibou). '), 'L’accueil est une maison : chaque pièce regroupe une famille d’activités. Le parcours du jour propose 3 activités choisies selon les notions les plus fragiles et les jeux pas faits depuis longtemps ; le terminer donne 3 gouttes d’eau. Chaque jeu terminé donne une goutte pour arroser le jardin ; une plante doit être arrosée 3 jours différents pour être récoltée, ce qui donne envie de revenir sans pression. Les récoltes servent en cuisine : Luca lit la recette (mots en couleurs), Lola l’écoute, puis il faut mettre exactement les bonnes quantités dans le bol. Dans les histoires, les mots que Luca sait déchiffrer (selon les sons déjà validés) et les petits mots outils sont en couleur, les autres en gris : il lit ce qu’il peut, Lumi aide sur le reste. L’atelier des cartes fait lire puis écrire un prénom pour fabriquer une vraie carte. Le tableau des notions ci-dessus indique, par notion : découverte (moins de 4 réponses), en cours, ou acquis (au moins 80 % sur 6 réponses ou plus).'),
+      h('p', null, h('b', null, 'Un accueil par thèmes. '), 'L’enfant choisit directement Lire ou Écouter, Calculer ou Compter, Jouer, Créer et Découvrir. Les activités et leur progression restent accessibles dans chaque thème. Le jardin et la cuisine se trouvent dans Découvrir.'),
       h('p', null, h('b', null, 'Calcul. '), 'Progression concret → imagé → symbolique : collections, cadres de dix, ligne numérique, puis écritures chiffrées. Compléments à 10, doubles et passage par la dizaine avant la mémorisation. La multiplication est introduite par des groupes égaux et des quadrillages (attendu de 2e primaire, en découverte).'),
-      h('p', null, h('b', null, 'Autonomie. '), 'Toutes les consignes sont lues par Lumi et réécoutables (haut-parleur ou chouette). Pendant l’entraînement, après deux erreurs, la bonne réponse est montrée pour que l’enfant apprenne de son erreur. Chez les Petits, un niveau est réussi à 80 % du premier coup ; après deux parties difficiles, le jeu revient au niveau précédent.'),
-      h('p', null, h('b', null, 'Validation (Grands). '), 'En lecture et en calcul, l’entraînement aidé ne valide rien. Il est suivi d’un petit défi, présenté comme une chasse aux énigmes (une clé par réponse, le coffre mystère ne s’ouvre qu’à la fin) : 6 questions nouvelles, à 4 choix ou au clavier, sans aide ni correction, avec une seule réponse. Il faut 5 bonnes réponses sur 6 pour valider (moins d’une chance sur 200 de réussir au hasard). Raté, l’enfant refait la leçon puis retente le défi.'),
-      h('p', null, h('b', null, 'Personnages. '), 'Luca et Lola jouent avec leur propre personnage, dessiné d’après leur photo (la photo elle-même n’est pas enregistrée). Le personnage les accompagne dans chaque exercice : il avance sur le chemin des questions et réagit aux réponses. Chaque étoile le fait progresser : 9 niveaux, 8 accessoires à mettre ou enlever dans le vestiaire, et un trésor toutes les 5 étoiles (40 trésors à collectionner).'),
+      h('p', null, h('b', null, 'Autonomie. '), 'Toutes les consignes sont lues par Lumi et réécoutables (haut-parleur ou chouette). Pendant l’entraînement, après deux erreurs, la bonne réponse est montrée pour que l’enfant apprenne de son erreur. Chez les Petits, une étape est acquise à 80 % du premier coup ; après deux parties difficiles, le jeu propose une étape plus facile.'),
+      h('p', null, h('b', null, 'Validation (Grands). '), 'En lecture et en calcul, l’entraînement aidé ne valide rien. Il est suivi d’une courte activité autonome : 6 questions nouvelles, à 4 choix ou au clavier, sans aide ni correction, avec une seule réponse. Il faut 5 bonnes réponses sur 6 pour valider (moins d’une chance sur 200 de réussir au hasard). Raté, l’enfant refait la leçon puis retente le défi.'),
+      h('p', null, h('b', null, 'Personnages. '), 'Luca et Lola jouent avec leur propre personnage, dessiné d’après leur photo (la photo elle-même n’est pas enregistrée). Le personnage les accompagne dans chaque exercice : il avance sur le chemin des questions et réagit aux réponses. Tous les objets sont disponibles dans « Mon personnage ». L’enfant peut en choisir jusqu’à trois, indépendamment de ses réponses. Une étoile est offerte par série terminée, indépendamment du score. Dix étoiles deviennent un diamant. Aucun rang ni niveau de récompense n’est affiché, et les anciens grands totaux ne sont pas repris.'),
       h('p', null, h('b', null, 'Tablette et ordinateur. '), 'Le monde de Lola est pensé pour la tablette : grandes cibles, labyrinthes à parcourir du doigt. Le monde de Luca est pensé pour l’ordinateur : barre d’espace pour réécouter la consigne, Entrée pour valider, chiffres et lettres au clavier, flèches pour le robot et les labyrinthes, Échap pour quitter un jeu.'),
-      h('p', null, h('b', null, 'Grands jeux et logique. '), 'Repris des « Petits Explorateurs » et réécrits : le robot des étoiles (programmer un trajet), le marché (préparer une commande et payer juste en euros), les jardins en miroir (symétrie), la rivière des mots (assembler des syllabes), la première lettre, les mots en balade (remettre les lettres en ordre), le chemin du trésor (labyrinthes) et l’œil de lynx (repérer une différence). « Tape les syllabes » existait déjà : c’est le même jeu, accessible aux deux enfants.'),
+      h('p', null, h('b', null, 'Grands jeux et logique. '), 'Repris des « Petits Explorateurs » et réécrits : le petit robot (programmer un trajet), le marché (préparer une commande et payer juste en euros), les jardins en miroir (symétrie), la rivière des mots (assembler des syllabes), la première lettre, les mots en balade (remettre les lettres en ordre), le labyrinthe (labyrinthes) et l’œil de lynx (repérer une différence). « Tape les syllabes » existait déjà : c’est le même jeu, accessible aux deux enfants.'),
       h('p', null, h('b', null, 'Repères. '), 'Les niveaux suivent le tronc commun de la Fédération Wallonie-Bruxelles. Pour les Petits, le référentiel des compétences initiales fixe des attendus pour la M1 et la M2 ensemble, puis pour la M3 : les étiquettes « M1–M2 » et « M3 » reprennent ce découpage, et les niveaux progressent à l’intérieur de chaque palier. Pour les Grands, les référentiels de français et de mathématiques de 1re primaire (étiquette P1 ; P2 pour la multiplication, en découverte).')));
     w.append(h('p', { style: { color: 'var(--ink-soft)', fontSize: '13px', marginTop: '16px' } }, 'La progression est enregistrée sur cet appareil' + (Remote.ref ? ' et dans votre compte Claude.' : '.')));
   };
@@ -1692,7 +1653,7 @@ function boot() {
    PERSONNAGES — Luca (5-6 ans, PC) et Lola (3 ans, tablette)
    Illustrations originales dessinées d'après les photos fournies par le parent
    (aucune photo n'est intégrée dans la page). Le personnage suit l'enfant dans
-   chaque exercice, réagit, évolue (9 niveaux, 8 accessoires) et gagne des trésors.
+   chaque exercice et réagit aux réponses. Ses objets sont librement choisis.
    ========================================================= */
 const KIDS_DEF = {
   luca: {
@@ -1720,27 +1681,43 @@ const GEAR = [
   { id: 'etoiles', lvl: 8, em: '✨', name: { m: 'les étoiles magiques', f: 'les étoiles magiques' } },
   { id: 'baguette', lvl: 9, em: '🪄', name: { m: 'la baguette magique', f: 'la baguette magique' } }
 ];
-const LV_STARS = [0, 8, 20, 35, 55, 80, 110, 145, 185];
-const LV_TITLE = {
-  m: ['Apprenti explorateur', 'Explorateur', 'Aventurier', 'Détective', 'Super-héros', 'Ami des dragons', 'Roi des jeux', 'Magicien', 'Grand magicien'],
-  f: ['Apprentie exploratrice', 'Exploratrice', 'Aventurière', 'Détective', 'Super-héroïne', 'Amie des lapins', 'Reine des jeux', 'Magicienne', 'Grande magicienne']
-};
 const TREASURES = [
   ['🪙', 'la pièce d’or'], ['💎', 'le diamant bleu'], ['🔮', 'la boule de cristal'], ['🗝️', 'la clé dorée'], ['🧭', 'la boussole'],
-  ['🗺️', 'la carte au trésor'], ['🐚', 'le coquillage magique'], ['🌠', 'l’étoile filante'], ['🏺', 'le vase ancien'], ['💍', 'l’anneau brillant'],
+  ['🗺️', 'la carte'], ['🐚', 'le coquillage magique'], ['🌠', 'l’étoile filante'], ['🏺', 'le vase ancien'], ['💍', 'l’anneau brillant'],
   ['🦴', 'l’os de dinosaure'], ['🍀', 'le trèfle à quatre feuilles'], ['🪶', 'la plume d’or'], ['🔭', 'la longue-vue'], ['🎖️', 'la médaille'],
-  ['🏆', 'la coupe des champions'], ['🧿', 'la perle porte-bonheur'], ['🌈', 'l’arc-en-ciel'], ['🪐', 'la planète'], ['🥚', 'l’œuf de dragon'],
+  ['🏆', 'la coupe'], ['🧿', 'la perle porte-bonheur'], ['🌈', 'l’arc-en-ciel'], ['🪐', 'la planète'], ['🥚', 'l’œuf de dragon'],
   ['📜', 'le vieux parchemin'], ['⚓', 'l’ancre de pirate'], ['🎁', 'le cadeau mystère'], ['🍯', 'le pot de miel'], ['🌟', 'l’étoile d’or'],
   ['🧸', 'le nounours'], ['🪁', 'le cerf-volant'], ['🎻', 'le violon'], ['🛸', 'la soucoupe volante'], ['🦋', 'le papillon bleu'],
   ['🌋', 'le volcan'], ['🏰', 'le château'], ['⛵', 'le voilier'], ['🦕', 'le dinosaure'], ['🌻', 'le tournesol'],
   ['🍭', 'la sucette géante'], ['🚀', 'la fusée'], ['👑', 'la couronne de diamants'], ['💰', 'le sac de pièces'], ['🐉', 'le dragon d’or']
 ];
-const STARS_PER_TREASURE = 5;
 const kid = (id = S.current) => KIDS_DEF[id] || KIDS_DEF.luca;
-const levelOf = stars => { let l = 1; LV_STARS.forEach((s, i) => { if (stars >= s) l = i + 1; }); return l; };
 function avState() { const p = P(); p.av = p.av || { gear: {} }; return p.av; }
 function gearName(g, k = kid()) { return g.name[k.g]; }
-function gearOn(id = S.current) { const keep = S.current; S.current = id; const st = avState(); const lv = levelOf(P().stars); S.current = keep; return GEAR.filter(g => g.lvl <= lv && st.gear[g.id] !== false).map(g => g.id); }
+function objectChoices(k = kid()) {
+  return [...GEAR.map(g => ({ id: g.id, name: gearName(g, k), label: ({sac:'Sac',chapeau:'Chapeau',loupe:'Loupe',cape:'Cape',pet:k.pet==='dragon'?'Dragon':'Lapin',couronne:'Couronne',etoiles:'Étincelles',baguette:'Baguette'})[g.id], em: g.id === 'pet' && k.pet !== 'dragon' ? '🐰' : g.em })),
+    ...TREASURES.map(([em, name], i) => ({ id: 'objet-' + i, em, name, label: ['Pièce','Diamant','Cristal','Clé','Boussole','Carte','Coquillage','Étoile','Vase','Anneau','Os','Trèfle','Plume','Longue-vue','Médaille','Coupe','Perle','Arc-en-ciel','Planète','Œuf','Parchemin','Ancre','Cadeau','Miel','Étoile','Nounours','Cerf-volant','Violon','Soucoupe','Papillon','Volcan','Château','Voilier','Dinosaure','Tournesol','Sucette','Fusée','Couronne','Pièces','Dragon'][i] }))];
+}
+function gearOn(id = S.current) {
+  const keep = S.current; S.current = id; const st = avState(); S.current = keep;
+  const valid = new Set(objectChoices(kid(id)).map(o => o.id));
+  if (!Array.isArray(st.equipped)) st.equipped = GEAR.filter(g => st.gear && st.gear[g.id] === true).map(g => g.id);
+  st.equipped = [...new Set(st.equipped)].filter(x => valid.has(x)).slice(0, 3);
+  if (st.equipped.includes('couronne')) st.equipped = st.equipped.filter(x => x !== 'chapeau');
+  return st.equipped.slice();
+}
+function toggleObject(id) {
+  if (!objectChoices().some(o => o.id === id)) return false;
+  const st = avState(); let selected = gearOn();
+  if (selected.includes(id)) selected = selected.filter(x => x !== id);
+  else {
+    if (id === 'couronne') selected = selected.filter(x => x !== 'chapeau');
+    if (id === 'chapeau') selected = selected.filter(x => x !== 'couronne');
+    if (selected.length >= 3) return false;
+    selected.push(id);
+  }
+  st.equipped = selected; save(); return true;
+}
 
 /* ---------- Dessin ---------- */
 function avatarSVG(id, o = {}) {
@@ -1821,6 +1798,7 @@ function avatarSVG(id, o = {}) {
       ? `<g transform="translate(188 192)"><path d="M-14 -14 L-24 -30 L-8 -20 Z M2 -18 L0 -34 L10 -18 Z" fill="#7BC96F"/><path d="M14 14 Q34 14 30 -4" stroke="#4FA857" stroke-width="7" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="8" rx="22" ry="20" fill="#5DBB63"/><ellipse cx="0" cy="12" rx="13" ry="12" fill="#C8EFB8"/><circle cx="-4" cy="-12" r="16" fill="#5DBB63"/><circle cx="-10" cy="-14" r="4" fill="#fff"/><circle cx="-9" cy="-14" r="2.2" fill="#1B120D"/><circle cx="3" cy="-14" r="4" fill="#fff"/><circle cx="4" cy="-14" r="2.2" fill="#1B120D"/><path d="M-10 -5 Q-4 -1 2 -5" stroke="#2F6F3A" stroke-width="2" fill="none" stroke-linecap="round"/></g>`
       : `<g transform="translate(190 196)"><ellipse cx="-8" cy="-40" rx="6" ry="17" fill="#fff" stroke="#E6E6EE" stroke-width="2"/><ellipse cx="8" cy="-40" rx="6" ry="17" fill="#fff" stroke="#E6E6EE" stroke-width="2"/><ellipse cx="-8" cy="-40" rx="2.6" ry="11" fill="#FFC1D6"/><ellipse cx="8" cy="-40" rx="2.6" ry="11" fill="#FFC1D6"/><ellipse cx="0" cy="10" rx="20" ry="18" fill="#fff" stroke="#E6E6EE" stroke-width="2"/><circle cx="0" cy="-14" r="15" fill="#fff" stroke="#E6E6EE" stroke-width="2"/><circle cx="-5" cy="-15" r="2.4" fill="#1B120D"/><circle cx="5" cy="-15" r="2.4" fill="#1B120D"/><path d="M-2 -9 L2 -9 L0 -7 Z" fill="#F48FB1"/><circle cx="18" cy="16" r="6" fill="#fff" stroke="#E6E6EE" stroke-width="2"/></g>`;
   }
+  if (!head) [...gear].filter(g => g.startsWith('objet-')).forEach((g, i) => { const item = TREASURES[+g.slice(6)]; if (item) svg += `<text x="${[32, 207, 120][i]}" y="${[112, 119, 239][i]}" text-anchor="middle" font-size="34">${item[0]}</text>`; });
   const vb = head ? '50 2 140 140' : '0 0 240 240';
   return `<svg class="av ${head ? 'av-head ' : ''}${o.cls || ''}" viewBox="${vb}" role="img" aria-label="${c.name}${o.label ? ', ' + o.label : ''}">${svg}</svg>`;
 }
@@ -1837,58 +1815,35 @@ const Avatar = {
   live(cls = '') { const d = h('div', { class: 'av-live ' + cls }); d.innerHTML = avatarSVG(S.current, { gear: gearOn() }); return d; }
 };
 
-/* ---------- Récompenses : étoiles → niveaux + trésors ---------- */
+/* One star per completed series, regardless of score. Historical totals stay private. */
+function seriesRewards() {
+  const p = P();
+  if (!p.rewards || !Number.isInteger(p.rewards.stars) || p.rewards.stars < 0 || p.rewards.stars > 9) p.rewards = { stars: 0, diamonds: 0 };
+  return p.rewards;
+}
 function addStars(n) {
-  const p = P(); const k = kid();
-  const lv0 = levelOf(p.stars), tr0 = p.treasures || 0;
-  p.stars += n;
-  p.treasures = Math.min(TREASURES.length, Math.floor(p.stars / STARS_PER_TREASURE));
-  const lv1 = levelOf(p.stars);
-  const r = {};
-  if (p.treasures > tr0) r.treasure = TREASURES[p.treasures - 1];
-  if (lv1 > lv0) { r.level = lv1; r.title = LV_TITLE[k.g][lv1 - 1]; r.gear = GEAR.find(g => g.lvl === lv1); if (r.gear) { const st = avState(); st.gear[r.gear.id] = true; if (r.gear.id === 'couronne') st.gear.chapeau = false; } }
-  return (r.treasure || r.level) ? r : null;
+  const rewards = seriesRewards();
+  rewards.stars++;
+  const diamond = rewards.stars === 10;
+  if (diamond) { rewards.stars = 0; rewards.diamonds = (rewards.diamonds || 0) + 1; }
+  return { stars: rewards.stars, diamond };
 }
-function rewardSay(r) {
-  if (!r) return [];
-  const k = kid(); const out = [];
-  if (r.level) out.push(`Tu passes au niveau ${nw(r.level)} !`, `Tu es ${k.g === 'f' ? 'une' : 'un'} ${r.title.toLowerCase()} !`, ...(r.gear ? [`Tu gagnes ${gearName(r.gear, k)} !`] : []));
-  if (r.treasure) out.push('Et voici un nouveau trésor :', r.treasure[1] + ' !');
-  return out;
-}
-
-/* ---------- Cadeau annulé : si un appareil l'avait déjà reçu, on le retire une fois ---------- */
-const GIFTS_REVOKED = [{ id: 'cadeau-2026-10-21', kid: 'luca', stars: 27 }];
-function applyGifts() {
-  let changed = false; const keep = S.current;
-  GIFTS_REVOKED.forEach(g => {
-    if (!KIDS_DEF[g.kid] || !S.progress[g.kid]) return;
-    S.current = g.kid; const p = P();
-    if (!(p.gifts || []).includes(g.id)) return;
-    p.stars = Math.max(0, p.stars - g.stars);
-    p.treasures = Math.min(TREASURES.length, Math.floor(p.stars / STARS_PER_TREASURE));
-    const st = avState(); delete st.gear.sac; delete st.gear.chapeau;
-    p.gifts = p.gifts.filter(x => x !== g.id); changed = true;
-  });
-  S.current = keep;
-  if (changed) save();
-  return changed;
-}
+function rewardSay(r) { return []; }
+function applyGifts() { return false; }
 
 /* ---------- Écran « Qui joue ? » ---------- */
 function whoScreen(first, only) {
   $$('.who-screen').forEach(e => e.remove());
   const el = h('div', { class: 'who-screen', role: 'dialog', 'aria-label': 'Qui joue ?' });
   const card = id => {
-    const k = KIDS_DEF[id]; const keep = S.current; S.current = id; const st = P().stars; S.current = keep;
+    const k = KIDS_DEF[id];
     const b = h('button', { class: 'who-card who-' + id, id: 'pick-' + id, 'aria-label': `${k.name}, ${WORLDS[k.world].sub}` },
       h('span', { class: 'who-av', html: avatarSVG(id, { gear: gearOn(id) }) }),
-      h('b', null, k.name), h('span', { class: 'who-sub' }, `${k.world === 'grands' ? '📚 5 ans · lecture et calcul' : '🧸 3 ans · jeux d’éveil'}`),
-      h('span', { class: 'who-lv' }, `Niveau ${levelOf(st)} · ⭐ ${st}`));
+      h('b', null, k.name), h('span', { class: 'who-sub' }, `${k.world === 'grands' ? '📚 5/6 ans · lecture et calcul' : '🧸 3 ans · jeux d’éveil'}`));
     onTap(b, () => {
       Sfx.ensure(); Voice.unlock && Voice.unlock();
       const p = S.profiles.find(x => x.id === id); S.current = id; S.world = p.world; save(); VoicePack.prefetch(p.world);
-      el.remove(); if (first) Timer.start(); renderHome();
+      el.remove(); if (first) Timer.start(); HOME_THEME = null; renderHome(null);
       Sfx.play('star'); Voice.say([`Coucou ${k.name} !`, p.world === 'grands' ? 'On lit, on calcule, ou on part à l’aventure ?' : 'Choisis un jeu !']);
       Remote.refresh(id);
     });
@@ -1902,72 +1857,46 @@ function whoScreen(first, only) {
   if (!first) Voice.say('Qui joue ? Touche ton personnage.');
 }
 
-/* ---------- Carte du personnage (accueil) ---------- */
-function avatarCard() {
-  const p = P(); const k = kid(); const lv = levelOf(p.stars); const nxt = LV_STARS[lv];
-  const prev = LV_STARS[lv - 1]; const pct = nxt == null ? 1 : (p.stars - prev) / (nxt - prev);
-  const big = Avatar.live('home-av');
-  onTap(big, () => { Avatar.react('happy'); Voice.say([`Coucou ${k.name} !`, `Tu es ${k.g === 'f' ? 'une' : 'un'} ${LV_TITLE[k.g][lv - 1].toLowerCase()} !`]); });
-  const nextTxt = nxt == null ? 'Niveau maximum atteint !' : `Encore ${nxt - p.stars} ⭐ pour le niveau ${lv + 1}`;
-  return h('section', { class: 'av-card wrap', 'aria-label': 'Mon personnage' },
-    big,
-    h('div', { class: 'av-info' },
-      h('div', { class: 'av-name' }, k.name, h('span', { class: 'av-lvl' }, `Niveau ${lv}`)),
-      h('div', { class: 'av-title' }, LV_TITLE[k.g][lv - 1]),
-      h('div', { class: 'xp', 'aria-label': nextTxt }, h('i', { style: { width: Math.round(clamp(pct, 0, 1) * 100) + '%' } })),
-      h('div', { class: 'av-next' }, nextTxt),
-      h('div', { class: 'av-btns' },
-        onTap(h('button', { class: 'av-btn', id: 'btn-coffre' }, h('span', { 'aria-hidden': 'true' }, '🧰'), `Mon coffre (${p.treasures || 0})`), () => { Sfx.play('tap'); chestView(); }),
-        onTap(h('button', { class: 'av-btn', id: 'btn-vestiaire' }, h('span', { 'aria-hidden': 'true' }, '👕'), 'Mon vestiaire'), () => { Sfx.play('tap'); wardrobeView(); }))));
-}
-
-/* ---------- Coffre aux trésors ---------- */
-function chestView() {
-  const p = P(); const n = p.treasures || 0; const left = STARS_PER_TREASURE - (p.stars % STARS_PER_TREASURE);
-  const m = h('div', { class: 'modal', role: 'dialog', 'aria-label': 'Mon coffre aux trésors' });
-  const close = () => { Voice.stop(); m.remove(); };
-  m.append(h('div', { class: 'sheet chest' }, h('h3', null, `🧰 Le coffre de ${kid().name}`),
-    h('p', { class: 'chest-sub' }, `${n} trésor${n > 1 ? 's' : ''} sur ${TREASURES.length}`),
-    h('div', { class: 'album' }, TREASURES.map(([e, name], i) => i < n
-      ? onTap(h('button', { class: 'tr', 'aria-label': name }, e), () => Voice.say(name))
-      : h('span', { class: 'lock', 'aria-label': 'trésor caché' }, '❔'))),
-    onTap(h('button', { class: 'pbtn pri', style: { marginTop: '14px' } }, 'Fermer'), close)));
-  document.body.append(m); fixSquares(m);
-  Voice.say(n ? [`Tu as ${nw(n)} trésor${n > 1 ? 's' : ''} !`, `Encore ${nwf(left)} étoile${left > 1 ? 's' : ''} pour le prochain.`] : ['Ton coffre est encore vide.', 'Gagne des étoiles pour trouver des trésors !']);
-}
-
-/* ---------- Vestiaire : mettre ou enlever les accessoires gagnés ---------- */
-function wardrobeView() {
-  const p = P(); const k = kid(); const lv = levelOf(p.stars); const st = avState();
-  const m = h('div', { class: 'modal', role: 'dialog', 'aria-label': 'Mon vestiaire' });
-  const close = () => { m.remove(); renderHome(); };
-  const prev = h('div', { class: 'ward-av' });
-  const grid = h('div', { class: 'ward-grid' });
+/* ---------- Un seul écran pour choisir librement ses objets ---------- */
+function characterView() {
+  Voice.stop();
+  const k = kid(); const choices = objectChoices(k);
+  const m = h('div', { class: 'modal', role: 'dialog', 'aria-label': 'Mon personnage', 'aria-modal': 'true' });
+  const close = () => { Voice.stop(); $('#app').inert = false; m.remove(); renderHome(); $('#app .chip').focus(); };
+  const prev = h('div', { class: 'character-preview' });
+  const slots = h('div', { class: 'character-slots', 'aria-label': 'Objets équipés' });
+  const status = h('p', { class: 'character-status', role: 'status', 'aria-live': 'polite' });
+  const grid = h('div', { class: 'character-grid' });
   const draw = () => {
-    prev.innerHTML = avatarSVG(k.id, { gear: gearOn(), mood: 'happy' });
-    grid.innerHTML = '';
-    GEAR.forEach(g => {
-      const open = g.lvl <= lv; const on = open && st.gear[g.id] !== false;
-      const em = g.id === 'pet' ? (k.pet === 'dragon' ? '🐉' : '🐰') : g.id === 'chapeau' && k.g === 'm' ? '🤠' : g.em;
-      const b = h('button', { class: 'ward-it' + (on ? ' on' : '') + (open ? '' : ' lock'), 'aria-pressed': String(on), 'aria-label': open ? gearName(g, k) : `${gearName(g, k)}, au niveau ${g.lvl}` },
-        h('span', { class: 'em' }, open ? em : '🔒'), h('small', null, open ? gearName(g, k).replace(/^(le |la |les |l’)/, '') : `Niveau ${g.lvl}`));
-      onTap(b, () => {
-        if (!open) { Sfx.play('bad'); Voice.say([`Encore un peu de patience !`, `Tu gagneras ${gearName(g, k)} au niveau ${nw(g.lvl)}.`]); return; }
-        st.gear[g.id] = !on;
-        if (!on && g.id === 'couronne') st.gear.chapeau = false;
-        if (!on && g.id === 'chapeau') st.gear.couronne = false;
-        save(); Sfx.play('tap'); draw();
-        if (!on) Voice.say(gearName(g, k));
-      });
-      grid.append(b);
+    const selected = gearOn();
+    prev.innerHTML = avatarSVG(k.id, { gear: selected });
+    slots.innerHTML = ''; grid.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const item = choices.find(o => o.id === selected[i]);
+      slots.append(item ? onTap(h('button', { 'aria-label': 'Enlever ' + item.name }, item.em, h('small', null, '×')), () => { toggleObject(item.id); draw(); }) : h('span', { 'aria-label': 'Place libre' }, '＋'));
+    }
+    status.textContent = 'Choisis jusqu’à trois objets.';
+    choices.forEach(o => {
+      const on = selected.includes(o.id);
+      grid.append(onTap(h('button', { class: 'character-object' + (on ? ' on' : ''), 'aria-label': o.name, 'aria-pressed': String(on) },
+        h('span', { 'aria-hidden': 'true' }, o.em), h('small', null, o.label)), () => {
+          if (!toggleObject(o.id)) { status.textContent = 'Enlève un objet pour en choisir un autre.'; Voice.say('Tu as déjà trois objets. Enlève un objet pour en choisir un autre.'); return; }
+          draw(); grid.querySelectorAll('button')[choices.indexOf(o)].focus({preventScroll:true}); Sfx.play('tap'); Voice.say(on ? 'Objet enlevé.' : o.name);
+        }));
     });
   };
   draw();
-  m.append(h('div', { class: 'sheet ward' }, h('h3', null, `👕 Le vestiaire de ${k.name}`), prev, grid,
-    onTap(h('button', { class: 'pbtn pri', style: { marginTop: '14px' } }, 'Fermer'), close)));
+  m.append(h('div', { class: 'sheet character-sheet' }, h('div', { class: 'character-top' }, h('h2', null, 'Mon personnage'), onTap(h('button', { class: 'pbtn pri' }, 'Terminé'), close)),
+    prev, slots, status, grid,
+    onTap(h('button', { class: 'pbtn', style: { marginTop: '20px' } }, 'Changer de joueur'), () => { Voice.stop(); $('#app').inert = false; m.remove(); HOME_THEME = null; whoScreen(false); })));
   document.body.append(m);
-  Voice.say(lv > 1 ? 'Touche un accessoire pour le mettre ou l’enlever.' : 'En gagnant des étoiles, tu vas gagner des accessoires !');
+  const app = $('#app'); app.inert = true;
+  m.addEventListener('keydown', e => { if (e.key === 'Escape') close(); if (e.key === 'Tab') { const buttons = Array.from(m.querySelectorAll('button')); const first=buttons[0], last=buttons[buttons.length-1]; if (e.shiftKey && document.activeElement===first) { e.preventDefault(); last.focus(); } else if (!e.shiftKey && document.activeElement===last) { e.preventDefault(); first.focus(); } } });
+  m.querySelector('button').focus({preventScroll:true});
+  Voice.say('Touche un objet pour le mettre ou l’enlever. Tu peux choisir trois objets.');
 }
+function chestView() { characterView(); }
+function wardrobeView() { characterView(); }
 
 'use strict';
 /* =========================================================
@@ -3269,7 +3198,7 @@ function logDefi(entry) { const lec = P().lecture; lec.log = lec.log || []; lec.
 async function runLesson(li) {
   Sfx.ensure();
   const run = { gid: 'lecture', abort: false, res: [] }; RUN = run;
-  Shell.open({ bg: '#FFFFFF', level: `Leçon ${li + 1}/${LESSONS.length}`, onClose: () => openLecture() });
+  Shell.open({ bg: '#FFFFFF', level: `Le son ${LESSONS[li].main}`, onClose: () => openLecture() });
   const items = buildLesson(li);
   Shell.setDots(items.length);
   for (let i = 0; i < items.length; i++) {
@@ -3322,13 +3251,11 @@ function openLecture() {
   const st = Shell.stage; st.innerHTML = ''; st.className = 'stage'; st.style.background = '#fff';
   const nDone = Object.keys(lec.pass).length;
   const inner = h('div', { class: 'map-in' },
-    h('div', { class: 'prompt', style: { marginBottom: '12px' } }, 'Le chemin des sons'),
-    h('p', { style: { margin: '0 0 18px', color: 'var(--ink-soft)', textAlign: 'center' } }, `${nDone} son${nDone > 1 ? 's' : ''} sur ${LESSONS.length}`));
+    h('div', { class: 'prompt', style: { marginBottom: '12px' } }, 'Le chemin des sons'));
   let curEl = null;
   LESSONS.forEach((L, i) => {
     const ps = lec.pass[i]; const done = !!ps && !ps.review, review = !!(ps && ps.review), lock = i > cur;
-    const node = h('button', { class: 'node' + (done ? ' done' : '') + (review ? ' review' : '') + (lock ? ' lock' : '') + (i === cur ? ' cur' : ''), 'aria-label': `Leçon ${i + 1}, le son ${L.main}${lock ? ', fermée' : review ? ', à revoir' : ''}` }, lock ? h('span', { html: ICON.lock, style: { width: '30px' } }) : L.show[0]);
-    if (done && lec.done[i]) node.append(h('span', { class: 'st' }, '⭐'.repeat(lec.done[i])));
+    const node = h('button', { class: 'node' + (done ? ' done' : '') + (review ? ' review' : '') + (lock ? ' lock' : '') + (i === cur ? ' cur' : ''), 'aria-label': `Le son ${L.main}${lock ? ', fermée' : review ? ', à revoir' : ''}` }, lock ? h('span', { html: ICON.lock, style: { width: '30px' } }) : L.show[0]);
     if (review) node.append(h('span', { class: 'cons', 'aria-hidden': 'true' }, '↺'));
     onTap(node, () => {
       if (lock) { Sfx.play('bad'); Voice.say('Termine d’abord les leçons d’avant !'); return; }
@@ -3621,7 +3548,7 @@ async function runModule(mi, lv) {
   Sfx.ensure();
   const M = MODS[mi]; const L = M.levels[lv];
   const run = { gid: 'calcul', abort: false, res: [] }; RUN = run;
-  Shell.open({ bg: '#EAF3FF', level: `${M.em} Niveau ${lv + 1}/3`, onClose: () => openCalcul() });
+  Shell.open({ bg: '#EAF3FF', level: M.name, onClose: () => openCalcul() });
   const n = 8; Shell.setDots(n);
   const items = genDistinct(L.gen, n, false);
   for (let i = 0; i < n; i++) {
@@ -3668,38 +3595,37 @@ function openCalcul() {
   Shell.setDots(0);
   const c = calc();
   const st = Shell.stage; st.innerHTML = ''; st.className = 'stage'; st.style.background = '#EAF3FF';
-  const inner = h('div', { class: 'map-in', style: { gap: '12px' } }, h('div', { class: 'prompt', style: { marginBottom: '6px' } }, 'Les îles du calcul'));
+  const inner = h('div', { class: 'map-in', style: { gap: '12px' } }, h('div', { class: 'prompt', style: { marginBottom: '6px' } }, 'Compter et calculer'));
   let curEl = null;
   MODS.forEach((M, mi) => {
     const lock = mi > c.open; const mp = modProg(M.id);
     const isle = h('button', { class: 'isle' + (lock ? ' lock' : ''), 'aria-label': M.name + (lock ? ', fermée' : '') },
       h('span', { class: 'badge', style: { background: lock ? '#C5CDD9' : M.col } }, lock ? h('span', { html: ICON.lock, style: { width: '28px', color: '#fff' } }) : M.em),
-      h('div', { style: { minWidth: 0 } }, h('b', null, M.name), h('span', null, lock ? 'Termine l’île d’avant' : M.levels[nextLevel(mi)].name)),
-      h('span', { class: 'lv3', 'aria-hidden': 'true' }, [0, 1, 2].map(i => { const p = mp.pass[i]; return h('span', { style: { filter: p ? 'none' : 'grayscale(1) opacity(.3)' } }, '⭐'); })));
-    onTap(isle, () => { if (lock) { Sfx.play('bad'); Voice.say('Cette île est encore fermée. Termine d’abord l’île d’avant !'); return; } Sfx.play('tap'); runModule(mi, nextLevel(mi)); });
+      h('div', { style: { minWidth: 0 } }, h('b', null, M.name), h('span', null, lock ? 'À découvrir ensuite' : M.levels[nextLevel(mi)].name)));
+    onTap(isle, () => { if (lock) { Sfx.play('bad'); Voice.say('Commençons par l’activité proposée.'); return; } Sfx.play('tap'); runModule(mi, nextLevel(mi)); });
     if (mi === c.open && !curEl) curEl = isle;
     inner.append(isle);
   });
   const map = h('div', { class: 'map', style: { background: '#EAF3FF', backgroundImage: 'radial-gradient(circle at 20% 10%,#D6E9FF 0 8%,transparent 9%),radial-gradient(circle at 80% 40%,#D6E9FF 0 6%,transparent 7%)' } }, inner);
   st.append(map);
   if (curEl) setTimeout(() => { try { map.scrollTop = Math.max(0, curEl.offsetTop - map.clientHeight / 2 + 40); } catch (e) { } }, 50);
-  const say = 'Choisis une île. Chaque île a trois niveaux.';
-  Shell.item = { say }; Shell.caption('Touche une île pour jouer');
+  const say = 'Choisis une activité pour compter et calculer.';
+  Shell.item = { say }; Shell.caption('Choisis une activité');
   Voice.say(say);
 }
 GAMES.calcul = {
   id: 'calcul', title: 'Calcul', sub: 'Compter, ajouter, enlever, multiplier', icon: '🔢', color: 'sky', big: true,
   open: openCalcul,
-  info() { const n = MODS.reduce((a, M) => a + Object.keys(modProg(M.id).pass).length, 0); return { lv: `${n} niveau${n > 1 ? 'x' : ''} sur ${MODS.length * 3}`, pct: n / (MODS.length * 3) }; },
+  info() { const n = MODS.reduce((a, M) => a + Object.keys(modProg(M.id).pass).length, 0); return { lv: `${n} étape${n > 1 ? 's' : ''} sur ${MODS.length * 3}`, pct: n / (MODS.length * 3) }; },
   report() {
     const pr = P();
     const box = h('div', { style: { marginTop: '8px' } }, h('b', null, '🔢 Calcul'));
     MODS.forEach((M, mi) => {
       const mp = modProg(M.id);
-      M.levels.forEach((L, lv) => { const s = pr.skills[`calc:${M.id}:${lv}`]; const pct = s && s.n ? s.ok / s.n : 0; const p = mp.pass[lv]; const st = !p ? '' : ' ⭐ validé'; box.append(h('div', { class: 'skill' }, h('span', null, h('span', { class: 'tag' }, M.id === 'mul' ? 'P2' : 'P1'), `${M.em} ${L.ref}`, st), h('div', { class: 'meter' }, h('i', { style: { width: Math.round(pct * 100) + '%' } })), h('span', { class: 'num' }, s && s.n ? Math.round(pct * 100) + '%' : '—'))); });
+      M.levels.forEach((L, lv) => { const s = pr.skills[`calc:${M.id}:${lv}`]; const pct = s && s.n ? s.ok / s.n : 0; const p = mp.pass[lv]; const st = !p ? '' : ' · acquis'; box.append(h('div', { class: 'skill' }, h('span', null, h('span', { class: 'tag' }, M.id === 'mul' ? 'P2' : 'P1'), `${M.em} ${L.ref}`, st), h('div', { class: 'meter' }, h('i', { style: { width: Math.round(pct * 100) + '%' } })), h('span', { class: 'num' }, s && s.n ? Math.round(pct * 100) + '%' : '—'))); });
     });
     const lg = calc().log.slice(-5).reverse();
-    box.append(h('div', { class: 'defi-note' }, '⭐ validé par le défi sans aide (5/6)' + (lg.length ? '. Derniers défis : ' + lg.map(e => `${frDate(e.at)} ${e.ok}/${e.n}`).join(' · ') : '')));
+    box.append(h('div', { class: 'defi-note' }, 'Acquis après le bilan sans aide (5/6)' + (lg.length ? '. Derniers défis : ' + lg.map(e => `${frDate(e.at)} ${e.ok}/${e.n}`).join(' · ') : '')));
     const sel = h('select', { 'aria-label': 'Ouvrir les îles', style: { marginTop: '8px', border: '2px solid var(--line)', borderRadius: '10px', padding: '4px 8px' } }, MODS.map((M, i) => h('option', { value: i, selected: i === calc().open }, `Ouvrir jusqu’à l’île : ${M.name}`)));
     sel.addEventListener('change', () => { calc().open = +sel.value; save(); });
     box.append(sel);
@@ -3906,7 +3832,7 @@ WORLD_TILES.grands = ['lecture', 'calcul', 'trace', 'sudoku', 'suitesG', 'memoG'
 const kidHead = () => avatarSVG(S.current, { crop: 'head', gear: gearOn().filter(g => g === 'chapeau' || g === 'couronne') });
 const nwE = n => n === 1 ? 'un euro' : nw(n) + ' euros';
 
-/* ================= 1. Le chemin du trésor (labyrinthe) ================= */
+/* ================= 1. Le labyrinthe (labyrinthe) ================= */
 function makeMaze(cw, ch, braid = 0) {
   const W = 2 * cw + 1, H = 2 * ch + 1;
   const g = Array.from({ length: H }, () => Array(W).fill(1));
@@ -3928,9 +3854,9 @@ function mazeItem(L) {
   const start = [1, 1], goal = [W - 2, H - 2];
   const open = []; for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) if (!g[y][x] && !(x === 1 && y === 1) && !(x === goal[0] && y === goal[1]) && (x + y) % 2 === 0) open.push([x, y]);
   const stars = sample(open, L.stars || 0).map(p => p.join(','));
-  const say = L.stars ? ['Guide-toi jusqu’au trésor.', `Ramasse ${L.stars > 1 ? 'les ' + nwf(L.stars) + ' étoiles' : 'l’étoile'} en chemin !`] : ['Guide-toi jusqu’au trésor !', 'Glisse ton doigt sur le chemin, ou utilise les flèches.'];
+  const say = L.stars ? ['Guide-toi jusqu’au papillon.', `Ramasse ${L.stars > 1 ? 'les ' + nwf(L.stars) + ' fleurs' : 'la fleur'} en chemin !`] : ['Guide-toi jusqu’au papillon !', 'Glisse ton doigt sur le chemin, ou utilise les flèches.'];
   return {
-    say, caption: L.stars ? 'Ramasse les étoiles, puis va au trésor' : 'Va jusqu’au trésor',
+    say, caption: L.stars ? 'Ramasse les fleurs, puis va au papillon' : 'Va jusqu’au papillon',
     render(st, api) {
       let pos = [...start]; const got = new Set(); const trail = new Set(['1,1']);
       const grid = h('div', { class: 'maze', style: { gridTemplateColumns: `repeat(${W},1fr)`, gridTemplateRows: `repeat(${H},1fr)`, aspectRatio: `${W} / ${H}` } });
@@ -3940,8 +3866,8 @@ function mazeItem(L) {
       const me = h('div', { class: 'mz-me', html: kidHead() });
       const draw = () => {
         cells.forEach(c => { c.classList.toggle('trail', trail.has(c._x + ',' + c._y)); c.innerHTML = ''; });
-        stars.forEach(k => { if (!got.has(k)) { const [x, y] = k.split(',').map(Number); cell(x, y).append(h('span', { class: 'mz-star' }, '⭐')); } });
-        cell(goal[0], goal[1]).append(h('span', { class: 'mz-goal' }, '🧰'));
+        stars.forEach(k => { if (!got.has(k)) { const [x, y] = k.split(',').map(Number); cell(x, y).append(h('span', { class: 'mz-star' }, '🌼')); } });
+        cell(goal[0], goal[1]).append(h('span', { class: 'mz-goal' }, '🦋'));
         cell(pos[0], pos[1]).append(me);
       };
       let done = false;
@@ -3954,8 +3880,8 @@ function mazeItem(L) {
         if (stars.includes(k) && !got.has(k)) { got.add(k); Sfx.play('star'); }
         else Sfx.play('tap');
         if (nx === goal[0] && ny === goal[1]) {
-          if (got.size < stars.length) { draw(); Voice.say('Il reste des étoiles à ramasser !'); return true; }
-          done = true; draw(); api.answer(true, { el: me, praise: ['Bravo !', 'Tu as trouvé le trésor !'] }); return true;
+          if (got.size < stars.length) { draw(); Voice.say('Il reste des fleurs à ramasser !'); return true; }
+          done = true; draw(); api.answer(true, { el: me, praise: ['Bravo !', 'Tu as trouvé le papillon !'] }); return true;
         }
         draw(); return true;
       };
@@ -3987,22 +3913,22 @@ function mazeItem(L) {
   };
 }
 GAMES.chemin = {
-  id: 'chemin', title: 'Le chemin du trésor', sub: 'Trouver sa route', icon: '🗺️', color: 'teal', stage: '#E5F6E9', n: 3,
+  id: 'chemin', title: 'Le labyrinthe', sub: 'Trouver sa route', icon: '🗺️', color: 'teal', stage: '#E5F6E9', n: 3,
   levels: [
     { name: 'Tout petit chemin', tag: 'M1–M2', ref: 'Se déplacer sur un chemin vers un but', cw: 2, ch: 2, braid: .5, skill: 'ch1' },
     { name: 'Un chemin qui tourne', tag: 'M1–M2', ref: 'Suivre un chemin qui tourne', cw: 3, ch: 3, braid: .35, skill: 'ch2' },
-    { name: 'L’étoile en chemin', tag: 'M3', ref: 'Planifier un trajet avec une étape', cw: 3, ch: 3, braid: .25, stars: 1, skill: 'ch3' },
+    { name: 'La fleur en chemin', tag: 'M3', ref: 'Planifier un trajet avec une étape', cw: 3, ch: 3, braid: .25, stars: 1, skill: 'ch3' },
     { name: 'Le petit labyrinthe', tag: 'M3', ref: 'Se repérer dans un labyrinthe', cw: 4, ch: 4, braid: .15, stars: 1, skill: 'ch4' },
     { name: 'Le grand labyrinthe', tag: 'M3', ref: 'Se repérer dans un labyrinthe plus grand', cw: 4, ch: 5, braid: .1, stars: 2, skill: 'ch5' }
   ],
   make(ctx) { return mazeItem(ctx.L); }
 };
 GAMES.cheminG = Object.assign({}, GAMES.chemin, {
-  id: 'cheminG', sub: 'Labyrinthes et étoiles', color: 'teal',
+  id: 'cheminG', sub: 'Labyrinthes et fleurs', color: 'teal',
   levels: [
     { name: 'Labyrinthe 5 × 5', tag: 'P1', ref: 'Se repérer et se déplacer dans un quadrillage', cw: 5, ch: 5, braid: .08, skill: 'cg1' },
-    { name: 'Une étoile à prendre', tag: 'P1', ref: 'Planifier un trajet avec une étape', cw: 6, ch: 6, braid: .06, stars: 1, skill: 'cg2' },
-    { name: 'Deux étoiles', tag: 'P1', ref: 'Planifier un trajet avec plusieurs étapes', cw: 7, ch: 7, braid: .05, stars: 2, skill: 'cg3' },
+    { name: 'Une fleur à prendre', tag: 'P1', ref: 'Planifier un trajet avec une étape', cw: 6, ch: 6, braid: .06, stars: 1, skill: 'cg2' },
+    { name: 'Deux fleurs', tag: 'P1', ref: 'Planifier un trajet avec plusieurs étapes', cw: 7, ch: 7, braid: .05, stars: 2, skill: 'cg3' },
     { name: 'Le grand labyrinthe', tag: 'P1', ref: 'Anticiper un long trajet', cw: 8, ch: 8, braid: .04, stars: 2, skill: 'cg4' },
     { name: 'Le labyrinthe géant', tag: 'P1', ref: 'Anticiper un trajet complexe', cw: 9, ch: 9, braid: .03, stars: 3, skill: 'cg5' }
   ]
@@ -4240,7 +4166,7 @@ GAMES.riviere = {
   make(ctx) { return riviereItem(ctx.L, ctx); }
 };
 
-/* ================= 6. Le robot des étoiles (programmer un trajet) ================= */
+/* ================= 6. Le petit robot (programmer un trajet) ================= */
 const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];
 function robotPuzzle(L) {
   for (let tries = 0; tries < 400; tries++) {
@@ -4275,10 +4201,10 @@ function robotItem(L) {
     ? { F: ['⬆️', 'Avancer'], L: ['↩️', 'Tourner à gauche'], R: ['↪️', 'Tourner à droite'] }
     : { U: ['⬆️', 'Monter'], D: ['⬇️', 'Descendre'], G: ['⬅️', 'Aller à gauche'], E: ['➡️', 'Aller à droite'] };
   const say = L.rel
-    ? ['Programme le robot.', P_.gem ? 'Il doit prendre l’étoile, puis aller au portail.' : 'Il doit aller jusqu’au portail.', 'Attention : tourner ne fait pas avancer !']
-    : ['Programme le robot avec les flèches.', P_.gem ? 'Il doit prendre l’étoile, puis aller au portail.' : 'Il doit aller jusqu’au portail.', 'Puis appuie sur le bouton vert.'];
+    ? ['Programme le robot.', P_.gem ? 'Il doit prendre la fleur, puis aller au portail.' : 'Il doit aller jusqu’au portail.', 'Attention : tourner ne fait pas avancer !']
+    : ['Programme le robot avec les flèches.', P_.gem ? 'Il doit prendre la fleur, puis aller au portail.' : 'Il doit aller jusqu’au portail.', 'Puis appuie sur le bouton vert.'];
   return {
-    say, caption: P_.gem ? 'Étoile ⭐ puis portail 🌀' : 'Va jusqu’au portail 🌀',
+    say, caption: P_.gem ? 'Fleur 🌼 puis portail 🌀' : 'Va jusqu’au portail 🌀',
     render(st, api) {
       const { n, walls, s, gl, gem } = P_;
       let prog = [], pos = [...s], dir = P_.dir, has = !gem, running = false, fails = 0, token = 0;
@@ -4289,7 +4215,7 @@ function robotItem(L) {
         cells.forEach(c => {
           c.innerHTML = '';
           if (walls.has(c._x + ',' + c._y)) c.append(h('span', null, '🪨'));
-          if (gem && !has && c._x === gem[0] && c._y === gem[1]) c.append(h('span', null, '⭐'));
+          if (gem && !has && c._x === gem[0] && c._y === gem[1]) c.append(h('span', null, '🌼'));
           if (c._x === gl[0] && c._y === gl[1]) c.append(h('span', { class: 'portal' }, '🌀'));
           if (c._x === pos[0] && c._y === pos[1]) c.append(h('span', { class: 'robot' + (L.rel ? ' rel' : ''), style: L.rel ? { '--r': (dir * 90) + 'deg' } : null }, '🤖', L.rel ? h('i', { class: 'rdir' }) : null));
         });
@@ -4320,7 +4246,7 @@ function robotItem(L) {
           draw();
           if (has && pos[0] === gl[0] && pos[1] === gl[1]) { running = false; return api.answer(true, { el: grid, praise: ['Bravo !', 'Ton programme a guidé le robot jusqu’au portail !'] }); }
         }
-        return fail(has ? ['Le robot s’est arrêté avant le portail.', 'Ajoute la suite du chemin.'] : ['Le robot n’a pas pris l’étoile.', 'Passe d’abord par l’étoile.']);
+        return fail(has ? ['Le robot s’est arrêté avant le portail.', 'Ajoute la suite du chemin.'] : ['Le robot n’a pas pris la fleur.', 'Passe d’abord par la fleur.']);
       };
       const add = k => { if (running) return; if (prog.length >= 18) { Voice.say('Le programme est plein.'); return; } prog.push(k); Sfx.play('tap'); reset(); draw(); };
       const keys = h('div', { class: 'rkeys' }, Object.entries(C).map(([k, [e, lab]]) => onTap(h('button', { class: 'rkey', 'aria-label': lab }, h('span', null, e), h('small', null, lab)), () => add(k))));
@@ -4342,11 +4268,11 @@ function robotItem(L) {
   };
 }
 GAMES.robot = {
-  id: 'robot', title: 'Le robot des étoiles', sub: 'Programmer son chemin', icon: '🤖', color: 'navy', stage: '#E8EEF8', n: 3,
+  id: 'robot', title: 'Le petit robot', sub: 'Programmer son chemin', icon: '🤖', color: 'navy', stage: '#E8EEF8', n: 3,
   levels: [
     { name: 'Tout droit', tag: 'P1', ref: 'Coder un déplacement en ligne droite', n: 4, walls: [0, 2], len: [2, 3], turns: [0, 0], skill: 'ro1' },
     { name: 'Un virage', tag: 'P1', ref: 'Coder un déplacement avec un changement de direction', n: 5, walls: [2, 4], len: [3, 5], turns: [1, 1], skill: 'ro2' },
-    { name: 'L’étoile d’abord', tag: 'P1', ref: 'Coder un trajet avec une étape', n: 5, walls: [3, 5], len: [4, 7], turns: [1, 3], gem: true, skill: 'ro3' },
+    { name: 'La fleur d’abord', tag: 'P1', ref: 'Coder un trajet avec une étape', n: 5, walls: [3, 5], len: [4, 7], turns: [1, 3], gem: true, skill: 'ro3' },
     { name: 'Le robot tourne', tag: 'P1–P2', ref: 'Coder avec avancer / tourner (orientation du robot)', n: 5, walls: [1, 3], len: [2, 4], turns: [1, 1], rel: true, skill: 'ro4' },
     { name: 'Pilote expert', tag: 'P1–P2', ref: 'Coder un trajet avec étape en tenant compte de l’orientation', n: 6, walls: [4, 7], len: [4, 8], turns: [1, 3], gem: true, rel: true, faceAway: true, skill: 'ro5' }
   ],
@@ -4543,116 +4469,38 @@ function season(t = new Date()) {
   return SEASONS.find(s => { const a = s.from[0] * 100 + s.from[1], b = s.to[0] * 100 + s.to[1]; return a <= b ? md >= a && md <= b : md >= a || md <= b; }) || null;
 }
 
-/* ---------------- Les pièces de la maison ---------------- */
-const ROOMS = {
+/* ---------------- Thèmes simples, adaptés à chaque âge ---------------- */
+const THEMES = {
   grands: [
-    { id: 'biblio', name: 'La bibliothèque', icon: '📚', col: '#8E63E6', ids: ['lecture', 'histoires', 'lettre1', 'balade', 'syllabes', 'trace'] },
-    { id: 'nombres', name: 'L’atelier des nombres', icon: '🔢', col: '#3AA2EE', ids: ['calcul', 'heure', 'marche'] },
-    { id: 'jeux', name: 'La salle de jeux', icon: '🧩', col: '#FF9636', ids: ['cheminG', 'lynxG', 'sudoku', 'suitesG', 'memoG'] },
-    { id: 'voyage', name: 'Le grand voyage', icon: '🧭', col: '#35B872', ids: ['robot', 'miroir', 'riviere'] },
-    { id: 'jardin', name: 'Le jardin', icon: '🌻', col: '#6BBF3A', open: () => gardenView() },
-    { id: 'cuisine', name: 'La cuisine', icon: '🍳', col: '#FF6B57', open: () => kitchenView() },
-    { id: 'atelier', name: 'L’atelier des cartes', icon: '🎨', col: '#FF86B3', ids: ['atelier'] }
+    { id: 'lire', name: 'Lire', icon: '📚', col: '#6F4AC7', bg: '#F0E9FF', say: 'Choisis un jeu pour apprendre à lire.', ids: ['lecture', 'histoires', 'lettre1', 'balade', 'syllabes', 'riviere'] },
+    { id: 'calculer', name: 'Calculer', icon: '🔢', col: '#1E72BA', bg: '#E4F2FF', say: 'Choisis un jeu pour compter et calculer.', ids: ['calcul', 'heure', 'marche'] },
+    { id: 'jouer', name: 'Jouer', icon: '🧩', col: '#B3631E', bg: '#FFF0DC', say: 'Choisis un jeu.', ids: ['cheminG', 'lynxG', 'sudoku', 'suitesG', 'memoG', 'robot', 'miroir'] },
+    { id: 'creer', name: 'Créer', icon: '🎨', col: '#BA467B', bg: '#FDE8F1', say: 'Tu peux écrire ou créer une carte.', ids: ['trace', 'atelier'] },
+    { id: 'decouvrir', name: 'Découvrir', icon: '🌱', col: '#2B8050', bg: '#E7F4E7', say: 'Choisis ce que tu veux découvrir.', ids: ['jardin', 'cuisine'] }
   ],
   petits: [
-    { id: 'eveil', name: 'La salle d’éveil', icon: '🌈', col: '#FF9636', ids: ['couleurs', 'nombres', 'grandpetit', 'formes', 'tailles', 'espace', 'ferme', 'syllabes'] },
-    { id: 'jeux', name: 'La salle de jeux', icon: '🧩', col: '#3AA2EE', ids: ['chemin', 'lynx', 'suites', 'memo', 'ombres', 'puzzle'] },
-    { id: 'histoires', name: 'Le coin des histoires', icon: '📖', col: '#8E63E6', ids: ['histoires'] },
-    { id: 'jardin', name: 'Le jardin', icon: '🌷', col: '#6BBF3A', open: () => gardenView() },
-    { id: 'cuisine', name: 'La cuisine', icon: '🍳', col: '#FF6B57', open: () => kitchenView() },
-    { id: 'atelier', name: 'L’atelier des cartes', icon: '🎨', col: '#FF86B3', ids: ['atelier'] }
+    { id: 'lire', name: 'Écouter', icon: '📚', col: '#6F4AC7', bg: '#F0E9FF', say: 'Choisis une histoire ou un jeu avec les sons.', ids: ['histoires', 'syllabes', 'ferme'] },
+    { id: 'calculer', name: 'Compter', icon: '🔢', col: '#1E72BA', bg: '#E4F2FF', say: 'Choisis un jeu pour apprendre à compter.', ids: ['nombres', 'grandpetit', 'tailles'] },
+    { id: 'jouer', name: 'Jouer', icon: '🧩', col: '#B3631E', bg: '#FFF0DC', say: 'Choisis un jeu.', ids: ['formes', 'espace', 'chemin', 'lynx', 'suites', 'memo', 'ombres', 'puzzle'] },
+    { id: 'creer', name: 'Créer', icon: '🎨', col: '#BA467B', bg: '#FDE8F1', say: 'Tu peux jouer avec les couleurs ou créer une carte.', ids: ['couleurs', 'atelier'] },
+    { id: 'decouvrir', name: 'Découvrir', icon: '🌱', col: '#2B8050', bg: '#E7F4E7', say: 'Choisis ce que tu veux découvrir.', ids: ['jardin', 'cuisine'] }
   ]
 };
-function roomsOf(world) {
-  const rs = ROOMS[world].slice(); const s = season();
-  if (s) rs.push({ id: 'fete', name: s.name, icon: s.icon, col: '#7A4FD6', ids: [world === 'petits' ? 'feteP' : 'feteG'] });
-  return rs;
+function themesOf(world) {
+  const out = THEMES[world].map(t => ({ ...t, ids: t.ids.filter(id => GAMES[id]) }));
+  if (season()) out.find(t => t.id === 'decouvrir').ids.push(world === 'petits' ? 'feteP' : 'feteG');
+  return out;
 }
-function houseEl(world) {
-  const p = P(); const rs = roomsOf(world);
-  let cur = rs.find(r => r.id === p.room && !r.open) || rs[0];
-  const s = season();
-  const roomsBox = h('div', { class: 'house-rooms' });
-  const content = h('div', { class: 'room-content' });
-  const btns = rs.map(r => {
-    const b = h('button', { class: 'room' + (r.id === 'jardin' ? ' garden' : '') + (r.id === cur.id ? ' on' : ''), style: { '--rc': r.col }, 'data-room': r.id, 'aria-label': r.name },
-      h('span', { class: 'r-em', 'aria-hidden': 'true' }, r.icon), h('b', null, r.name), r.id === 'jardin' ? gardenBadge() : null);
-    onTap(b, () => {
-      Sfx.play('tap'); Voice.say(r.name);
-      if (r.open) { CURRENT_ACT = r.id; lastPlayed()[r.id] = dayNo(); save(); setTimeout(r.open, 250); return; }
-      cur = r; p.room = r.id; save(); btns.forEach(x => x.classList.toggle('on', x === b)); draw();
-    });
-    b.addEventListener('keydown', e => {
-      const i = btns.indexOf(b); const d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-      if (d) { e.preventDefault(); e.stopPropagation(); btns[(i + d + btns.length) % btns.length].focus(); }
-    });
-    return b;
-  });
-  roomsBox.append(...btns);
-  const draw = () => {
-    content.innerHTML = '';
-    content.append(h('h2', { class: 'section-title' }, cur.icon + ' ' + cur.name), h('div', { class: 'tiles' }, cur.ids.filter(id => GAMES[id]).map(gameTile)));
-  };
-  draw();
-  const roof = h('div', { class: 'house-roof', html: `<svg viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path d="M8 66 L200 6 L392 66 Z" fill="#E8604C"/><path d="M8 66 L200 6 L392 66" fill="none" stroke="#C4473A" stroke-width="6" stroke-linejoin="round"/><rect x="300" y="18" width="26" height="34" fill="#B5503F"/></svg>` });
-  const deco = s ? h('div', { class: 'house-deco', 'aria-hidden': 'true' }, s.deco.map(e => h('span', null, e))) : null;
-  return h('section', { class: 'house wrap', 'aria-label': 'La maison de Lumi' }, deco, roof, h('div', { class: 'house-body' }, roomsBox), content);
+const SIMPLE_GAME_NAMES = { lecture: 'Apprendre à lire', calcul: 'Compter et calculer', histoires: 'Les histoires', lettre1: 'Le premier son', balade: 'Les lettres des mots', syllabes: 'Les syllabes', riviere: 'Construire les mots', trace: 'Tracer les lettres', atelier: 'Créer une carte', nombres: 'Les petits nombres', grandpetit: 'Plus ou moins', tailles: 'Grand et petit', ferme: 'Les animaux', couleurs: 'Les couleurs', jardin: 'Le jardin', cuisine: 'La cuisine' };
+function simpleGameTile(id) {
+  const g = GAMES[id], name = SIMPLE_GAME_NAMES[id] || g.title;
+  return onTap(h('button', { class: 'simple-game', 'data-gid': id, 'aria-label': name, style: { '--game-color': 'var(--' + g.color + ', var(--sky))' } }, h('span', { class: 'simple-game-picture', 'aria-hidden': 'true' }, g.icon), h('b', null, name)), () => { Voice.stop(); Sfx.play('tap'); CURRENT_ACT = id; lastPlayed()[id] = dayNo(); setTimeout(() => runGame(id), 100); });
 }
 function gardenBadge() {
   const g = garden(); const ripe = g.plots.filter(x => x && x.st >= 3).length; const thirsty = g.plots.filter(x => x && x.st < 3 && x.w !== dayNo()).length;
   if (ripe) return h('span', { class: 'r-badge' }, `${ripe} à cueillir`);
   if (thirsty && g.drops) return h('span', { class: 'r-badge' }, 'À arroser');
   return null;
-}
-
-/* ---------------- Parcours du jour ---------------- */
-function skillPct(gid) {
-  const g = GAMES[gid]; if (!g || !g.levels) return null;
-  const L = g.levels[clamp(gameProg(gid).lvl, 0, g.levels.length - 1)]; const s = P().skills[L.skill];
-  return s && s.n >= 3 ? s.ok / s.n : null;
-}
-function dailyPlan() {
-  const p = P(); const today = dayNo();
-  if (p.daily && p.daily.day === today && p.daily.ids && p.daily.ids.every(id => GAMES[id])) return p.daily;
-  const world = S.world; const last = lastPlayed();
-  const pool = ROOMS[world].flatMap(r => r.ids || []).filter(id => GAMES[id] && !['atelier', 'histoires'].includes(id));
-  const rnd = n => (today * 9301 + n * 49297) % 233280 / 233280;
-  const ids = [];
-  if (world === 'grands') ids.push('lecture');
-  else ids.push([...ROOMS.petits[0].ids].sort((a, b) => (last[a] || 0) - (last[b] || 0) || rnd(a.length) - .5)[0]);
-  const weak = pool.filter(id => !ids.includes(id) && skillPct(id) != null).sort((a, b) => skillPct(a) - skillPct(b));
-  if (weak.length && skillPct(weak[0]) < .8) ids.push(weak[0]);
-  else ids.push(world === 'grands' ? 'calcul' : pool.filter(id => !ids.includes(id))[Math.floor(rnd(3) * 5)]);
-  const old = pool.filter(id => !ids.includes(id)).sort((a, b) => (last[a] || 0) - (last[b] || 0) || rnd(a.charCodeAt(0)) - .5);
-  ids.push(old[0]);
-  p.daily = { day: today, ids: ids.filter(Boolean).slice(0, 3), done: [], bonus: false };
-  return p.daily;
-}
-function dailyEl() {
-  const d = dailyPlan(); const n = d.done.length;
-  const box = h('section', { class: 'daily wrap', 'aria-label': 'Le parcours du jour' },
-    h('div', { class: 'daily-head' }, h('b', null, '🌟 Le parcours du jour'), h('span', null, n >= d.ids.length ? 'Bravo, tout est fait ! 💧💧💧' : `${n} sur ${d.ids.length} · bonus : 3 gouttes d’eau`)));
-  const row = h('div', { class: 'daily-row' });
-  d.ids.forEach((id, i) => {
-    const g = GAMES[id]; const ok = d.done.includes(id);
-    const b = h('button', { class: 'daily-step' + (ok ? ' ok' : '') + (!ok && d.ids.slice(0, i).every(x => d.done.includes(x)) ? ' next' : ''), 'aria-label': g.title + (ok ? ', fait' : '') },
-      h('span', { class: 'ds-n' }, ok ? '✓' : String(i + 1)), h('span', { class: 'ds-em', 'aria-hidden': 'true' }, g.icon), h('span', { class: 'ds-t' }, g.title));
-    onTap(b, () => { Sfx.play('tap'); Voice.stop(); CURRENT_ACT = id; lastPlayed()[id] = dayNo(); setTimeout(() => runGame(id), 100); });
-    row.append(b);
-  });
-  box.append(row);
-  return box;
-}
-/* appelé à chaque fin d'activité (écran de fête) */
-function activityDone() {
-  const g = garden(); g.drops = Math.min(9, (g.drops || 0) + 1);
-  const d = P().daily; let bonus = null;
-  if (d && d.day === dayNo() && CURRENT_ACT && d.ids.includes(CURRENT_ACT) && !d.done.includes(CURRENT_ACT)) {
-    d.done.push(CURRENT_ACT);
-    if (d.done.length >= d.ids.length && !d.bonus) { d.bonus = true; g.drops = Math.min(12, g.drops + 3); bonus = 'Parcours du jour terminé ! Tu gagnes trois gouttes d’eau pour ton jardin.'; }
-  }
-  if (CURRENT_ACT) lastPlayed()[CURRENT_ACT] = dayNo();
-  return bonus;
 }
 
 /* ---------------- Le jardin ---------------- */
@@ -4687,8 +4535,7 @@ function gardenView() {
   ov.body.append(head, field);
   const draw = () => {
     head.innerHTML = '';
-    head.append(h('div', { class: 'g-drops', 'aria-label': `${g.drops} gouttes d’eau` }, h('span', null, '💧'), h('b', null, '× ' + g.drops)),
-      h('div', { class: 'g-help' }, g.drops ? 'Touche une plante pour l’arroser (une fois par jour).' : 'Plus de gouttes : termine un jeu pour en gagner.'),
+    head.append(h('div', { class: 'g-help' }, 'Touche une plante pour l’arroser (une fois par jour).'),
       onTap(h('button', { class: 'pbtn', 'aria-label': 'Aller à la cuisine' }, '🍳 Cuisine'), () => { ov.el.remove(); kitchenView(); }));
     field.innerHTML = '';
     g.plots.forEach((pl, i) => {
@@ -4708,16 +4555,15 @@ function gardenView() {
   const tapPlot = (i, el) => {
     const pl = g.plots[i];
     if (!pl) return chooseSeed(i);
-    if (pl.weed) { pl.weed = false; g.drops = Math.min(12, g.drops + 1); Sfx.play('pop'); Voice.say(['Tu as arraché la mauvaise herbe !', 'Elle te donne une goutte d’eau.']); save(); return draw(); }
+    if (pl.weed) { pl.weed = false; Sfx.play('pop'); Voice.say('Tu as arraché la mauvaise herbe !'); save(); return draw(); }
     if (pl.snail) { pl.snail = false; Sfx.play('whoosh'); Voice.say('L’escargot part se promener ailleurs !'); save(); return draw(); }
     if (pl.st >= 3) {
       g.pantry[pl.s] = (g.pantry[pl.s] || 0) + (pl.s === 'fraise' || pl.s === 'tomate' || pl.s === 'pomme' ? 3 : 2);
       const n = g.pantry[pl.s]; g.plots[i] = null; Sfx.play('star'); confetti(1200);
-      Voice.say([`Tu as cueilli ${SEEDS[pl.s].p} !`, `Tu en as ${nwf(n)} dans ta cuisine.`]); save(); return draw();
+      Voice.say(`Tu as cueilli ${SEEDS[pl.s].p} !`); save(); return draw();
     }
     if (pl.w === today) { Voice.say('Elle a déjà bu aujourd’hui. Reviens demain !'); flash(el, 'shake'); return; }
-    if (!g.drops) { Voice.say(['Tu n’as plus de gouttes d’eau.', 'Termine un jeu pour en gagner une !']); flash(el, 'shake'); return; }
-    g.drops--; pl.w = today; pl.st++; Sfx.play('flip');
+    pl.w = today; pl.st++; Sfx.play('flip');
     Voice.say(pl.st >= 3 ? [`Ta plante est prête !`, 'Touche-la pour la cueillir.'] : pl.st === 1 ? 'Glou glou ! Une petite pousse sort de la terre.' : 'Glou glou ! Elle grandit. Reviens demain pour l’arroser encore.');
     save(); draw();
   };
@@ -4737,8 +4583,8 @@ function gardenView() {
     Voice.say(world === 'grands' ? ['Lis les sachets, et choisis ce que tu veux planter.', 'Touche un sachet.'] : 'Qu’est-ce que tu veux planter ? Touche une graine.');
   };
   draw();
-  if (!g.intro) { g.intro = true; save(); Voice.say(['Voici ton jardin !', 'Plante des graines, puis arrose-les chaque jour.', 'Pour arroser, il faut des gouttes d’eau : tu en gagnes une à chaque jeu terminé.']); }
-  else Voice.say(`Tu as ${nwf(g.drops)} goutte${g.drops > 1 ? 's' : ''} d’eau.`);
+  if (!g.intro) { g.intro = true; save(); Voice.say(['Voici ton jardin !', 'Plante des graines, puis arrose-les chaque jour.']); }
+  else Voice.say('Voici ton jardin !');
 }
 
 /* ---------------- La cuisine ---------------- */
@@ -4848,7 +4694,7 @@ async function cookRecipe(r) {
   Celebrate.show({ stars, sticker, note: `${r.e} ${r.n} pour ${run.guest || 'toi'} !`, noteSay: [`Miam ! ${run.guest === 'le chien' ? 'Le chien' : run.guest || 'Tout le monde'} se régale !`], again: () => Shell.close(), home: () => { Shell.onClose = null; Shell.close(); } });
 }
 GAMES.cuisine = { id: 'cuisine', title: 'La cuisine', sub: 'Recettes du jardin', icon: '🍳', color: 'orange', open: () => kitchenView(), info: () => ({ lv: `${garden().dishes || 0} plat${(garden().dishes || 0) > 1 ? 's' : ''}`, pct: Math.min(1, (garden().dishes || 0) / 8) }) };
-GAMES.jardin = { id: 'jardin', title: 'Le jardin', sub: 'Planter et arroser', icon: '🌻', color: 'leaf', open: () => gardenView(), info: () => ({ lv: `💧 × ${garden().drops}`, pct: garden().plots.filter(Boolean).length / 6 }) };
+GAMES.jardin = { id: 'jardin', title: 'Le jardin', sub: 'Planter et arroser', icon: '🌻', color: 'leaf', open: () => gardenView(), info: () => ({ lv: 'Arrosage libre', pct: garden().plots.filter(Boolean).length / 6 }) };
 
 /* ---------------- L'heure (P1) ---------------- */
 const hw = hh => hh === 1 ? 'une heure' : `${nw(hh)} heures`;
@@ -5089,7 +4935,7 @@ async function readStory(s) {
   const p = P(); (p.stories || (p.stories = {}))[s.id] = (p.stories[s.id] || 0) + 1;
   const sc = run.res.filter(r => r.first != null); const ok = sc.filter(r => r.first).length;
   const stars = !sc.length ? 3 : ok === sc.length ? 3 : ok >= sc.length - 1 ? 2 : 1;
-  const sticker = addStars(stars); save();
+  const sticker = sc.length ? addStars(1) : null; save();
   Celebrate.show({ stars, sticker, note: `Histoire lue : ${s.t}`, again: () => readStory(s), next: () => Shell.close(), nextLabel: 'Autre histoire', home: () => { Shell.onClose = null; Shell.close(); } });
 }
 GAMES.histoires = { id: 'histoires', title: 'Les histoires', sub: 'Lire et écouter', icon: '📖', color: 'plum', open: () => storyLibrary(), info: () => { const n = Object.keys(P().stories || {}).length, t = STORIES[S.world].length; return { lv: `${n} sur ${t} lue${n > 1 ? 's' : ''}`, pct: n / t }; } };
@@ -5155,7 +5001,7 @@ async function makeCard() {
   for (const [i, it] of items.entries()) { Shell.now(i); const r = await Engine.play(it, run); if (run.abort || RUN !== run) return; run.res.push(r); Shell.mark(i, 'ok'); }
   const p = P(); const cards = p.cards || (p.cards = []);
   const c = { to: out.to[0], msg: out.msg[0], stk: out.stk, bg: out.bg, from: k.name, at: Date.now() }; cards.unshift(c); if (cards.length > 12) cards.pop();
-  const sticker = addStars(reader && run.res[2] && run.res[2].first === false ? 2 : 3); save();
+  const sticker = reader ? addStars(1) : null; save();
   showCard(c, true);
   Celebrate.show({ stars: 3, sticker, note: 'Ta carte est rangée dans l’atelier. Montre-la !', again: () => makeCard(), home: () => { Shell.onClose = null; Shell.close(); } });
 }
@@ -5205,9 +5051,9 @@ function notionsCard(id) {
 /* ---------------- Phrases à enregistrer (inventaire de la voix) ---------------- */
 function maisonVoiceLines() {
   const out = [];
-  Object.values(ROOMS).flat().forEach(r => out.push(r.name));
+  Object.values(THEMES).flat().forEach(t => out.push(t.name, t.say));
   SEASONS.forEach(s => out.push(s.name));
-  ['Voici ton jardin !', 'Plante des graines, puis arrose-les chaque jour.', 'Pour arroser, il faut des gouttes d’eau : tu en gagnes une à chaque jeu terminé.', 'Tu as arraché la mauvaise herbe !', 'Elle te donne une goutte d’eau.', 'L’escargot part se promener ailleurs !', 'Elle a déjà bu aujourd’hui. Reviens demain !', 'Tu n’as plus de gouttes d’eau.', 'Termine un jeu pour en gagner une !', 'Ta plante est prête !', 'Touche-la pour la cueillir.', 'Glou glou ! Une petite pousse sort de la terre.', 'Glou glou ! Elle grandit. Reviens demain pour l’arroser encore.', 'Lis les sachets, et choisis ce que tu veux planter.', 'Touche un sachet.', 'Qu’est-ce que tu veux planter ? Touche une graine.', 'Arrose-les pour les faire pousser !', 'Parcours du jour terminé ! Tu gagnes trois gouttes d’eau pour ton jardin.',
+  ['Voici ton jardin !', 'Plante des graines, puis arrose-les chaque jour.', 'Tu as arraché la mauvaise herbe !', 'Elle te donne une goutte d’eau.', 'L’escargot part se promener ailleurs !', 'Elle a déjà bu aujourd’hui. Reviens demain !', 'Tu n’as plus de gouttes d’eau.', 'Termine un jeu pour en gagner une !', 'Ta plante est prête !', 'Touche-la pour la cueillir.', 'Glou glou ! Une petite pousse sort de la terre.', 'Glou glou ! Elle grandit. Reviens demain pour l’arroser encore.', 'Lis les sachets, et choisis ce que tu veux planter.', 'Touche un sachet.', 'Qu’est-ce que tu veux planter ? Touche une graine.', 'Arrose-les pour les faire pousser !', 'Parcours du jour terminé ! Tu gagnes trois gouttes d’eau pour ton jardin.',
     'Bienvenue dans la cuisine !', 'Choisis une recette.', 'Il te manque des ingrédients du jardin :', 'Va planter et arroser !', 'Lis la recette.', 'Mets les bons ingrédients dans le bol, puis touche Mélanger.', 'Écoute la recette :', 'Mets-les dans le bol !', 'Parfait, tout est dans le bol !', 'Touche le bol pour mélanger !', 'C’est prêt !', 'À qui veux-tu l’offrir ?', 'Miam ! Tout le monde se régale !', 'Relis la recette.', 'Vide le bol et recommence.',
     'Quelle heure est-il ?', 'Touche d’abord un nombre pour placer la petite aiguille.', 'Pour la demie, la grande aiguille va en bas, sur le six.', 'Pour l’heure pile, la grande aiguille reste en haut, sur le douze.', 'Regarde la petite aiguille rouge : elle est entre deux nombres. On dit l’heure du nombre d’avant, et demie.', 'Regarde la petite aiguille rouge : elle montre l’heure.',
     'Trouve celui qui n’est pas comme les autres !', 'Lis les mots.', 'Compte encore, en touchant chaque objet avec ton doigt.', 'Combien faut-il en ajouter ?',

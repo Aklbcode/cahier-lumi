@@ -1,0 +1,20 @@
+/* Inventory source strings and feedback; no browser or real profile. */
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const source=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n').replace(/\bboot\(\);\s*$/,'');
+const fake=()=>({style:{setProperty(){}},classList:{add(){},remove(){}},append(){},setAttribute(){},addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null});
+const speech=require('../speech-engine.js');
+const ctx=vm.createContext({console,Blob,URL,AbortController,setTimeout,clearTimeout,window:{CSS:{supports:()=>true},addEventListener(){}},CSS:{supports:()=>true},document:{createElement:fake,createTextNode:t=>({textContent:t}),body:fake(),addEventListener(){},querySelectorAll:()=>[],querySelector:()=>null},LumiSpeech:speech});
+vm.runInContext(source,ctx,{timeout:3000});
+const lines=vm.runInContext(`[...PRAISE,...TRY,...DEFI_ACK,...Object.values(THEMES).flat().flatMap(t=>[t.name,t.say]),...['luca','lola'].flatMap(id=>objectChoices(kid(id)).map(o=>o.name))]`,ctx);
+lines.push('Tes dix étoiles deviennent un diamant !','Voici une étoile pour ta série terminée.','Objet enlevé.','Choisis une activité pour compter et calculer.','Tu as trouvé le papillon !','À toi de jouer. Écoute bien et prends ton temps.','Tu as terminé ! Merci d’avoir joué.','Guide-toi jusqu’au papillon.','Ramasse les deux fleurs en chemin !','Ramasse les trois fleurs en chemin !','Ramasse la fleur en chemin !','Guide-toi jusqu’au papillon !','Le robot n’a pas pris la fleur.','Passe d’abord par la fleur.','Il doit prendre la fleur, puis aller au portail.','Bravo ! Tu as trouvé !','Regarde bien et essaie encore.','Merci, tu peux continuer.');
+for(const m of source.matchAll(/(?:praise|feedback|reveal)\s*:\s*('(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*")/g))lines.push(vm.runInNewContext(m[1]));
+for(const m of source.matchAll(/Voice\.say\(\s*('(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*")/g))lines.push(vm.runInNewContext(m[1]));
+const bank=JSON.parse(fs.readFileSync(path.join(root,'voix/index-belge.json'),'utf8'));
+const norm=t=>speech.norm(t).replace(/[.!?…:]+$/,'').trim().toLocaleLowerCase('fr');
+const known=new Set(Object.keys(bank.clips).filter(k=>/^[nms]\|/.test(k)).map(k=>norm(k.slice(2))));
+const unique=[...new Set(lines.flatMap(t=>[t,...speech.speechSegments(t).map(s=>s.t)]))].filter(t=>t.trim()&&!/^[\s.!?…,;:]+$/.test(t));
+const missing=unique.filter(t=>!known.has(norm(t)));
+fs.writeFileSync(path.join(root,'audit-voix/phrases-themes-feedback.json'),JSON.stringify(unique,null,2));
+const themes=vm.runInContext('JSON.stringify(Object.fromEntries(["petits","grands"].map(w=>[w,themesOf(w).map(t=>({name:t.name,ids:t.ids}))])))',ctx);
+console.log(JSON.stringify({missing:missing.length,examples:missing.slice(0,15),themes:JSON.parse(themes)},null,2));

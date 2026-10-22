@@ -8,11 +8,20 @@ Jeux éducatifs pour Luca (5-6 ans, 1re primaire) et Lola (3 ans, maternelle) : 
 - Mac : ouvrir le lien dans Safari ou Chrome et l’ajouter aux favoris (ou au Dock).
 - La progression est enregistrée sur chaque appareil. Espace parents (cadenas) → « Sur cet appareil » pour ouvrir directement le monde de Luca ou de Lola.
 - Voix : banque féminine neuronale **Charline, français de Belgique**, choisie à l’écoute de deux extraits. Les fichiers sont préparés à l’avance dans `voix/` ; l’appareil n’utilise pas le service de voix pendant le jeu.
-- Les sons de référence utilisent des enregistrements dédiés à vitesse d’origine. Une absence de fichier demande une nouvelle écoute et ne déclenche jamais une prononciation automatique de remplacement. La tortue ralentit légèrement les mots et allonge les pauses. Les bruitages baissent pendant la parole.
-- Espace parents → Voix de Lumi : tester une consigne, chacun des 13 sons voyelles ou un calcul, régler la vitesse des consignes et choisir la voix de secours pour les autres messages.
+- Les sons de référence utilisent des enregistrements dédiés à vitesse d’origine. Une absence de fichier demande une nouvelle écoute et ne déclenche jamais une prononciation automatique de remplacement. Les bruitages baissent pendant la parole.
+- Espace parents → Voix de Lumi : tester une consigne, un encouragement, une correction ou chacun des 13 sons voyelles, et régler la vitesse des consignes. Tous les messages utilisent Charline ; aucune voix de remplacement de l’appareil n’est utilisée automatiquement.
 
 ## Vérification des voix
 
 Le moteur se trouve dans `speech-engine.js` ; les progrès gardent leur sauvegarde habituelle. `audit-voix/Voix-belge-et-sons-de-lecture.md` décrit la nouvelle version. L’ancien rapport est conservé pour retracer la première intervention. `audit-voix/controle-audio-belge.json` contient les contrôles de la nouvelle banque sonore.
 
 Les tests du lecteur se lancent avec `node tests/speech.test.cjs`. `scripts/build_natural_voices.py` prépare les fichiers Charline avec `edge-tts==7.3.1`. Cette étape envoie les textes publics de l’application au service vocal Microsoft ; aucune progression, réponse d’enfant ou donnée de profil n’est envoyée. L’application publiée n’intègre ni clé de service ni bibliothèque de génération. `scripts/check_audio.py --bank voix/index-belge.json --output audit-voix/controle-audio-belge.json` décode et contrôle les fichiers. Les anciens scripts et fichiers Kokoro sont conservés à titre d’historique et ne sont plus chargés par le jeu.
+
+## Interface simplifiée — 22 octobre 2026
+
+- Cinq thèmes directs : Lire/Écouter, Calculer/Compter, Jouer, Créer, Découvrir.
+- « Mon personnage » regroupe les 48 objets. Tous sont libres ; trois au maximum peuvent être équipés. Un mot par objet. Le choix est enregistré séparément pour chaque enfant.
+- Une étoile par série d’exercices terminée, quel que soit le score. Dix étoiles deviennent un diamant ; le compteur repart à zéro (0–9). Aucun rang, niveau de récompense ou objet à débloquer. Les anciens grands totaux sont conservés en sauvegarde mais ne sont plus affichés ni repris dans ce nouveau cycle. Les points en haut du jeu indiquent seulement l’avancement de l’activité. La fin affiche « Tu as terminé », puis l’étoile ou le diamant. Les nombres cumulés de diamants ne sont pas affichés à l’enfant.
+- Les acquisitions et l’adaptation des exercices restent enregistrées et consultables dans l’espace parents. Les anciennes sauvegardes sont conservées.
+- Le jardin s’arrose librement une fois par plante et par jour, sans monnaie à gagner.
+- La vitesse vocale se règle dans l’espace parents ; aucun bouton « Plus lent » dans les jeux.

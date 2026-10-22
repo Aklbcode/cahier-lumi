@@ -34,7 +34,7 @@
     const settings = adapters.settings || (() => ({}));
     const state = (status, text = '') => { Voice.status=status; Voice.text=text; if (adapters.onState) adapters.onState({status,text,mode:Voice.mode}); };
     const VoicePack = {
-      base:'voix/', revision:'20261022-belge-1', idx:null, packs:[], order:{}, scopes:{}, loading:{}, packAge:new Map(), urls:new Map(), hits:0, misses:new Set(), label:'', ready:null,
+      base:'voix/', revision:'20261022-personnage-2', idx:null, packs:[], order:{}, scopes:{}, loading:{}, packAge:new Map(), urls:new Map(), hits:0, misses:new Set(), label:'', ready:null,
       init() {
         if (this.ready) return this.ready;
         this.ready = (async () => {
@@ -43,13 +43,14 @@
             const j = await r.json(); if (![2,3].includes(j.v) || !j.clips || !Array.isArray(j.packs)) return;
             this.idx=j.clips; this.packs=j.packs; this.order=j.order||{}; this.scopes=j.scopes||{}; this.label=j.voice;
             this.normal = new Map(Object.keys(this.idx).map(k => [keyNorm(k), k]));
+            this.byText = new Map(Object.keys(this.idx).filter(k=>/^[nms]\|/.test(k)).map(k=>[keyNorm(k.slice(2)).toLocaleLowerCase('fr'),k]));
             // Only prime the first UI pack. Requested speech always gets priority.
             const first=(this.scopes.ui||[])[0]; if (first != null) this.loadPack(first);
           } catch (_) { this.idx=null; }
           finally { if (!this.idx) this.ready=null; }
         })(); return this.ready;
       },
-      usable() { return !!this.idx && settings().voiceMode !== 'device'; },
+      usable() { return !!this.idx; },
       key(t, rate, unit={}) {
         if (unit.phoneme || unit.syllable) {
           const id=(unit.phoneme?'ph|':'sy|')+(unit.phoneme||unit.syllable);
@@ -57,7 +58,7 @@
         }
         const bucket=speechBucket(rate), raw=bucket+'|'+t;
         if (this.idx && this.idx[raw]) return raw;
-        return this.normal && this.normal.get(keyNorm(raw));
+        return this.normal && this.normal.get(keyNorm(raw)) || this.byText && this.byText.get(keyNorm(t).toLocaleLowerCase('fr'));
       },
       loadPack(i) {
         if (this.packAge.has(i)) { this.packAge.delete(i); this.packAge.set(i,true); }
@@ -126,7 +127,7 @@
       slower(fn) { this.nextSlow=true; try { return fn(); } finally { this.nextSlow=false; } },
       async say(parts, options={}) {
         const slow=options.slow || this.nextSlow; this.stop(); const my=this.tok;
-        this.last=parts; this.unlock(); const joined=speechJoin(parts), units=[];
+        this.last=parts; this.lastFallback=false; this.unlock(); const joined=speechJoin(parts), units=[];
         const prepare = (continuous=false) => {
           units.length=0;
           for (const p of joined) {
@@ -141,7 +142,7 @@
         this.speaking=true; state('loading');
         try {
           const teaching=units.some(u=>u && (u.phoneme || u.syllable));
-          if (teaching || !options.device && settings().voiceMode!=='device') await Promise.race([VoicePack.init(),this.wait(5000,my)]);
+          if (teaching || !options.device) await Promise.race([VoicePack.init(),this.wait(5000,my)]);
           if (my!==this.tok) return;
           // Prefer a whole recorded phrase. A voice naturally links its words;
           // only split when a complete phrase is absent from the static bank.
@@ -151,7 +152,7 @@
           if (teaching || !options.device && VoicePack.usable()) {
             const keys=speechUnits.map(u=>VoicePack.key(u.t,u.rate,u));
             if (keys.every(Boolean)) urls=await Promise.all(keys.map(k=>VoicePack.get(k)));
-            else if (teaching) {
+            else {
               // A generic device TTS cannot be trusted to pronounce a phoneme.
               // Do not silently teach another sound when the recording is absent.
               for (let i=0;i<keys.length;i++) if(!keys[i]) VoicePack.miss((speechUnits[i].phoneme?'ph|':speechUnits[i].syllable?'sy|':'n|')+(speechUnits[i].phoneme||speechUnits[i].syllable||speechUnits[i].t));
@@ -159,8 +160,17 @@
           }
           if (my!==this.tok) return;
           // Keep a single timbre across the entire instruction, even when one clip is missing.
-          const recorded=urls.length>0 && urls.every(Boolean) && !!this.audio;
+          let recorded=urls.length>0 && urls.every(Boolean) && !!this.audio;
+          // Specific dynamic feedback may be absent from a static bank. Use a
+          // complete Charline encouragement, never another speaker or accent.
+          if (!recorded && !options.device && options.feedback) {
+            const fallback=options.feedback==='correct' ? 'Bravo ! Tu as trouvé !' : options.feedback==='neutral' ? 'Merci, tu peux continuer.' : 'Regarde bien et essaie encore.';
+            const k=VoicePack.key(fallback,1), url=k && await VoicePack.get(k);
+            if(my!==this.tok)return;
+            if(url && this.audio){units.splice(0,units.length,{t:fallback,rate:1,end:'.'});urls=[url];recorded=true;this.lastFallback=true;}
+          }
           if (teaching && !recorded) { state('error','Le son ne se charge pas. Touche le haut-parleur pour réessayer.'); return; }
+          if (!recorded && !options.device) { state('error','La voix ne se charge pas. Touche le haut-parleur pour réessayer.'); return; }
           if (!recorded) prepare(true);
           this.mode=recorded?'recorded':'device';
           let at=0;
