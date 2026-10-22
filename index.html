@@ -1742,7 +1742,9 @@ function parentArea() {
       sc.append(h('h3', { style: { marginTop: '16px', fontSize: '18px' } }, WORLDS[wk].name + ' — ' + WORLDS[wk].sub));
       for (const gid of WORLD_TILES[wk]) {
         const g = GAMES[gid];
+        if (!g) continue;
         if (g.report) { sc.append(g.report()); continue; }
+        if (!g.levels) { const inf = g.info ? g.info() : null; sc.append(h('div', { style: { marginTop: '8px' } }, h('b', null, `${g.icon} ${g.title}`), inf ? h('span', { style: { color: 'var(--ink-soft)' } }, ` — ${inf.lv}`) : null)); continue; }
         const gp = gameProg(gid);
         const box = h('div', { style: { marginTop: '8px' } }, h('b', null, `${g.icon} ${g.title}`), h('span', { style: { color: 'var(--ink-soft)' } }, ` — niveau ${gp.lvl + 1}/${g.levels.length}, ${gp.rounds} partie${gp.rounds > 1 ? 's' : ''}`));
         g.levels.forEach((L, i) => {
