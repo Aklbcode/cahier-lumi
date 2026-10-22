@@ -1,4 +1,4 @@
-/* Lumi speech v2. One voice per message, cancellable playback, preserved pitch. */
+/* Lumi speech v3. Natural Belgian French; explicit, recording-only teaching sounds. */
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -22,6 +22,9 @@
       if (p == null || p === '') continue;
       if (typeof p === 'number') { flush(); out.push(clamp(p,0,10000)); continue; }
       const o = typeof p === 'object' ? p : {t:p}; const t = String(o.t == null ? '' : o.t), r = o.rate || 1;
+      // Sound identities survive joining: /a/ is a sound, never a sentence's
+      // letter name, and "me" as a syllable is separate from ordinary prose.
+      if (o.phoneme || o.syllable) { flush(); out.push({...o,t,rate:r}); continue; }
       if (cur && cur.rate === r) cur.t += ' '+t; else { flush(); cur = {t,rate:r}; }
     }
     flush(); return out;
@@ -31,22 +34,27 @@
     const settings = adapters.settings || (() => ({}));
     const state = (status, text = '') => { Voice.status=status; Voice.text=text; if (adapters.onState) adapters.onState({status,text,mode:Voice.mode}); };
     const VoicePack = {
-      base:'voix/', revision:'20261022-1', idx:null, packs:[], order:{}, scopes:{}, loading:{}, packAge:new Map(), urls:new Map(), hits:0, misses:new Set(), label:'', ready:null,
+      base:'voix/', revision:'20261022-belge-1', idx:null, packs:[], order:{}, scopes:{}, loading:{}, packAge:new Map(), urls:new Map(), hits:0, misses:new Set(), label:'', ready:null,
       init() {
         if (this.ready) return this.ready;
         this.ready = (async () => {
           try {
-            const r = await env.fetch(this.base+'index-claire.json?v='+this.revision); if (!r.ok) return;
-            const j = await r.json(); if (j.v !== 2 || !j.clips || !Array.isArray(j.packs)) return;
+            const r = await env.fetch(this.base+'index-belge.json?v='+this.revision); if (!r.ok) return;
+            const j = await r.json(); if (![2,3].includes(j.v) || !j.clips || !Array.isArray(j.packs)) return;
             this.idx=j.clips; this.packs=j.packs; this.order=j.order||{}; this.scopes=j.scopes||{}; this.label=j.voice;
             this.normal = new Map(Object.keys(this.idx).map(k => [keyNorm(k), k]));
             // Only prime the first UI pack. Requested speech always gets priority.
             const first=(this.scopes.ui||[])[0]; if (first != null) this.loadPack(first);
           } catch (_) { this.idx=null; }
+          finally { if (!this.idx) this.ready=null; }
         })(); return this.ready;
       },
       usable() { return !!this.idx && settings().voiceMode !== 'device'; },
-      key(t, rate) {
+      key(t, rate, unit={}) {
+        if (unit.phoneme || unit.syllable) {
+          const id=(unit.phoneme?'ph|':'sy|')+(unit.phoneme||unit.syllable);
+          return this.idx && this.idx[id] ? id : null;
+        }
         const bucket=speechBucket(rate), raw=bucket+'|'+t;
         if (this.idx && this.idx[raw]) return raw;
         return this.normal && this.normal.get(keyNorm(raw));
@@ -119,32 +127,49 @@
       async say(parts, options={}) {
         const slow=options.slow || this.nextSlow; this.stop(); const my=this.tok;
         this.last=parts; this.unlock(); const joined=speechJoin(parts), units=[];
-        for (const p of joined) {
-          if (typeof p === 'number') { units.push(p); continue; }
-          if (!p.t.trim() || /^[\s.!?…,;:]+$/.test(p.t)) { if (/[.…]/.test(p.t)) units.push(250); continue; }
-          for (const s of speechSegments(p.t)) units.push({...s,rate:p.rate});
-        }
+        const prepare = (continuous=false) => {
+          units.length=0;
+          for (const p of joined) {
+            if (typeof p === 'number') { units.push(p); continue; }
+            if (!p.t.trim() || /^[\s.!?…,;:]+$/.test(p.t)) { if (/[.…]/.test(p.t)) units.push(250); continue; }
+            if (p.phoneme || p.syllable || continuous || VoicePack.key(p.t,p.rate)) units.push({...p,end:p.phoneme||p.syllable?'':p.t.slice(-1)});
+            else for (const s of speechSegments(p.t)) units.push({...s,rate:p.rate});
+          }
+        };
+        prepare();
         if (!units.some(x=>typeof x==='object')) return;
         this.speaking=true; state('loading');
         try {
-          if (!options.device && settings().voiceMode!=='device') await Promise.race([VoicePack.init(),this.wait(1800,my)]);
+          const teaching=units.some(u=>u && (u.phoneme || u.syllable));
+          if (teaching || !options.device && settings().voiceMode!=='device') await Promise.race([VoicePack.init(),this.wait(5000,my)]);
           if (my!==this.tok) return;
+          // Prefer a whole recorded phrase. A voice naturally links its words;
+          // only split when a complete phrase is absent from the static bank.
+          prepare();
           let urls=[];
-          if (!options.device && VoicePack.usable()) {
-            const keys=units.filter(x=>typeof x==='object').map(u=>VoicePack.key(u.t,u.rate));
+          const speechUnits=units.filter(x=>typeof x==='object');
+          if (teaching || !options.device && VoicePack.usable()) {
+            const keys=speechUnits.map(u=>VoicePack.key(u.t,u.rate,u));
             if (keys.every(Boolean)) urls=await Promise.all(keys.map(k=>VoicePack.get(k)));
+            else if (teaching) {
+              // A generic device TTS cannot be trusted to pronounce a phoneme.
+              // Do not silently teach another sound when the recording is absent.
+              for (let i=0;i<keys.length;i++) if(!keys[i]) VoicePack.miss((speechUnits[i].phoneme?'ph|':speechUnits[i].syllable?'sy|':'n|')+(speechUnits[i].phoneme||speechUnits[i].syllable||speechUnits[i].t));
+            }
           }
           if (my!==this.tok) return;
           // Keep a single timbre across the entire instruction, even when one clip is missing.
           const recorded=urls.length>0 && urls.every(Boolean) && !!this.audio;
+          if (teaching && !recorded) { state('error','Le son ne se charge pas. Touche le haut-parleur pour réessayer.'); return; }
+          if (!recorded) prepare(true);
           this.mode=recorded?'recorded':'device';
           let at=0;
-          const speed=clamp(settings().rate == null ? .95:settings().rate,.75,1.1)*(slow ? .84 : 1);
+          const speed=clamp(settings().rate == null ? 1:settings().rate,.75,1.1)*(slow ? .90 : 1);
           for (const u of units) {
             if (my!==this.tok) return;
             if (typeof u==='number') { await this.wait(u+(slow?Math.min(u*.2,150):0),my); continue; }
             state('speaking',u.t);
-            if (recorded) { await this.play(urls[at++],speed,my); VoicePack.hits++; }
+            if (recorded) { await this.play(urls[at++],u.phoneme ? 1 : speed,my); VoicePack.hits++; }
             else { if (VoicePack.usable()) VoicePack.miss(speechBucket(u.rate)+'|'+u.t); await this.utter(u.t,speed*clamp(u.rate,.72,1.15),my); }
             if (my!==this.tok) return;
             await this.wait(/[.!?…]/.test(u.end)?(slow?420:270):u.end===':'?200:65,my);

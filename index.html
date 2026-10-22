@@ -790,7 +790,7 @@ table.notions tr.st-acquis td:last-child{color:#2E9B5C;font-weight:700}
 </style>
 </head>
 <body>
-<script src="speech-engine.js?v=6"></script>
+<script src="speech-engine.js?v=7"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -891,7 +891,7 @@ function defState() {
       { id: 'lola', name: 'Lola', world: 'petits' }
     ],
     current: 'luca',
-    settings: { voiceURI: '', rate: 0.95, pitch: 1.0, sfx: true, timerMin: 0, voiceMode: 'lumi', voiceRevision: 2 },
+    settings: { voiceURI: '', rate: 1, pitch: 1.0, sfx: true, timerMin: 0, voiceMode: 'lumi', voiceRevision: 3 },
     progress: {}
   };
 }
@@ -900,7 +900,12 @@ function migrate(o) {
   const d = defState();
   const oldVoiceRevision = (o.settings || {}).voiceRevision;
   o.settings = Object.assign(d.settings, o.settings || {});
-  if (oldVoiceRevision !== 2) { if (o.settings.pitch === 1.05) o.settings.pitch = 1; o.settings.voiceRevision = 2; }
+  if (oldVoiceRevision !== 3) {
+    if (o.settings.pitch === 1.05) o.settings.pitch = 1;
+    if (o.settings.rate === .95) o.settings.rate = 1;
+    o.settings.voiceMode = 'lumi';
+    o.settings.voiceRevision = 3;
+  }
   o.progress = o.progress || {};
   /* v1 → v2 : les profils « Grand ours » (Grands) et « Petit loup » (Petits) deviennent Luca et Lola */
   const old = Array.isArray(o.profiles) ? o.profiles : [];
@@ -1030,6 +1035,8 @@ const { Voice, VoicePack, speechJoin, speechSegments, speechBucket } = LumiSpeec
     Sfx.duck(status === 'speaking' || status === 'loading');
     const label = $('#voice-status');
     if (label) label.textContent = status === 'loading' ? 'Préparation de la voix…' : status === 'speaking' ? (mode === 'recorded' ? 'Voix de Lumi : ' : 'Voix de l’appareil : ') + text : status === 'error' ? text : 'Prête à écouter.';
+    const gameNote = $('.game-voice-status');
+    if (gameNote) { gameNote.hidden = status !== 'error'; gameNote.textContent = status === 'error' ? '🔊 ' + text : ''; }
     const buttons = $$('.voice-replay'); buttons.forEach(b => b.classList.toggle('is-speaking', status === 'speaking'));
   }
 });
@@ -1126,6 +1133,7 @@ const Shell = {
     this.dotsEl = h('div', { class: 'dots', 'aria-hidden': 'true' });
     this.lvlEl = h('div', { class: 'lvl' });
     this.capEl = h('div', { class: 'caption' });
+    const voiceNote = h('div', { class: 'game-voice-status', hidden: true, role: 'status', 'aria-live': 'polite', style: { color: '#9a491a', fontSize: '14px', fontWeight: '700', textAlign: 'center' } });
     const close = onTap(h('button', { class: 'round-btn', 'aria-label': 'Quitter le jeu', html: ICON.close }), () => this.close());
     const spk = onTap(h('button', { class: 'round-btn voice-replay', 'aria-label': 'Réécouter la consigne', style: { color: '#3AA2EE' }, html: ICON.speaker }), () => this.replay());
     const slow = onTap(h('button', { class: 'round-btn voice-slow', 'aria-label': 'Réécouter plus lentement' }, h('span', { 'aria-hidden': 'true' }, '🐢'), h('small', null, 'Plus lent')), () => Voice.slower(() => this.replay()));
@@ -1136,7 +1144,7 @@ const Shell = {
     this.el = h('div', { class: 'screen', hidden: true, role: 'dialog', 'aria-label': 'Jeu' },
       h('div', { class: 'game-top' }, close, this.trackEl, this.lvlEl),
       h('div', { class: 'stage-wrap' }, this.stage),
-      h('div', { class: 'game-bottom' }, h('div', { class: 'voice-tools' }, spk, slow), this.capEl, this.avEl));
+      h('div', { class: 'game-bottom' }, h('div', { class: 'voice-tools' }, spk, slow), h('div', { style: { flex: '1', minWidth: '0' } }, this.capEl, voiceNote), this.avEl));
     document.body.append(this.el);
   },
   isOpen() { return this.el && !this.el.hidden; },
@@ -1566,14 +1574,14 @@ function parentArea() {
     /* Voix */
     const vc = h('div', { class: 'pcard' }, h('h3', null, 'Voix de Lumi'));
     const vm = h('select', { id: 'voice-mode', 'aria-label': 'Type de voix' },
-      h('option', { value: 'lumi', selected: S.settings.voiceMode !== 'device' }, 'Lumi · voix française féminine'),
+      h('option', { value: 'lumi', selected: S.settings.voiceMode !== 'device' }, 'Lumi · français de Belgique · voix naturelle'),
       h('option', { value: 'device', selected: S.settings.voiceMode === 'device' }, 'Voix de cet appareil'));
     const pitchRows = [];
     const refreshVoice = () => { pitchRows.forEach(el => el.hidden = vm.value !== 'device'); };
     vm.addEventListener('change', () => { Voice.stop(); S.settings.voiceMode = vm.value; refreshVoice(); save(); Voice.say('Bonjour, je suis Lumi. On apprend ensemble ?'); });
-    vc.append(h('p', { class: 'voice-intro' }, 'Une voix féminine française, un débit posé et des pauses entre les consignes. Le bouton tortue permet à l’enfant de réécouter plus lentement.'),
+    vc.append(h('p', { class: 'voice-intro' }, 'Une voix féminine naturelle en français de Belgique. Les phrases gardent leur fluidité ; des pauses permettent d’écouter les sons. Le bouton tortue ralentit légèrement les mots et allonge les pauses.'),
       h('div', { class: 'prow' }, h('label', { for: 'voice-mode' }, 'Voix principale'), vm),
-      h('p', null, VoicePack.idx ? 'Voix féminine française enregistrée à l’avance. La vitesse est réglable sans rendre la voix plus grave. Une phrase absente de la banque utilise la voix de l’appareil pour toute la consigne.' : 'Chargement des enregistrements. Si le chargement échoue, une voix française de l’appareil prend le relais.'));
+      h('p', null, 'Les sons de lecture utilisent des enregistrements dédiés, à leur vitesse d’origine. Ils ne sont jamais remplacés par une voix de l’appareil. Pour les autres consignes, une voix de secours reste disponible.'));
     const ranked = Voice.ranked();
     const fallback = h('div', null, h('h4', null, 'Voix de l’appareil et de secours'));
     if (!Voice.ok || !ranked.length) fallback.append(h('p', null, 'Aucune voix française de secours n’est disponible. Les enregistrements de Lumi restent utilisables une fois chargés.'));
@@ -1592,15 +1600,16 @@ function parentArea() {
     pitch.addEventListener('change', () => { S.settings.pitch=+pitch.value; save(); Voice.say('Voici ma voix.',{device:true}); });
     const pitchRow = h('div', { class: 'prow' }, h('label', { for: 'pitch' }, 'Hauteur · appareil seulement'), pitch); pitchRows.push(pitchRow);
     const sfx = h('input', { type: 'checkbox', id: 'sfx', checked: S.settings.sfx }); sfx.addEventListener('change', () => { S.settings.sfx=sfx.checked; save(); });
-    vc.append(h('div', { class: 'prow' }, h('label', { for: 'rate' }, 'Vitesse · toutes les voix'), rate, speedText), pitchRow,
+    vc.append(h('div', { class: 'prow' }, h('label', { for: 'rate' }, 'Vitesse · consignes et mots'), rate, speedText), pitchRow,
       h('div', { class: 'prow' }, h('label', { for: 'sfx' }, 'Bruitages, atténués pendant la voix'), sfx),
       h('div', { class: 'voice-tests' },
         onTap(h('button', { class: 'pbtn' }, '▶ Une consigne'), () => Voice.say('Écoute. Regarde les images. Puis choisis ta réponse.')),
-        onTap(h('button', { class: 'pbtn' }, '▶ Sons et mots'), () => Voice.say(['Écoute le son', {t:'ou',rate:.8}, 350, 'comme dans loup.'])),
+        onTap(h('button', { class: 'pbtn' }, '▶ Sons et mots'), () => Voice.say(['Écoute le son', vow('a'), 350, 'comme dans ami.'])),
         onTap(h('button', { class: 'pbtn' }, '▶ Calcul'), () => Voice.say('Cinq plus trois, cela fait huit.')),
         onTap(h('button', { class: 'pbtn' }, '■ Arrêter la voix'), () => Voice.stop())),
+      h('div', { class: 'voice-tests', 'aria-label': 'Écouter les sons de référence' }, ['a','i','o','u','é','e','è','ou','on','an','oi','in','eu'].map(k => onTap(h('button', { class: 'pbtn', 'aria-label': 'Écouter le son ' + k }, '▶ ' + k), () => Voice.say([vow(k)])))),
       h('p', { id: 'voice-status', role: 'status', 'aria-live': 'polite' }, 'Prête à écouter.'),
-      h('p', null, 'Pour les sons, les syllabes et les mots, la prononciation est préparée séparément. La qualité de la voix de secours dépend des voix françaises installées sur l’appareil.'));
+      h('p', null, 'Un son n’est pas le nom de la lettre : pour lire, on écoute ce qu’elle fait entendre dans le mot. Si un son ne charge pas, le haut-parleur permet de réessayer.'));
     refreshVoice(); w.append(vc);
 
     /* Minuteur */
@@ -2538,7 +2547,7 @@ GAMES.syllabes = {
     const bad = sample([...CONSW, ...VOYW.filter(x => x[2] !== v)], 2);
     const opts = shuffle([good, ...bad]);
     return {
-      say: [`Quel mot commence par le son`, { t: v, rate: .8 }, '?', 300, ...listenAll(opts.map(o => o[0]))],
+      say: [`Quel mot commence par le son`, vow(v), '?', 300, ...listenAll(opts.map(o => o[0]))],
       caption: `Quel mot commence par le son « ${v} » ?`,
       render(st, api) {
         let target;
@@ -2879,6 +2888,7 @@ const SAY_SYL = {
   le: 'le', re: 're', me: 'me', se: 'se', fe: 'fe', che: 'che', ve: 've', ne: 'ne', je: 'je', pe: 'pe', te: 'te', de: 'de', be: 'be', gue: 'gue'
 };
 const spokenSyl = s => SAY_SYL[s] || s;
+const sylUnit = (s, rate = .85) => ({ t: spokenSyl(s), syllable: spokenSyl(s), rate });
 const PH = k => LESSONS[LIDX[k]].ph;
 /* Comment Lumi nomme un son.
    Voyelles : prononcées seules (a, ou, on…), ce qui est juste.
@@ -2888,7 +2898,7 @@ const PH = k => LESSONS[LIDX[k]].ph;
 const ANCHOR2 = { l: 'lune', r: 'robe', m: 'maman', s: 'sac', f: 'fée', ch: 'chou', v: 'vélo', n: 'nid', j: 'judo', p: 'papa', t: 'tomate', d: 'dodo', b: 'bol', k: 'cube', g: 'goutte' };
 const isCons = k => !!(LESSONS[LIDX[k]] || {}).c;
 const anchorOf = k => LESSONS[LIDX[k]].kw[0];
-const vow = k => ({ t: PH(k), rate: .75 });
+const vow = k => ({ t: PH(k), phoneme: k, rate: 1 });
 const anc = k => ({ t: anchorOf(k), rate: .85 });
 const sndHear = k => isCons(k) ? ['Comme au début de', anc(k), 250, 'et au début de', { t: ANCHOR2[k], rate: .85 }, '.'] : [vow(k)];
 const CONF_G = { a: ['o', 'e', 'd'], i: ['l', 'j', 'é'], o: ['a', 'e', 'u'], u: ['n', 'ou', 'o'], 'é': ['è', 'e', 'a'], e: ['é', 'a', 'o'], l: ['i', 't', 'r'], r: ['l', 'n', 'v'], m: ['n', 'w', 'u'], s: ['ch', 'z', 'c'], f: ['t', 'v', 'l'], ch: ['c', 'j', 's'], v: ['f', 'w', 'u'], n: ['m', 'u', 'r'], j: ['ch', 'i', 'g'], ou: ['on', 'u', 'au'], p: ['b', 'd', 'q'], t: ['f', 'd', 'l'], d: ['b', 'p', 'q'], b: ['d', 'p', 'q'], on: ['an', 'ou', 'no'], an: ['on', 'en', 'in'], k: ['g', 'q', 's'], g: ['j', 'q', 'p'], oi: ['io', 'on', 'ou'], in: ['an', 'un', 'on'], 'è': ['é', 'e', 'ê'], eu: ['ou', 'ue', 'é'] };
@@ -3048,9 +3058,9 @@ function itFusion(L, li, mode, t, demo, n = 3) {
   const ds = sylDistractors(t, li, n - 1); const opts = shuffle([t, ...ds]);
   const cG = t.w.slice(0, t.w.length - LESSONS[LIDX[t.v]].main.length) || t.w[0];
   const vG = t.w.slice(cG.length);
-  const syl = { t: spokenSyl(t.w), rate: .85 };
+  const syl = sylUnit(t.w);
   /* Fusion sans consonne isolée : « le début de lion, et a… ensemble : la » */
-  const demoParts = ['Le début de', anc(t.c), 250, 'et', vow(t.v), 350, 'ensemble, ça fait :', { t: spokenSyl(t.w), rate: .7 }, 300, syl];
+  const demoParts = ['Le début de', anc(t.c), 250, 'et', vow(t.v), 350, 'ensemble, ça fait :', sylUnit(t.w), 300, syl];
   if (mode === 'hear') {
     return {
       skill: L.k, cls: 'paper',
@@ -3066,7 +3076,7 @@ function itFusion(L, li, mode, t, demo, n = 3) {
           st.append(f);
         }
         let target;
-        const row = h('div', { class: rowCls('row', opts.length) }, opts.map(s => { const b = card(s.w, '', 'txt'); if (s === t) target = b; onTap(b, () => api.answer(s === t, { el: b, correctEl: target, praise: ['Oui !', syl, '!'], feedback: ['Ça, c’est', { t: spokenSyl(s.w), rate: .85 }, '. Écoute :', syl] })); return b; }));
+        const row = h('div', { class: rowCls('row', opts.length) }, opts.map(s => { const b = card(s.w, '', 'txt'); if (s === t) target = b; onTap(b, () => api.answer(s === t, { el: b, correctEl: target, praise: ['Oui !', syl, '!'], feedback: ['Ça, c’est', sylUnit(s.w), '. Écoute :', syl] })); return b; }));
         api.key(target);
         st.append(row);
       }
@@ -3086,14 +3096,14 @@ function itFusion(L, li, mode, t, demo, n = 3) {
         const b = h('button', { class: 'sbtn', 'aria-label': 'bulle ' + (i + 1), html: ICON.speaker, style: { color: cols[i] } });
         b.prepend(h('span', { class: 'n', style: { background: cols[i] } }, String(i + 1)));
         b._s = s; btns.push(b); if (s === t) api.key(b);
-        onTap(b, () => { btns.forEach(x => x.classList.remove('sel')); b.classList.add('sel'); chosen = b; Voice.say([{ t: spokenSyl(s.w), rate: .85 }]); });
+        onTap(b, () => { btns.forEach(x => x.classList.remove('sel')); b.classList.add('sel'); chosen = b; Voice.say([sylUnit(s.w)]); });
         return b;
       }));
       const ok = h('button', { class: 'go-btn' }, icon('check'), 'C’est celle-là');
       onTap(ok, () => {
         if (!chosen) { Voice.say('Touche d’abord une bulle pour l’écouter.'); return; }
         const good = chosen._s === t;
-        api.answer(good, { el: chosen, correctEl: btns.find(b => b._s === t), praise: ['Oui ! On lit', syl, '!'], feedback: ['Non, cette bulle dit', { t: spokenSyl(chosen._s.w), rate: .85 }, '. Lis bien : d’abord la lettre du début de', anc(t.c), ', puis', vow(t.v), '.'], reveal: 'Écoute la bulle qui brille.' });
+        api.answer(good, { el: chosen, correctEl: btns.find(b => b._s === t), praise: ['Oui ! On lit', syl, '!'], feedback: ['Non, cette bulle dit', sylUnit(chosen._s.w), '. Lis bien : d’abord la lettre du début de', anc(t.c), ', puis', vow(t.v), '.'], reveal: 'Écoute la bulle qui brille.' });
       });
       st.append(big, row, ok);
     }
@@ -3117,7 +3127,10 @@ function itMot(W, pool, n = 3) {
     render(st, api) {
       const wEl = wordEl(W);
       const help = h('button', { class: 'hint-btn' }, icon('speaker'), 'Aide');
-      onTap(help, () => { api.help(); Voice.say(['On lit doucement :', ...W.syl.flatMap(sy => { const t = sy.filter(g => !g.mute).map(g => g.g).join(''); return [{ t: spokenSyl(t.toLowerCase()), rate: .8 }, 350]; })]); });
+      // Written colour groups are not necessarily spoken syllables (mou-che,
+      // fu-sée). Keep the real word pronunciation, including silent letters
+      // and the /z/ in fusée, instead of synthesising each spelling fragment.
+      onTap(help, () => { api.help(); Voice.slower(() => Voice.say(W.w)); });
       let target;
       const row = h('div', { class: rowCls('row pics', opts.length) }, opts.map(o => { const b = picBtn(o.e, o.w, el => api.answer(o === W, { el, correctEl: target, praise: ['Oui !', W.w, '!'], feedback: 'Ce n’est pas ce mot. Relis bien chaque syllabe.' })); if (o === W) target = b; return b; }));
       /* Pendant le défi : ni aide, ni haut-parleur sur les images (sinon on écoute au lieu de lire) */
@@ -3133,18 +3146,13 @@ function itDictee(W, li) {
   const conf = uniq(need.flatMap(g => CONF_G[G2L[g.toLowerCase()]] || [])).filter(g => known.includes(g) && !need.includes(g));
   const extra = uniq([...shuffle(conf), ...shuffle(known.filter(g => !need.includes(g)))]).slice(0, 2);
   const tiles = shuffle([...need, ...extra]);
-  const sylSay = W.syl.flatMap(sy => { const t = sy.filter(g => !g.mute).map(g => g.g).join(''); return [{ t: spokenSyl(t.toLowerCase()), rate: .8 }, 300]; });
-  /* Écho sonore : une voyelle se dit seule ; une consonne attend sa voyelle et l’on entend la syllabe entière */
-  const sylOf = []; W.syl.forEach((sy, si) => sy.forEach(() => sylOf.push(si)));
-  const sylFull = W.syl.map(sy => sy.map(g => g.g).join('').toLowerCase());
-  const lastOf = W.syl.map((sy, si) => { let last = -1; gs.forEach((g, i) => { if (sylOf[i] === si && !g.mute) last = i; }); return last; });
   return {
     skill: 'dictee', cls: 'paper',
     say: ['Écris le mot', W.w, '.', 300, 'Touche les sons dans l’ordre.'],
-    replay() { Voice.say([W.w, 400, ...sylSay]); },
+    replay() { Voice.slower(() => Voice.say(W.w)); },
     caption: 'Écris le mot avec les étiquettes',
     render(st, api) {
-      const pic = h('button', { class: 'card', 'aria-label': 'écouter le mot' }, W.e); onTap(pic, () => Voice.say([W.w, 400, ...sylSay]));
+      const pic = h('button', { class: 'card', 'aria-label': 'écouter le mot' }, W.e); onTap(pic, () => Voice.slower(() => Voice.say(W.w)));
       const slotEls = gs.map(g => h('div', { class: 'slot' + (g.mute ? ' mute' : '') }, g.mute ? g.g : ''));
       const slots = h('div', { class: 'slots' }, slotEls);
       let pos = 0; const advance = () => { while (pos < gs.length && gs[pos].mute) pos++; slotEls.forEach((s, i) => s.classList.toggle('next', i === pos)); };
@@ -3156,12 +3164,9 @@ function itDictee(W, li) {
           if (b.classList.contains('used') || pos >= gs.length) return;
           const want = gs[pos].g;
           if (g === want) {
-            const at = pos; b.classList.add('used'); slotEls[pos].textContent = g; slotEls[pos].classList.add('fill'); pos++; advance();
+            b.classList.add('used'); slotEls[pos].textContent = g; slotEls[pos].classList.add('fill'); pos++; advance();
             if (pos >= gs.length) { api.answer(true, { el: slots, praise: ['Bravo ! Tu as écrit', W.w, '!'] }); return; }
             api.step(true, {});
-            const key = G2L[g.toLowerCase()];
-            if (lastOf[sylOf[at]] === at) Voice.say([{ t: spokenSyl(sylFull[sylOf[at]]), rate: .8 }]);
-            else if (key && !isCons(key)) Voice.say([vow(key)]);
           }
           else api.step(false, { el: b, correctEl: tileEls.find(x => x.textContent === want && !x.classList.contains('used')), feedback: ['Écoute bien :', W.w, '...', 'Quel son entends-tu ensuite ?'] });
         });
@@ -3723,10 +3728,10 @@ GAMES.trace = {
   make(ctx) {
     const L = ctx.L; const t = avoidRepeat(ctx, L.set);
     const fam = L.font === 'cursive' ? '"Playwrite BE WAL", "Segoe Script", "Apple Chancery", cursive' : '"Andika", "Atkinson Hyperlegible", system-ui, sans-serif';
-    const sayT = t.length > 1 ? ['Repasse sur la syllabe', { t: (typeof spokenSyl === 'function' ? spokenSyl(t) : t), rate: .85 }]
+    const sayT = t.length > 1 ? ['Repasse sur la syllabe', sylUnit(t)]
       : TRACE_ANCHOR[t] ? ['Repasse sur la lettre du début de', { t: TRACE_ANCHOR[t], rate: .85 }]
       : t === 'h' ? ['Repasse sur la lettre h, la lettre muette de hibou']
-      : ['Repasse sur la lettre', { t: TRACE_SOUND[t] || t, rate: .8 }];
+      : ['Repasse sur la lettre', vow(TRACE_SOUND[t] || t)];
     return {
       say: [...sayT, 'avec ton doigt. Puis touche le bouton vert.'],
       caption: 'Repasse sur la lettre grise avec ton doigt',
@@ -4211,7 +4216,7 @@ function riviereItem(L, ctx) {
           if (s.t === R.parts[pos]) {
             b.classList.add('used'); planks[pos].textContent = s.t; planks[pos].classList.add('fill'); pos++;
             if (pos >= R.parts.length) { me.classList.add('cross'); Sfx.play('whoosh'); setTimeout(() => api.answer(true, { el: bridge, praise: ['Bravo ! Le pont est construit :', R.w, '!'] }), 900); }
-            else { api.step(true, {}); Voice.say([{ t: spokenSyl(s.t.toLowerCase()), rate: .85 }]); }
+            else { api.step(true, {}); }
           } else api.step(false, { el: b, correctEl: els.find(x => x._s.t === R.parts[pos] && !x.classList.contains('used')), feedback: ['Plouf !', 'Écoute bien :', R.w, 300, 'Quel morceau vient maintenant ?'] });
         });
         return b;
