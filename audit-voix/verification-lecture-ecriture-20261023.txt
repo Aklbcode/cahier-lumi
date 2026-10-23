@@ -6,3 +6,5 @@ tests/offline.test.cjs : OK
 scripts/inventory_feedback.cjs : OK
 scripts/check_reading_coverage.cjs : OK
 Audio : 17124 entrées décodées, aucune erreur.
+Interface : tracé réel à la souris validé ; lecture accompagnée et questions vérifiées.
+Voix publique : consigne composée et feedback chargés depuis GitHub Pages dans le profil de démonstration sans sauvegarde.

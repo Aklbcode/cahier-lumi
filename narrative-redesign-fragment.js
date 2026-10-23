@@ -73,6 +73,7 @@ function narrativeItem(ctx){
    const begin=()=>{
     if(!api.alive())return;st.innerHTML='';
     uWrap(st,h('div',{class:'narrative-title'},story.title),slots,prompt,tray,h('div',{class:'sequence-tools'},uButton('🔊 Réécouter',()=>Voice.say(initialVoice())),uButton('👀 Montre-moi',model)));
+    if(typeof favoriteGuide==='function'&&!RUN?.exam){const guide=favoriteGuide('petit');if(guide)st.prepend(guide);}
     draw();Voice.say(initialVoice());
    };
    if(!P().narrativeIntroV2){

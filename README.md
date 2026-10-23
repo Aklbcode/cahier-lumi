@@ -96,3 +96,14 @@ L’ordre est défini par `THEME_DIFFICULTY_ORDER`, appliqué après l’ajout d
 - Banque vocale : 17 237 entrées / 182 packs. Toutes les nouvelles phrases répertoriées sont présentes ; les sons dédiés de lecture restent inchangés. Téléchargement hors connexion étendu aux nouvelles images et aux cris.
 
 Validation : 12 suites de tests (activités, langage, tracé, récits, progression, passages, moteur réel, illustrations, alphabet, audio animalier, voix et hors connexion), dont 1 200 générations alphabet/sons. Contrôle navigateur sur profils de démonstration sans sauvegarde réelle ; tablette physique et écoute humaine de l’ensemble des enregistrements non réalisées.
+
+
+## Version tablette — cursive et profil de démonstration
+
+- Cadenas → **Ouvrir Admin · tout débloqué** : profil local adulte, tous les parcours et trésors accessibles, choix 3 ans ou 5/6 ans. Données et essais séparés des enfants ; aucune réussite scolaire inventée. Le rechargement revient au dernier enfant.
+- **Créer → Écrire en attaché** : douze modèles vectoriels de cursive liée classique, neuf étapes (repasser, copier, rappeler de mémoire). Les anciennes observations script restent conservées et ne deviennent pas des observations cursives. Police Borel locale sous licence OFL pour les modèles typographiques liés. Le modèle de l’école peut varier.
+- Petit Poilu accompagne les histoires et Barbapapa les formes/silhouettes avec des illustrations générées pour Lumi. Bluey et Peter Pan figurent dans les thèmes, consignes et titres, avec une initiale graphique ; ils n’ont pas encore de portrait. Voir `assets/personnages/CREATION.md` pour les fichiers et prompts. Les personnages sont hors des réponses et absents des évaluations.
+- Les 24 nouveaux extraits de consigne et de feedback utilisent Charline fr-BE ; les références phonémiques sont conservées.
+- Site indépendant pour écran e-ink : https://aklbcode.github.io/cahier-lumi/boox/ — données et fichiers séparés. Compatibilité technique préparée pour Android ancien ; essai sur la tablette physique encore nécessaire.
+
+Vérifications supplémentaires : `tests/cursive.test.cjs`, `tests/admin.test.cjs`, `tests/admin-integration.test.cjs`, `tests/favorite-characters.test.cjs`. Tous les 17 261 extraits audio de cette version sont décodables.

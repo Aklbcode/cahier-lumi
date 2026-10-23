@@ -3,6 +3,7 @@ const root=path.join(__dirname,'..');
 class NarrativeElement{
  constructor(tag='div',text=''){this.tagName=tag.toUpperCase();this.nodeType=tag==='#text'?3:1;this.childNodes=[];this.attributes={};this.listeners={};this.style={setProperty(){}};this.dataset={};this.disabled=false;this._text=text;this._html='';this.className='';this.classList={contains:c=>this.className.split(/\s+/).includes(c),add:(...cs)=>{this.className=[...new Set([...this.className.split(/\s+/).filter(Boolean),...cs])].join(' ');},remove:(...cs)=>{this.className=this.className.split(/\s+/).filter(c=>!cs.includes(c)).join(' ');},toggle:(c,force)=>{const add=force===undefined?!this.classList.contains(c):force;this.classList[add?'add':'remove'](c);return add;}};}
  append(...xs){for(const x of xs){if(x==null)continue;const n=typeof x==='string'?new NarrativeElement('#text',x):x;n.parentNode=this;this.childNodes.push(n);}}
+ prepend(...xs){for(const x of xs.reverse()){const n=typeof x==='string'?new NarrativeElement('#text',x):x;n.parentNode=this;this.childNodes.unshift(n);}}
  get children(){return this.childNodes.filter(n=>n.nodeType===1);}get textContent(){return this._text+this.childNodes.map(n=>n.textContent).join('');}set textContent(t){this._text=String(t);this._html='';this.childNodes=[];}get innerHTML(){return this._html;}set innerHTML(s){this._html=String(s);this._text='';this.childNodes=[];}
  setAttribute(k,v){this.attributes[k]=String(v);if(k==='class')this.className=String(v);}getAttribute(k){return this.attributes[k]??null;}addEventListener(k,fn){(this.listeners[k]||(this.listeners[k]=[])).push(fn);}async click(){if(!this.disabled)await Promise.all((this.listeners.click||[]).map(fn=>fn({preventDefault(){},target:this})));}
  matches(s){return s.startsWith('.')?this.classList.contains(s.slice(1)):this.tagName.toLowerCase()===s.toLowerCase();}querySelectorAll(selector){const selectors=selector.split(',').map(s=>s.trim()),out=[];const walk=n=>{for(const c of n.children){if(selectors.some(s=>c.matches(s)))out.push(c);walk(c);}};walk(this);return out;}querySelector(s){return this.querySelectorAll(s)[0]||null;}
@@ -26,6 +27,7 @@ async function main(){
   delete P().narrativeIntroV2;let stage=document.createElement('div'),api=apiN(),item=narrativeItem({L:NARRATIVE_LEVELS[0],used:[]});Shell.item=item;item.render(stage,api);
   checkN(stage.querySelector('.narrative-demo')&&api.answers.length===0&&api.steps.length===0,'Distinct tutorial is unscored');
   await stage.querySelectorAll('button').find(b=>b.textContent==='À moi de jouer').click();
+  checkN(stage.querySelector('.favorite-guide')?.textContent.includes('Petit Poilu'),'Petit Poilu stays after the tutorial clears the stage');
   checkN(P().narrativeIntroV2&&stage.querySelectorAll('.sequence-card').length===2&&api.answers.length===0,'One touch begins real task without granting success');
   // Exercise the real handlers with and without an initial frame. The final
   // image completes the task; no second validation or Continue is required.

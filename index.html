@@ -823,7 +823,7 @@ table.notions tr.st-acquis td:last-child{color:#2E9B5C;font-weight:700}
 </style>
 </head>
 <body>
-<script src="speech-engine.js?v=14"></script>
+<script src="speech-engine.js?v=15"></script>
 <script src="assets/illustrations/twemoji-bundle.js?v=1"></script>
 <script>
 'use strict';
@@ -958,7 +958,7 @@ function loadLocal() { try { const t = localStorage.getItem(LS_KEY); if (t) { co
 /* Synchronisation multi-appareils : un document par enfant (+ un pour les réglages), daté.
    Lola sur l'iPad et Luca sur le Mac peuvent jouer en même temps sans s'écraser. */
 const DEVICE_KEY = 'cahier-lumi-appareil';
-const syncDocs = () => ['reglages', ...S.profiles.map(p => p.id)];
+const syncDocs = () => ['reglages', ...S.profiles.filter(p=>p.id!=='admin').map(p => p.id)];
 /* Signature « de contenu » : ignore l'ordre des clés et les valeurs vides créées par défaut,
    pour qu'un simple affichage ne passe jamais pour une modification à envoyer */
 function isBlank(v) { if (v == null || v === 0 || v === false || v === '') return true; if (typeof v === 'object') return Object.values(v).every(isBlank); return false; }
@@ -967,11 +967,12 @@ function stableSig(v) {
   if (v && typeof v === 'object') return '{' + Object.keys(v).filter(k => !isBlank(v[k])).sort().map(k => JSON.stringify(k) + ':' + stableSig(v[k])).join(',') + '}';
   return JSON.stringify(v);
 }
-function docSig(k) { return k === 'reglages' ? stableSig({ settings: S.settings, worlds: S.profiles.map(p => [p.id, p.world]) }) : stableSig(S.progress[k] || {}); }
-function localDoc(k) { return k === 'reglages' ? JSON.stringify({ settings: S.settings, worlds: S.profiles.map(p => [p.id, p.world]) }) : JSON.stringify(S.progress[k] || {}); }
+function docSig(k) { return k === 'reglages' ? stableSig({ settings: S.settings, worlds: S.profiles.filter(p=>p.id!=='admin').map(p => [p.id, p.world]) }) : stableSig(S.progress[k] || {}); }
+function localDoc(k) { return k === 'reglages' ? JSON.stringify({ settings: S.settings, worlds: S.profiles.filter(p=>p.id!=='admin').map(p => [p.id, p.world]) }) : JSON.stringify(S.progress[k] || {}); }
 function applyDoc(k, txt) {
+  if(k==='admin')return;
   const o = JSON.parse(txt);
-  if (k === 'reglages') { S.settings = Object.assign(S.settings, o.settings || {}); (o.worlds || []).forEach(([id, w]) => { const p = S.profiles.find(x => x.id === id); if (p && (w === 'petits' || w === 'grands')) p.world = w; }); }
+  if (k === 'reglages') { S.settings = Object.assign(S.settings, o.settings || {}); (o.worlds || []).forEach(([id, w]) => { if(id==='admin')return;const p = S.profiles.find(x => x.id === id); if (p && (w === 'petits' || w === 'grands')) p.world = w; }); }
   else S.progress[k] = o;
 }
 const Track = {
@@ -1004,7 +1005,7 @@ const Remote = {
         try {
           const snap = await db.doc('data/users/' + uid + '/cahier').get(); const d = snap.exists ? snap.data() : null;
           const old = d && d.state ? JSON.parse(d.state) : null;
-          if (old && old.v === 1 && (old.updatedAt || 0) > (S.updatedAt || 0)) { const m = migrate(old); S.settings = m.settings; S.progress = m.progress; S.profiles = m.profiles; syncDocs().forEach(k => { S.at[k] = old.updatedAt; }); Track.init(); }
+          if (old && old.v === 1 && (old.updatedAt || 0) > (S.updatedAt || 0)) { const localAdmin = S.progress.admin; const m = migrate(old); S.settings = m.settings; S.progress = m.progress; delete S.progress.admin; if (localAdmin) S.progress.admin = localAdmin; S.profiles = m.profiles; syncDocs().forEach(k => { S.at[k] = old.updatedAt; }); Track.init(); }
         } catch (e) { }
       }
       this.ready = true; this.state = 'on';
@@ -1017,6 +1018,7 @@ const Remote = {
   },
   /* récupère le document k s'il est plus récent sur le compte */
   async pull(k, quiet) {
+    if (k === 'admin') return 'off';
     if (!this.db) return 'off';
     try {
       const snap = await this.ref(k).get(); const d = snap.exists ? snap.data() : null;
@@ -1515,7 +1517,7 @@ function parentArea() {
   const w = h('div', { class: 'wrap' });
   el.append(w); document.body.append(el);
   const close = () => { Voice.stop(); el.remove(); renderHome(); };
-  let sel = S.current;
+  let sel = S.current==='admin'?adminReturnId():S.current;
   const draw = () => {
     w.innerHTML = '';
     w.append(h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', flexWrap: 'wrap' } },
@@ -1525,7 +1527,7 @@ function parentArea() {
 
     /* Enfants */
     const pc = h('div', { class: 'pcard' }, h('h3', null, 'Enfants'));
-    S.profiles.forEach(pf => {
+    S.profiles.filter(pf=>pf.id!=='admin').forEach(pf => {
       const k = KIDS_DEF[pf.id];
       const worldSel = h('select', { id: 'world-' + pf.id, 'aria-label': 'Univers de ' + k.name }, Object.entries(WORLDS).map(([wk, v]) => h('option', { value: wk, selected: pf.world === wk }, v.name + ' (' + v.sub + ')')));
       worldSel.addEventListener('change', () => { pf.world = worldSel.value; save(); });
@@ -1567,7 +1569,7 @@ function parentArea() {
       }),
       onTap(h('button', { class: 'pbtn' }, 'Restaurer un fichier'), () => fileIn.click()), fileIn));
     w.append(bk);
-    if (typeof notionsCard === 'function') S.profiles.forEach(pf => w.append(notionsCard(pf.id)));
+    if (typeof notionsCard === 'function') S.profiles.filter(pf=>pf.id!=='admin').forEach(pf => w.append(notionsCard(pf.id)));
 
     /* Une seule voix pour toute l'application. */
     const vc = h('div', { class: 'pcard' }, h('h3', null, 'Voix de Lumi'));
@@ -1597,7 +1599,7 @@ function parentArea() {
 
     /* Progrès */
     const sc = h('div', { class: 'pcard' }, h('h3', null, 'Progrès et compétences'));
-    const who = h('select', { id: 'prog-who', 'aria-label': 'Enfant' }, S.profiles.map(p => h('option', { value: p.id, selected: p.id === sel }, p.name)));
+    const who = h('select', { id: 'prog-who', 'aria-label': 'Enfant' }, S.profiles.filter(p=>p.id!=='admin').map(p => h('option', { value: p.id, selected: p.id === sel }, p.name)));
     who.addEventListener('change', () => { sel = who.value; draw(); });
     sc.append(h('div', { class: 'prow' }, h('label', { for: 'prog-who' }, 'Enfant'), who));
     const keep = S.current; S.current = sel;
@@ -5362,9 +5364,9 @@ function parentUndo(id){const result=withParentChild(id,p=>{const entry=(p.paren
  if(!valid)return {ok:false,message:'La progression a changé depuis cette action. Elle est conservée.'};
  for(const x of [...entry.patches].reverse())parentWrite(p,x.path,x.before);entry.undone=Date.now();return {ok:true,message:'Dernière action annulée.'};});if(result.ok)save();return result;}
 function parentInitialTarget(id){return withParentChild(id,p=>{const r=p.resume;if(r?.kind==='lesson')return {kind:'lecture',index:r.li};if(r?.kind==='module')return {kind:'calcul',mi:r.mi,index:r.lv};if(r?.kind==='game'&&GAMES[r.gid]?.levels)return {kind:'game',gid:r.gid,index:gameProg(r.gid).lvl};return prof().world==='grands'?{kind:'lecture',index:p.lecture.unlocked||0}:{kind:'game',gid:'gestes',index:gameProg('gestes').lvl};});}
-function parentProgressCard(){let child=S.current,target=parentInitialTarget(child);const box=h('div',{class:'pcard parent-progress','aria-label':'Aider mon enfant'}),status=h('p',{role:'status','aria-live':'polite',class:'parent-action-status'}),form=h('div',{class:'parent-progress-form'}),details=h('p',{class:'defi-note'}),history=h('p',{class:'defi-note'});
+function parentProgressCard(){let child=S.current==='admin'?adminReturnId():S.current,target=parentInitialTarget(child);const box=h('div',{class:'pcard parent-progress','aria-label':'Aider mon enfant'}),status=h('p',{role:'status','aria-live':'polite',class:'parent-action-status'}),form=h('div',{class:'parent-progress-form'}),details=h('p',{class:'defi-note'}),history=h('p',{class:'defi-note'});
  box.append(h('h3',null,'🔓 Aider mon enfant'),h('p',null,'Choisissez une activité pour l’ouvrir ou passer une épreuve. Aucun point n’est ajouté. « Passée par le parent » reste distinct d’une réussite autonome.'),form,details,status,history);
- const who=h('select',{'aria-label':'Enfant à accompagner'},S.profiles.map(p=>h('option',{value:p.id,selected:p.id===child},kid(p.id).name))),activity=h('select',{'aria-label':'Activité à débloquer'}),step=h('select',{'aria-label':'Étape à ouvrir'});
+ const who=h('select',{'aria-label':'Enfant à accompagner'},S.profiles.filter(p=>p.id!=='admin').map(p=>h('option',{value:p.id,selected:p.id===child},kid(p.id).name))),activity=h('select',{'aria-label':'Activité à débloquer'}),step=h('select',{'aria-label':'Étape à ouvrir'});
  const field=(label,input)=>h('label',{class:'parent-progress-field'},h('span',null,label),input);
  form.append(field('Enfant',who),field('Activité',activity),field('Étape',step));
  const key=t=>t.kind==='lecture'?'lecture':t.kind==='calcul'?'calcul:'+t.mi:'game:'+t.gid;
@@ -5382,6 +5384,11 @@ function parentProgressCard(){let child=S.current,target=parentInitialTarget(chi
 const originalNextLevel=nextLevel;
 nextLevel=function(mi){const mp=modProg(MODS[mi].id);if(Number.isInteger(mp.parentStart)){for(let i=clamp(mp.parentStart,0,MODS[mi].levels.length-1);i<MODS[mi].levels.length;i++)if(!mp.pass[i]||mp.pass[i].review)return i;return clamp(mp.parentStart,0,MODS[mi].levels.length-1);}return originalNextLevel(mi);};
 document.body.append(h('style',null,`.parent-progress{border:2px solid #b8dcca!important}.parent-progress-form{display:grid;grid-template-columns:1fr 2fr 2fr;gap:12px}.parent-progress-field{display:flex;flex-direction:column;gap:6px;font-weight:700}.parent-progress-field select{width:100%;min-height:46px;border:2px solid var(--line);border-radius:12px;background:white;padding:7px;font:inherit;min-width:0}.parent-action-status{color:#28734e;font-weight:700;min-height:1.4em}.game-parent{width:44px;height:44px;flex:none;color:var(--ink-soft)}.game-top .lvl{max-width:33%;white-space:normal}.game-parent svg{width:22px;height:22px}@media(max-width:650px){.parent-progress-form{grid-template-columns:1fr}.parent-progress-actions{align-items:stretch}.parent-progress-actions button{flex:1 1 170px}.game-top .lvl{font-size:12px;max-width:30%}}`));
+
+
+
+
+
 
 
 
@@ -5477,7 +5484,7 @@ itFusion=function(L,li,mode,t,demo,n){return {...fusionBeforeLiteracy(L,li,mode,
 Engine.play=async function(item,run){const p=P(),key=evidenceKey(item,run),signature=String(item.exemplar||JSON.stringify(item.say||item.caption||'')).slice(0,500);const r=await evidencePlay(item,run);if(!run.abort&&RUN===run){evidenceUpdate(p,key,r,signature);save();}return r;};
 recommendedGame=function(){const p=P(),ids=themesOf(S.world).flatMap(t=>t.ids);if(p.resume){if(p.resume.kind==='lesson')return 'lecture';if(p.resume.kind==='module')return 'calcul';if(ids.includes(p.resume.gid))return p.resume.gid;}
  const due=Object.entries(p.evidence||{}).filter(([,e])=>e.due<=Date.now()).sort((a,b)=>a[1].due-b[1].due);
- for(const [key]of due){let id=key.startsWith('gp:')&&LIDX[key.slice(3)]!=null?'lecture':key.startsWith('encoding:')?'mots':key.startsWith('reading:')?'lecture':key.startsWith('calc:')?'calcul':key.startsWith('book:')?'livres':key.startsWith('oral:')?(S.world==='petits'?'consignesP':'consignes'):key.startsWith('narrative:')?(S.world==='petits'?'recitP':'recit'):key==='writing:message'?'messages':key.startsWith('writing:')?(S.world==='petits'?'pretrace':'trace'):key.startsWith('game:')?key.slice(5):null;if(ids.includes(id))return id;}
+ for(const [key]of due){let id=key.startsWith('gp:')&&LIDX[key.slice(3)]!=null?'lecture':key.startsWith('encoding:')?'mots':key.startsWith('reading:')?'lecture':key.startsWith('calc:')?'calcul':key.startsWith('book:')?'livres':key.startsWith('oral:')?(S.world==='petits'?'consignesP':'consignes'):key.startsWith('narrative:')?(S.world==='petits'?'recitP':'recit'):key==='writing:message'?'messages':key.startsWith('cursive:')?'cursive':key.startsWith('writing:')?(S.world==='petits'?'pretrace':null):key.startsWith('game:')?key.slice(5):null;if(ids.includes(id))return id;}
  return S.world==='petits'?'consignesP':(p.lecture.unlocked||0)<6?'lecture':'mots';
 };
 
@@ -5748,9 +5755,9 @@ addThemeGame('petits','creer','pretrace');SIMPLE_GAME_NAMES.pretrace='Les chemin
 function writingWorksheetSVG(letters=['c','o','a','d','i','l','t','u','n','m','p','b']){
  const selected=letters.filter(s=>WRITING_MODELS[s]&&!WRITING_MODELS[s].gesture).slice(0,12);return `<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 794 1123"><rect width="794" height="1123" fill="white"/><text x="48" y="53" font-family="Arial,sans-serif" font-size="23" fill="#333">Les lettres de Lumi</text><text x="48" y="80" font-family="Arial,sans-serif" font-size="13" fill="#555">Regarde le départ et l’ordre. Trace, puis copie avec ton crayon.</text>${selected.map((s,i)=>{const m=WRITING_MODELS[s],x=48+(i%2)*365,y=104+Math.floor(i/2)*153;return `<g transform="translate(${x},${y})"><rect width="333" height="137" rx="8" fill="white" stroke="#ccc"/><text x="12" y="23" font-family="Arial,sans-serif" font-size="18">${writingEscape(s)}</text><g transform="translate(23,8) scale(.95)">${writingSVG(m).replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</g><path d="M134 89H318M134 44H318" stroke="#bbc9d5" stroke-width="1"/><path d="M230 18V116" stroke="#ddd" stroke-dasharray="3 4"/></g>`;}).join('')}<text x="48" y="1066" font-family="Arial,sans-serif" font-size="12" fill="#555">Un adulte peut observer le confort, le sens du tracé et la tenue du crayon.</text><text x="48" y="1084" font-family="Arial,sans-serif" font-size="12" fill="#555">Les jeux sur écran ne certifient pas l’écriture sur papier.</text></svg>`;
 }
-function downloadWritingWorksheet(){const url=URL.createObjectURL(new Blob([writingWorksheetSVG()],{type:'image/svg+xml'})),a=h('a',{href:url,download:'Lumi-ecriture-papier.svg'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
+function downloadWritingWorksheet(){const url=URL.createObjectURL(new Blob([schoolWritingWorksheetSVG()],{type:'image/svg+xml'})),a=h('a',{href:url,download:'Lumi-ecriture-papier.svg'});document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
 const parentBeforeWriting=parentArea;
-parentArea=function(){parentBeforeWriting();const w=$('.parent .wrap');if(!w)return;const box=h('div',{class:'pcard'},h('h3',null,'Écriture : du doigt au crayon'),h('p',null,'Douze lettres script : geste démontré, repassage, copie avec modèle, puis rappel après modèle caché. Les observations concernent seulement le geste sur écran ; elles ne certifient pas une compétence scolaire.'),h('p',null,'Une fiche imprimable permet de reprendre les mêmes lettres au crayon, avec un adulte.'),uButton('⬇ Fiche pour le papier',downloadWritingWorksheet));const p=P(),items=Object.entries(p.writingPractice?.items||{});if(items.length){const table=h('table',{style:{width:'100%',marginTop:'16px',borderCollapse:'collapse',textAlign:'left'}},h('thead',null,h('tr',null,['Mode','Gestes terminés','Aide redemandée'].map(label=>h('th',{style:{padding:'7px',borderBottom:'1px solid var(--line)'}},label))))),body=h('tbody');for(const [mode,label]of [['trace','Repassage guidé'],['copy','Copie avec modèle'],['recall','Rappel après modèle caché']]){const group=items.filter(([key])=>key.endsWith(':'+mode)).map(([,e])=>e);body.append(h('tr',null,[label,group.reduce((n,e)=>n+e.completed,0),group.reduce((n,e)=>n+e.aided,0)].map(text=>h('td',{style:{padding:'7px',borderBottom:'1px solid var(--line)'}},String(text)))));}table.append(body);box.append(table,h('p',null,'Le rappel commence après une présentation du modèle. Une aide reprise après interruption reste comptée comme une aide. Ce n’est pas une mesure du rappel à long terme.'));}w.append(box);};
+parentArea=function(){parentBeforeWriting();const w=$('.parent .wrap');if(!w)return;const box=h('div',{class:'pcard'},h('h3',null,'Écriture : du doigt au crayon'),h('p',null,'Les lettres attachées se travaillent dans Écrire en attaché : repassage, copie puis rappel. Les observations historiques des tracés script restent conservées. Le jeu observe le geste sur écran, sans certifier une compétence scolaire.'),h('p',null,'Une fiche imprimable permet de reprendre les mêmes lettres au crayon, avec un adulte.'),uButton('⬇ Fiche pour le papier',downloadWritingWorksheet));const p=P(),items=Object.entries(p.writingPractice?.items||{});if(items.length){const table=h('table',{style:{width:'100%',marginTop:'16px',borderCollapse:'collapse',textAlign:'left'}},h('thead',null,h('tr',null,['Mode','Gestes terminés','Aide redemandée'].map(label=>h('th',{style:{padding:'7px',borderBottom:'1px solid var(--line)'}},label))))),body=h('tbody');for(const [mode,label]of [['trace','Repassage guidé'],['copy','Copie avec modèle'],['recall','Rappel après modèle caché']]){const group=items.filter(([key])=>key.endsWith(':'+mode)).map(([,e])=>e);body.append(h('tr',null,[label,group.reduce((n,e)=>n+e.completed,0),group.reduce((n,e)=>n+e.aided,0)].map(text=>h('td',{style:{padding:'7px',borderBottom:'1px solid var(--line)'}},String(text)))));}table.append(body);box.append(table,h('p',null,'Le rappel commence après une présentation du modèle. Une aide reprise après interruption reste comptée comme une aide. Ce n’est pas une mesure du rappel à long terme.'));}w.append(box);};
 if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent=`.writing-surface{display:flex;align-items:center;justify-content:center;gap:clamp(14px,3vw,36px);width:100%;max-width:760px;margin:auto}.writing-board{width:min(46vw,350px);aspect-ratio:100/115;touch-action:none;user-select:none;border:3px solid #bfd0e0;border-radius:18px;box-shadow:0 8px 24px #6352450d;overflow:hidden;background:#fffdf8}.writing-board svg,.writing-reference svg{display:block;width:100%;height:100%;pointer-events:none}.writing-reference-wrap{font-size:15px;color:#716677;text-align:center;max-width:180px}.writing-reference-wrap[hidden]{display:none!important}.writing-reference{width:min(20vw,155px);aspect-ratio:100/115;border:2px solid #e5d8c3;border-radius:12px;overflow:hidden;margin-top:5px}.writing-reference-compact .writing-reference{width:min(16vw,120px)}.writing-stage .urow{gap:8px}.writing-stage .ubtn{font-size:clamp(15px,2vw,19px);padding:12px 16px}.writing-status{min-height:24px}.writing-stage .u-wrap{gap:12px}@media(max-width:520px){.writing-board{width:55vw}.writing-reference{width:24vw}.writing-reference-compact .writing-reference{width:19vw}.writing-surface{gap:10px}.writing-stage .ubtn{padding:10px 12px}}`;document.head.append(style);}
 
 
@@ -5989,6 +5996,7 @@ function narrativeItem(ctx){
    const begin=()=>{
     if(!api.alive())return;st.innerHTML='';
     uWrap(st,h('div',{class:'narrative-title'},story.title),slots,prompt,tray,h('div',{class:'sequence-tools'},uButton('🔊 Réécouter',()=>Voice.say(initialVoice())),uButton('👀 Montre-moi',model)));
+    if(typeof favoriteGuide==='function'&&!RUN?.exam){const guide=favoriteGuide('petit');if(guide)st.prepend(guide);}
     draw();Voice.say(initialVoice());
    };
    if(!P().narrativeIntroV2){
@@ -6019,6 +6027,105 @@ function narrativeStyle(){const style=h('style');style.textContent=`
  @media(max-width:560px){.narrative-timeline{gap:3px}.narrative-cell{border-width:2px;border-radius:12px}.narrative-label{font-size:12px;padding:5px 1px}.narrative-timeline .narrative-arrow{font-size:16px}.narrative-picture{min-height:52px}.narrative-tray .sequence-card{width:38vw;max-width:180px}.narrative-tray{gap:10px}.narrative-prompt{font-size:20px}}
  `;document.head.append(style);}
 const bootBeforeNarrativeRedesign=boot;boot=function(){narrativeStyle();bootBeforeNarrativeRedesign();};
+
+
+/* Cursive liée classique. Les chemins ci-dessous sont des modèles de geste
+   explicites propres à Lumi, et non les contours d'une police à colorier.
+   Borel sert de référence typographique liée. Ce choix ne prétend pas être
+   l'unique modèle enseigné dans les écoles belges. Les observations script
+   historiques ne sont pas converties en observations cursives. */
+const SCHOOL_WRITING_VERSION='cursive-liee-v1';
+function schoolCurve(start,...segments){let at=start;return writingJoin(...segments.map(s=>{const points=writingCurve(at,s[0],s[1],s[2],24);at=s[2];return points;}));}
+const SCHOOL_WRITING_MODELS={
+ e:{strokes:[schoolCurve([8,85],[[20,77],[62,48],[51,45]],[[32,39],[23,57],[37,76]],[[48,93],[69,85],[92,73]])]},
+ l:{strokes:[schoolCurve([8,85],[[27,70],[70,17],[53,14]],[[30,10],[31,53],[42,77]],[[49,92],[68,88],[92,74]])]},
+ i:{strokes:[schoolCurve([8,85],[[20,76],[34,51],[42,39]],[[40,51],[37,71],[43,79]],[[51,91],[73,84],[92,74]]),writingLine([44,23],[44,24],3)]},
+ u:{strokes:[schoolCurve([8,85],[[18,78],[28,52],[33,39]],[[29,57],[22,79],[35,84]],[[46,87],[58,53],[61,39]],[[58,55],[54,76],[63,82]],[[70,89],[80,83],[92,74]])]},
+ t:{strokes:[schoolCurve([8,85],[[23,73],[41,35],[48,23]],[[43,44],[36,70],[43,80]],[[51,93],[72,85],[92,74]]),writingLine([29,44],[66,44])]},
+ c:{strokes:[schoolCurve([8,85],[[25,72],[60,40],[65,43]],[[38,25],[18,47],[25,70]],[[31,92],[63,91],[92,74]])]},
+ o:{strokes:[schoolCurve([8,85],[[25,71],[60,38],[64,43]],[[36,25],[18,50],[28,73]],[[41,96],[72,78],[66,52]],[[65,44],[61,40],[58,43]],[[56,48],[74,61],[92,54]])]},
+ a:{strokes:[schoolCurve([8,85],[[24,73],[55,38],[61,43]],[[39,26],[17,48],[25,72]],[[35,96],[61,83],[62,43]],[[60,57],[55,77],[63,82]],[[72,90],[81,83],[92,74]])]},
+ d:{strokes:[schoolCurve([8,85],[[24,73],[55,38],[61,43]],[[39,26],[17,48],[25,72]],[[35,96],[61,83],[62,43]],[[65,29],[69,13],[68,14]],[[65,35],[55,72],[63,82]],[[72,90],[81,83],[92,74]])]},
+ n:{strokes:[schoolCurve([8,85],[[18,76],[29,49],[34,39]],[[31,53],[28,75],[28,84]],[[36,62],[48,31],[62,42]],[[73,51],[57,74],[66,82]],[[74,90],[83,82],[92,74]])]},
+ m:{strokes:[schoolCurve([7,85],[[14,75],[21,50],[25,39]],[[22,55],[20,75],[20,84]],[[28,63],[37,32],[47,42]],[[54,49],[45,72],[45,84]],[[53,61],[64,33],[74,43]],[[83,52],[69,75],[77,82]],[[83,88],[89,79],[95,73]])]},
+ p:{strokes:[schoolCurve([8,85],[[19,74],[30,49],[36,39]],[[33,63],[27,93],[24,107]],[[32,89],[41,38],[57,42]],[[76,47],[73,76],[55,82]],[[44,85],[39,78],[45,75]],[[59,85],[75,85],[92,74]])]}
+};
+for(const [letter,model]of Object.entries(SCHOOL_WRITING_MODELS)){model.letter=letter;model.cursive=true;model.version=SCHOOL_WRITING_VERSION;model.entry=model.strokes[0][0];model.exit=model.strokes[0].at(-1);}
+const SCHOOL_WRITING_SOUND_KEYS={e:'e',l:'l',i:'i',u:'u',t:'t',c:'k',o:'o',a:'a',d:'d',n:'n',m:'m',p:'p'};
+const SCHOOL_WRITING_VOICE_LINES=[
+ 'Le point vert montre le départ. Trace cette lettre en écriture attachée.',
+ 'Regarde la lettre attachée. Copie-la dans la grande case.',
+ 'Regarde bien la lettre attachée. Cache le modèle, puis écris-la.',
+ 'La lettre est cachée. Écris-la en écriture attachée.',
+ 'Le trait continue sans lever le doigt. Les petits points et les barres se font après.',
+ 'Tu as suivi le modèle attaché. Tu peux continuer.',
+ 'Regarde aussi comment les lettres se lient dans les prénoms Lola et Luca.',
+ 'Tu peux essayer ces mots avec un crayon sur du papier.'
+];
+function schoolWritingVoiceLines(){return [...SCHOOL_WRITING_VOICE_LINES];}
+function schoolWritingStoreResult(symbol,mode,result,aided){
+ const p=P(),all=p.cursivePractice||(p.cursivePractice={version:SCHOOL_WRITING_VERSION,items:{}}),key=symbol+':'+mode,e=all.items[key]||(all.items[key]={completed:0,aided:0,last:null});e.completed++;if(aided)e.aided++;
+ e.last={at:Date.now(),modelVersion:SCHOOL_WRITING_VERSION,mode,aided,coverage:Math.round(result.coverage*100),outside:Math.round(result.outside*100),orderObserved:result.orderObserved,screenGestureOnly:true};save();
+}
+function schoolWritingItem(symbol,mode='trace'){
+ const model=SCHOOL_WRITING_MODELS[symbol];if(!model)return null;
+ const prompt=SCHOOL_WRITING_VOICE_LINES[mode==='copy'?1:mode==='recall'?2:0];
+ return {cls:'upgrade-stage writing-stage school-writing-stage',skill:'cursive:'+mode,evidenceKey:'cursive:'+SCHOOL_WRITING_VERSION+':'+mode+':'+symbol,exemplar:'cursive:'+symbol+':'+mode+':'+SCHOOL_WRITING_VERSION,say:[prompt,...sndHear(SCHOOL_WRITING_SOUND_KEYS[symbol])],caption:mode==='copy'?'Copie en attaché':mode==='recall'?'Écris en attaché de mémoire':'Trace en attaché',render(st,api){
+  let strokes=[],active=null,aided=false,ghost=mode==='trace',recallReady=mode!=='recall',demoToken=0,recorded=false,input;
+  const reference=h('div',{class:'writing-reference',html:writingSVG(model)}),referenceWrap=h('div',{class:'writing-reference-wrap'},h('span',null,'La lettre attachée'),reference);
+  const board=h('div',{class:'writing-board','aria-label':'Zone pour écrire la lettre attachée',role:'img'}),status=h('p',{class:'u-note writing-status','aria-live':'polite'},''),tools=h('div',{class:'urow'});
+  const paint=writingBoardView(board,model),draw=()=>paint({guide:ghost,ink:strokes,numbers:mode==='trace'||aided});
+  const redraw=progress=>{reference.innerHTML=writingSVG(model,{progress});};
+  const demo=async(manual=true)=>{if(manual){aided=true;api.help();Voice.say(WRITING_VOICE_LINES[5]);}const token=++demoToken;referenceWrap.hidden=false;if(mode==='recall'&&recallReady){ghost=true;aided=true;api.help();draw();}for(let si=0;si<model.strokes.length;si++){for(let step=1;step<=24;step++){if(token!==demoToken||!api.alive())return;redraw({stroke:si,fraction:step/24});await new Promise(r=>setTimeout(r,35));}await new Promise(r=>setTimeout(r,130));}if(api.alive()&&token===demoToken)redraw(null);};
+  const show=uButton('Regarder',()=>demo(true)),undo=uButton('Un trait',()=>{if(!api.alive())return;input?.reset();strokes.pop();active=null;draw();}),clear=uButton('Refaire',()=>{if(!api.alive())return;input?.reset();strokes=[];active=null;draw();status.textContent='';});
+  const done=uButton('Fini',()=>{if(!api.alive()||!recallReady)return;if(!strokes.some(s=>s.length)){Voice.say(WRITING_VOICE_LINES[6]);return;}const result=writingTraceMetrics(model,strokes);if(result.ok){if(!recorded){recorded=true;schoolWritingStoreResult(symbol,mode,result,writingEffectiveAid(aided,RUN));}return api.answer(true,{el:board,praise:SCHOOL_WRITING_VOICE_LINES[5]});}const line=result.outside>.34||result.tooMuch?WRITING_VOICE_LINES[8]:WRITING_VOICE_LINES[7];status.textContent=line;api.answer(false,{el:board,feedback:line});});
+  const hide=uButton('Cacher le modèle',()=>{if(!api.alive())return;demoToken++;recallReady=true;ghost=false;referenceWrap.hidden=true;hide.hidden=true;board.style.visibility='visible';done.hidden=false;strokes=[];draw();if(Shell.item)Shell.item.say=[SCHOOL_WRITING_VOICE_LINES[3],...sndHear(SCHOOL_WRITING_SOUND_KEYS[symbol])];Shell.caption('Écris en attaché de mémoire');Voice.say(SCHOOL_WRITING_VOICE_LINES[3]);});
+  tools.append(show,undo,clear,done);if(mode==='recall'){board.style.visibility='hidden';done.hidden=true;tools.prepend(hide);}else if(mode==='trace')referenceWrap.classList.add('writing-reference-compact');
+  const transfer=h('div',{class:'school-writing-transfer'},h('span',null,'Des lettres qui se lient : '),h('span',{class:'school-cursive-model',lang:'fr'},'lola · luca'));
+  uWrap(st,h('div',{class:'writing-surface'},referenceWrap,board),tools,status,transfer);
+  input=writingBoardInput(board,{canDraw:()=>api.alive()&&recallReady,begin:p=>{active=[p];strokes.push(active);draw();},extend:p=>{if(!active)return;const last=active.at(-1);if(Math.hypot(p[0]-last[0],p[1]-last[1])>.3&&active.length<1800){active.push(p);draw();}},finish:()=>{active=null;}});
+  api.strategy=()=>{aided=true;ghost=true;referenceWrap.hidden=false;board.classList.add('reveal');draw();status.textContent=WRITING_VOICE_LINES[11];};draw();
+  setTimeout(()=>{if(api.alive()&&writingAutoDemoAllowed(mode,recallReady))demo(false);},550);
+ }};
+}
+GAMES.cursive={id:'cursive',title:'Écrire en attaché',sub:'Tracer, copier, écrire de mémoire',icon:'✍️',color:'orange',stage:'#fff4e3',levels:[
+ ...['trace','copy','recall'].flatMap(mode=>[
+  {set:['e','l','i','u'],mode,name:(mode==='trace'?'Tracer':mode==='copy'?'Copier':'Retrouver')+' les boucles et les coupes'},
+  {set:['c','o','a','d'],mode,name:(mode==='trace'?'Tracer':mode==='copy'?'Copier':'Retrouver')+' les lettres rondes'},
+  {set:['n','m','p','t'],mode,name:(mode==='trace'?'Tracer':mode==='copy'?'Copier':'Retrouver')+' les ponts et les grandes lettres'}
+ ])
+].map((L,i)=>({...L,n:3,tag:'P1',skill:'cursive:'+SCHOOL_WRITING_VERSION+':'+L.mode+':'+i,ref:'Modèle cursif lié ; observation du geste sur écran, sans certification sur papier'})),make(ctx){return schoolWritingItem(avoidRepeat(ctx,ctx.L.set),ctx.L.mode);}};
+/* Un nouvel identifiant garde les réussites des anciens tracés script intactes. */
+for(const world of ['grands','petits']){WORLD_TILES[world]=WORLD_TILES[world].map(id=>id==='trace'?'cursive':id);THEMES[world].forEach(t=>t.ids=t.ids.map(id=>id==='trace'?'cursive':id));}
+if(typeof THEME_DIFFICULTY_ORDER!=='undefined')for(const world of ['grands','petits'])for(const [theme,ids]of Object.entries(THEME_DIFFICULTY_ORDER[world]||{}))THEME_DIFFICULTY_ORDER[world][theme]=ids.map(id=>id==='trace'?'cursive':id);
+SIMPLE_GAME_NAMES.cursive='Écrire en attaché';
+function schoolWritingWorksheetSVG(letters=['e','l','i','u','c','o','a','d','n','m','p','t']){
+ const selected=letters.filter(s=>SCHOOL_WRITING_MODELS[s]).slice(0,12);
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 794 1123"><rect width="794" height="1123" fill="white"/><text x="45" y="45" font-family="Arial,sans-serif" font-size="22">Les lettres attachées de Lumi</text><text x="45" y="71" font-family="Arial,sans-serif" font-size="12">Regarde le départ et le geste. Trace, puis copie avec un crayon.</text>${selected.map((s,i)=>`<g transform="translate(${45+(i%2)*365},${90+Math.floor(i/2)*151})"><rect width="335" height="138" rx="5" fill="white" stroke="#bbb"/><text x="9" y="19" font-family="Arial,sans-serif" font-size="13">${s}</text><g transform="translate(15,6) scale(.95)">${writingSVG(SCHOOL_WRITING_MODELS[s]).replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</g><path d="M130 87H320M130 42H320" stroke="#b7c5d6" stroke-width="1"/></g>`).join('')}<text x="45" y="1040" font-family="Arial,sans-serif" font-size="12">Ces modèles de cursive liée sont un choix pédagogique ; le modèle de l’école peut varier.</text><text x="45" y="1064" font-family="Arial,sans-serif" font-size="12">Sur écran, seule la ressemblance du geste est observée. Un adulte accompagne l’écriture sur papier.</text></svg>`;
+}
+if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent=`@font-face{font-family:"Borel Lumi";src:url("assets/fonts/Borel-Regular.ttf") format("truetype");font-style:normal;font-weight:400;font-display:swap}.school-cursive-model,.grapheme.cursive,.letter.cursive,.cursive{font-family:"Borel Lumi",cursive;font-weight:400;font-variant-ligatures:common-ligatures contextual;letter-spacing:0}.school-writing-transfer{text-align:center;font-size:14px;color:#665e68;line-height:1.8}.school-writing-transfer .school-cursive-model{font-size:30px;white-space:nowrap}.school-writing-stage .writing-reference-wrap{max-width:180px}.school-writing-stage .writing-board{width:min(46vw,350px,calc(87vh - 360px));min-width:140px}.school-writing-stage .school-writing-transfer{flex:none}`;document.head.append(style);}
+
+
+/* Familiar characters are context, never a cue to a phoneme or number answer. */
+const FAVORITE_CHARACTERS={
+ petit:{name:'Petit Poilu',image:'assets/personnages/petit-poilu.png',label:'Petit Poilu écoute ton histoire'},
+ barba:{name:'Barbapapa',image:'assets/personnages/barbapapa.png',label:'Les formes avec Barbapapa'},
+ bluey:{name:'Bluey',letter:'B',label:'Le jeu des paires de Bluey'},
+ peter:{name:'Peter Pan',letter:'P',label:'Le chemin de Peter Pan'}
+};
+const FAVORITE_ACTIVITIES={recit:'petit',recitP:'petit',formes:'barba',ombres:'barba',memo:'bluey',memoG:'bluey',robot:'peter'};
+function favoriteGuide(key){const friend=FAVORITE_CHARACTERS[key];if(!friend)return null;const picture=friend.image?h('img',{src:friend.image,alt:friend.name,width:86,height:86,loading:'lazy'}):h('span',{class:'favorite-initial','aria-hidden':'true'},friend.letter);if(friend.image)picture.addEventListener('error',()=>picture.hidden=true);return h('aside',{class:'favorite-guide','aria-label':friend.label},picture,h('span',null,friend.label));}
+const playBeforeFavorites=Engine.play.bind(Engine);
+Engine.play=function(item,run){const friend=FAVORITE_ACTIVITIES[run.gid];if(!friend||run.exam)return playBeforeFavorites(item,run);const render=item.render,copy={...item,render(st,api){render(st,api);const guide=favoriteGuide(friend);if(guide&&!st.querySelector('.favorite-guide'))st.prepend(guide);}};return playBeforeFavorites(copy,run);};
+for(const id of ['memo','memoG']){const before=GAMES[id].make;GAMES[id].make=function(ctx){const item=before(ctx);return {...item,say:['Bluey joue au jeu des paires avec toi.',item.say]};};}
+const formsBeforeFavorite=GAMES.formes.make;
+GAMES.formes.make=function(ctx){const item=formsBeforeFavorite(ctx);return {...item,say:['Barbapapa cherche la même forme que toi.',item.say]};};
+const pathBeforeFavorite=GAMES.robot.make;
+GAMES.robot.make=function(ctx){const item=pathBeforeFavorite(ctx),render=item.render;return {...item,say:'Guide Peter Pan. Touche la case voisine pour aller à la maison.',render(st,api){render(st,{...api,answer(ok,options={}){return api.answer(ok,{...options,praise:'Bravo, Peter Pan est arrivé !'});}});const grid=st.querySelector('.post-grid');if(!grid)return;st.querySelectorAll('.u-note').forEach(n=>{if(n.textContent.includes('🤖'))n.textContent='Peter Pan → maison';});const show=()=>Array.from(grid.children).forEach(b=>{const current=b.classList.contains('current');b.classList.toggle('favorite-pawn',current);if(current){b.textContent='P';b.setAttribute('aria-label','Peter Pan');}});show();Array.from(grid.children).forEach(b=>b.addEventListener('click',show));}};};
+Object.assign(SIMPLE_GAME_NAMES,{robot:'Suivre Peter Pan',memo:'Les paires de Bluey',memoG:'Les paires de Bluey'});for(const id of ['robot','memo','memoG'])GAMES[id].title=SIMPLE_GAME_NAMES[id];
+GAMES.robot.icon='🧭';GAMES.robot.sub='Suivre un chemin de case en case';GAMES.robot.levels.forEach(L=>L.name='Rejoindre la maison');
+function favoriteVoiceLines(){return ['Bluey joue au jeu des paires avec toi.','Barbapapa cherche la même forme que toi.','Guide Peter Pan. Touche la case voisine pour aller à la maison.','Bravo, Peter Pan est arrivé !'];}
+if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent=`.favorite-guide{display:flex;align-items:center;justify-content:center;gap:12px;flex:none;max-width:560px;padding:4px 14px;color:#5c5570;font:700 17px/1.3 var(--font-read)}.favorite-guide img{width:78px;height:78px;object-fit:contain;flex:none}.favorite-initial{display:grid;place-items:center;width:45px;height:45px;border-radius:50%;background:#e0edf9;color:#24517b;font-size:26px}.favorite-pawn{font-family:var(--font-read);font-weight:700;color:#23654b!important}.stage .favorite-guide+*{max-width:100%}.favorite-guide[hidden]{display:none}@media(max-width:600px){.favorite-guide{font-size:14px;padding:0 6px;gap:8px}.favorite-guide img{width:56px;height:56px}}`;document.head.append(style);}
 
 
 /* Niveaux lisibles : repère local à une activité, sans classement ni récompense supplémentaire. */
@@ -6170,6 +6277,97 @@ runModule=async function(mi,lv){
   Celebrate.show({stars:shown,sticker,note,noteSay,next,nextLabel:'Niveau suivant',again:()=>runModule(mi,lv),home:()=>openCalcul()});
 };
 if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent='.dots i.skipped{background:#d4d9df;box-shadow:inset 0 0 0 3px #8b96a5;position:relative}.dots i.skipped::after{content:"↪";position:absolute;inset:-4px;font:700 16px/23px sans-serif;text-align:center;color:#4c5c70}';document.head.append(style);}
+
+
+/* Local parent demonstration profile. Access is distinct from learning evidence. */
+const ADMIN_PROFILE_ID='admin';
+KIDS_DEF.admin={...KIDS_DEF.luca,id:'admin',name:'Admin',world:'grands',top:'#6c5a82',topS:'#524363'};
+function ensureAdminProfile(state){
+ state.profiles=Array.isArray(state.profiles)?state.profiles:[];
+ const existing=state.profiles.find(p=>p.id===ADMIN_PROFILE_ID);
+ if(existing){existing.name='Admin';existing.world=existing.world==='petits'?'petits':'grands';existing.localOnly=true;}
+ else state.profiles.push({id:ADMIN_PROFILE_ID,name:'Admin',world:'grands',localOnly:true});
+ return state;
+}
+function isAdminProfile(){return S.current===ADMIN_PROFILE_ID;}
+function adminReturnId(state=S){return ['luca','lola'].includes(state.adminReturnTo)?state.adminReturnTo:'luca';}
+const defStateBeforeAdmin=defState;
+defState=function(){return ensureAdminProfile(defStateBeforeAdmin());};
+const migrateBeforeAdmin=migrate;
+migrate=function(input){
+ /* The legacy migration searches for unnamed old child profiles: never let it
+    mistake demonstration records for Luca's historical progress. */
+ const adminProgress=input.progress&&input.progress.admin;
+ const adminWorld=(input.profiles||[]).find(p=>p.id==='admin')?.world;
+ const incomingAdmin=input.current==='admin';
+ input.profiles=(input.profiles||[]).filter(p=>p.id!=='admin');
+ if(incomingAdmin)input.current=adminReturnId(input);
+ const state=ensureAdminProfile(migrateBeforeAdmin(input));
+ if(adminProgress)state.progress.admin=adminProgress;
+ state.profiles.find(p=>p.id==='admin').world=adminWorld==='petits'?'petits':'grands';
+ if(incomingAdmin){state.current=adminReturnId(state);state.world=state.profiles.find(p=>p.id===state.current).world;}
+ return state;
+};
+function prepareAdminProgress(p){
+ p.demo=true;p.games=p.games||{};p.skills=p.skills||{};
+ p.lecture=p.lecture||{unlocked:0,done:{},gp:{},pass:{}};
+ p.lecture.unlocked=LESSONS.length-1;
+ p.lecture.done=p.lecture.done||{};p.lecture.gp=p.lecture.gp||{};p.lecture.pass=p.lecture.pass||{};
+ p.calcul=p.calcul||{mods:{}};p.calcul.mods=p.calcul.mods||{};p.calcul.open=MODS.length-1;
+ MODS.forEach(M=>{const mp=p.calcul.mods[M.id]||(p.calcul.mods[M.id]={done:{},pass:{}});mp.done=mp.done||{};mp.pass=mp.pass||{};mp.parentStart=M.levels.length-1;});
+ Object.entries(GAMES).forEach(([id,g])=>{if(!g.levels?.length)return;const gp=p.games[id]||(p.games[id]={lvl:0,unlocked:0,best:{},rounds:0,low:0});gp.unlocked=g.levels.length-1;gp.lvl=clamp(gp.lvl||0,0,g.levels.length-1);});
+ p.rewards=p.rewards||{v:2,stars:0,unlocked:[]};p.rewards.v=2;
+ p.rewards.unlocked=TREASURE_ORDER.map(i=>'objet-'+i);
+ return p;
+}
+const progressBeforeAdmin=P;
+P=function(){const p=progressBeforeAdmin();return isAdminProfile()?prepareAdminProgress(p):p;};
+function activateAdminProfile(){
+ if(['luca','lola'].includes(S.current))S.adminReturnTo=S.current;
+ ensureAdminProfile(S);Voice.stop();if(RUN)RUN.abort=true;RUN=null;
+ if(Shell.isOpen())Shell.close();
+ $$('.parent,.who-screen,.modal').forEach(el=>el.remove());
+ S.current='admin';S.world=prof().world;P();HOME_THEME=null;
+ const app=$('#app');if(app)app.inert=false;
+ save();renderHome(null);
+}
+function openAdminProfile(){parentGate(activateAdminProfile,'Profil Admin · parents');}
+function leaveAdminProfile(id=adminReturnId()){
+ if(!['luca','lola'].includes(id))id=adminReturnId();
+ Voice.stop();if(RUN)RUN.abort=true;RUN=null;
+ if(Shell.isOpen())Shell.close();
+ $$('.parent,.who-screen,.modal').forEach(el=>el.remove());
+ S.current=id;S.world=prof().world;S.adminReturnTo=id;HOME_THEME=null;
+ const app=$('#app');if(app)app.inert=false;
+ save();renderHome(null);
+}
+function adminParentCard(){
+ return h('div',{class:'pcard admin-parent-card','aria-label':'Profil Admin local'},h('h3',null,'Profil Admin'),
+  h('p',null,'Pour les adultes : essayez toutes les activités et tous les objets. Les essais utilisent une progression séparée sur cet appareil, sans modifier celle de Luca ou de Lola.'),
+  h('p',null,'Ce profil de démonstration est protégé par l’accès parents. Il ne constitue pas un compte administrateur en ligne.'),
+  onTap(h('button',{class:'pbtn pri'},'Ouvrir Admin · tout débloqué'),activateAdminProfile));
+}
+const parentAreaBeforeAdmin=parentArea;
+parentArea=function(){parentAreaBeforeAdmin();const wrap=$('.parent .wrap');if(wrap&&!$('.admin-parent-card',wrap))wrap.insertBefore(adminParentCard(),wrap.children[1]||null);};
+const homeBeforeAdmin=renderHome;
+renderHome=function(theme=HOME_THEME){
+ homeBeforeAdmin(theme);if(!isAdminProfile())return;
+ const app=$('#app');if(!app)return;
+ const previous=$('.admin-demo-banner',app);if(previous)previous.remove();
+ const controls=h('div',{class:'prow'},
+  onTap(h('button',{class:'pbtn'+(S.world==='grands'?' pri':'')},'Activités 5/6 ans'),()=>{prof().world='grands';S.world='grands';HOME_THEME=null;save();renderHome(null);}),
+  onTap(h('button',{class:'pbtn'+(S.world==='petits'?' pri':'')},'Activités 3 ans'),()=>{prof().world='petits';S.world='petits';HOME_THEME=null;save();renderHome(null);}),
+  onTap(h('button',{class:'pbtn'},'Retour à Luca'),()=>leaveAdminProfile('luca')),
+  onTap(h('button',{class:'pbtn'},'Retour à Lola'),()=>leaveAdminProfile('lola')));
+ const banner=h('section',{class:'pcard admin-demo-banner','aria-label':'Démonstration Admin'},h('b',null,'Admin · démonstration locale · tout débloqué'),h('p',null,'Les essais sont séparés des progrès des enfants.'),controls);
+ app.insertBefore(banner,app.firstChild);
+};
+const whoScreenBeforeAdmin=whoScreen;
+whoScreen=function(first,only){
+ /* Admin never appears on the children's chooser or opens automatically. */
+ if(isAdminProfile()){S.current=adminReturnId();S.world=prof().world;HOME_THEME=null;renderHome(null);}
+ return whoScreenBeforeAdmin(first,['luca','lola'].includes(only)?only:null);
+};
 
 /* END LEARNING REVISION 20261023 */
 boot();
