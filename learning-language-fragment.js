@@ -186,8 +186,26 @@ recommendedGame=function(){const id=recommendBeforeRecall();if(S.world==='grands
 for(const [world,theme,id]of [['grands','lire','rappel'],['grands','lire','consignes'],['grands','lire','recit'],['petits','lire','consignesP'],['petits','lire','recitP']])addThemeGame(world,theme,id);
 Object.assign(SIMPLE_GAME_NAMES,{rappel:'Mon petit rappel',consignes:'Écoute et place',consignesP:'Écoute et place',recit:'Histoire mélangée',recitP:'Histoire mélangée'});
 function literacyVoiceLines(){const lines=[...LITERACY_VOICE,...messageVoiceLines(),...PLACE_OBJECTS.map(o=>o.name),...PLACE_ZONES.map(z=>z.name)];for(const L of ORAL_LEVELS){const zones=PLACE_ZONES.slice(0,L.zones),objects=PLACE_OBJECTS;for(const a of objects)for(const z of zones){lines.push(`Mets ${a.name} ${z.name}.`);if(L.actions===2)for(const b of objects)for(const q of zones)if(a.id!==b.id&&z.id!==q.id)lines.push(L.before?`Avant de mettre ${b.name} ${q.name}, mets ${a.name} ${z.name}.`:`Mets ${a.name} ${z.name}, puis mets ${b.name} ${q.name}.`);}}for(const s of SEQUENCE_STORIES)lines.push(...s.events,s.q);for(const qs of Object.values(BOOK_QUESTIONS))for(const q of qs)lines.push(q.text,...q.options.map(o=>o.label));lines.push('Lola','Milo');return [...new Set(lines)];}
-/* Put the core pathway and its language complements first, keeping older games reachable. */
-for(const [world,order] of [['grands',['lecture','livres','mots','rappel','consignes','recit','histoires','lettre1','balade','syllabes','riviere']],['petits',['histoires','consignesP','recitP','syllabes','ferme','livres']]]){const theme=THEMES[world].find(t=>t.id==='lire');theme.ids=[...order.filter(id=>theme.ids.includes(id)),...theme.ids.filter(id=>!order.includes(id))];}
+/* Stable presentation order follows the entry task and its prerequisites.
+   Each game keeps its own adaptive progression; ordering never locks access. */
+const THEME_DIFFICULTY_ORDER={
+ grands:{
+  lire:['consignes','histoires','recit','syllabes','lecture','lettre1','rappel','mots','riviere','balade','livres'],
+  calculer:['blocs','paniers','calcul','marche','heure'],
+  jouer:['robot','miroir','memoG','monstre','suitesG','lynxG','sudoku','cheminG'],
+  creer:['atelier','trace','messages'],
+  decouvrir:['cuisine','feteG']
+ },
+ petits:{
+  lire:['ferme','consignesP','histoires','livres','recitP','syllabes'],
+  calculer:['gestes','tailles','nombres','blocsP','grandpetit'],
+  jouer:['formes','ombres','monstreP','espace','puzzle','lynx','memo','suites','chemin'],
+  creer:['couleurs','pretrace','atelier'],
+  decouvrir:['cuisine','feteP']
+ }
+};
+const themesBeforeDifficulty=themesOf;
+themesOf=function(world){return themesBeforeDifficulty(world).map(theme=>{const order=THEME_DIFFICULTY_ORDER[world]?.[theme.id]||[],rank=new Map(order.map((id,i)=>[id,i]));return {...theme,ids:theme.ids.map((id,i)=>({id,rank:rank.has(id)?rank.get(id):order.length+i})).sort((a,b)=>a.rank-b.rank).map(x=>x.id)};});};
 /* Deferred until boot so non-browser audits can load the game definitions. */
 const bootBeforeLiteracy=boot;
 boot=function(){literacyStyle();bootBeforeLiteracy();};

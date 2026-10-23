@@ -67,3 +67,16 @@ Un cadenas **Aide du parent** est aussi présent pendant les exercices. Après l
 [Analyse et changements](analyses/Analyse-et-changements-2026-10-23.md) : panorama de 18 offres/éditions, dossier de recherche et correspondance avec les changements. Les tests logiciels ne constituent pas une étude d’efficacité de Lumi ni une certification de l’écriture manuscrite.
 
 Sources des nouveaux modules : `learning-language-fragment.js` et `learning-writing-fragment.js`. `python3 scripts/integrate_learning.py` les intègre au HTML autonome. Vérification complémentaire : `node tests/literacy.test.cjs` et `node tests/writing.test.cjs`.
+
+
+## Ordre progressif des jeux — 23 octobre 2026
+
+Chaque thème affiche les activités dans un ordre stable, du point d’entrée le plus accessible vers les tâches demandant davantage de prérequis. Le classement concerne l’entrée des jeux ; leurs étapes internes continuent d’évoluer avec l’enfant. Tous les jeux restent accessibles et les sauvegardes conservent leurs identifiants.
+
+- Luca, Lire : consignes et histoires orales, récit, syllabes, parcours sons–lettres, premier son, rappels, encodage et assemblage de mots, puis petits livres.
+- Luca, Calculer : nombres manipulés, groupes égaux simples, parcours de calcul, marché, heure. Jouer : déplacements directs, appariement, mémoire, petites quantités, motifs, différences, déduction et grands labyrinthes.
+- Lola, Écouter : imagier, consignes simples, histoires et livres accompagnés, chronologie puis syllabes. Compter : un objet pour chacun, tailles, petites quantités, nombres construits puis comparaison.
+- Lola, Jouer : formes, ombres, petites quantités, positions, puzzle, différences, mémoire, motifs puis labyrinthe. Créer : couleurs, gestes, cartes.
+- Luca, Créer : cartes libres, lettres guidées puis messages composés. Découvrir conserve la cuisine et les jeux de saison disponibles.
+
+L’ordre est défini par `THEME_DIFFICULTY_ORDER`, appliqué après l’ajout de tous les jeux et des activités saisonnières. Les étoiles, trésors, étapes, acquis et reprises ne sont pas modifiés par le classement.

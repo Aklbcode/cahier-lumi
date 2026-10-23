@@ -1,5 +1,5 @@
 /* Explicit parent-controlled offline download. No child data is cached here. */
-const CACHE='lumi-offline-20261023-lire-ecrire-1';
+const CACHE='lumi-offline-20261023-ordre-1';
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 function canonical(url){const u=new URL(url,self.location.href);u.search='';u.hash='';return u.href;}
