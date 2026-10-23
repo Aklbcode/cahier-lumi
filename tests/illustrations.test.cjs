@@ -1,0 +1,17 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.join(__dirname,'..'),folder=path.join(root,'assets/illustrations');
+class IllustrationElement{
+ constructor(tag){this.tagName=tag;this.childNodes=[];this.attributes={};this.style={};this.className='';this._text='';this._html='';this.classList={add:c=>{this.className+=' '+c;}};}
+ setAttribute(k,v){this.attributes[k]=String(v);}getAttribute(k){return this.attributes[k];}append(...nodes){this.childNodes.push(...nodes);}get textContent(){return this._text+this.childNodes.map(n=>n.textContent||'').join('');}set textContent(v){this._text=String(v);this.childNodes=[];}set innerHTML(v){this._html=String(v);this.childNodes=[];}get innerHTML(){return this._html;}
+}
+const doc={createElement:t=>new IllustrationElement(t),head:new IllustrationElement('head')},ctx=vm.createContext({console,document:doc,Intl,boot(){}});
+const bundle=fs.readFileSync(path.join(folder,'twemoji-bundle.js'),'utf8');vm.runInContext(bundle,ctx);vm.runInContext(fs.readFileSync(path.join(root,'illustrations-fragment.js'),'utf8'),ctx);
+const bank=ctx.LUMI_ILLUSTRATION_SVGS,manifest=JSON.parse(fs.readFileSync(path.join(folder,'manifest.json'),'utf8'));
+assert.ok(Object.keys(bank).length>=300,'Substantial local illustration inventory');
+for(const item of manifest.files){const svg=bank[item.code];assert.ok(svg?.startsWith('<svg'),'Valid SVG '+item.code);assert.ok(!/<(?:script|foreignObject|iframe|image)\b/i.test(svg),'No active or external-image node '+item.code);assert.ok(!/\son[a-z]+\s*=/i.test(svg),'No event handler '+item.code);for(const link of svg.matchAll(/(?:href=["']|url\(["']?)([^"'\s)>]+)/g))assert.ok(link[1].startsWith('#'),'Only internal SVG references '+item.code);}
+for(const [emoji,label]of [['🐝','Une abeille'],['🫏','Un âne'],['🐱','Un chat'],['🪆','Une poupée'],['🍎','Une pomme'],['🐰🥕','Un lapin et une carotte'],['🍎🍎','Deux pommes']]){const picture=ctx.lumiIllustration(emoji,label);assert.equal(typeof picture,'object','Available illustrated card '+emoji);assert.equal(picture.textContent,emoji,'Exact answer text retained '+emoji);assert.equal(picture.getAttribute('aria-label'),label,'Explicit accessible label '+emoji);assert.ok(picture.childNodes[1].innerHTML.includes('<svg'),'Local vector drawing present '+emoji);}
+assert.equal(ctx.lumiIllustrationCode('☀️'),'2600');assert.equal(ctx.lumiIllustrationCode('2600-FE0F'),'2600');
+assert.equal(ctx.lumiIllustration('A'),'A');assert.equal(ctx.lumiIllustration('12'),'12');assert.equal(ctx.lumiIllustration('chat'),'chat');assert.equal(ctx.lumiIllustration('🍎 + 2'),'🍎 + 2');assert.equal(ctx.lumiIllustration('❔inconnu'),'❔inconnu');
+const gradientAsset=manifest.files.find(o=>/\bid=/.test(bank[o.code]));if(gradientAsset){const repeated=ctx.lumiIllustration(gradientAsset.emoji+gradientAsset.emoji),ids=[...repeated.childNodes[1].innerHTML.matchAll(/\bid=["']([^"']+)["']/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length,'Repeated drawings keep distinct gradient/clip identifiers');}
+assert.ok(!/new\s+MutationObserver|fetch\(|https?:\/\/[^\s*]+\.(?:svg|png)/.test(fs.readFileSync(path.join(root,'illustrations-fragment.js'),'utf8')),'No global observer or remote image lookup');
+console.log('Illustrations : '+Object.keys(bank).length+' SVG locaux, sécurité des ressources, animaux récents, assemblages et texte des réponses vérifiés.');

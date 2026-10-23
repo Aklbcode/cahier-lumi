@@ -39,9 +39,40 @@ function writingTraceMetrics(model,ink,small=false){
 function writingEscape(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));}
 function writingPoints(s){return s.map(p=>p.map(n=>Number(n).toFixed(2)).join(',')).join(' ');}
 function writingSVG(model,{guide=true,ink=[],progress=null,numbers=true}={}){
- const ref=model.strokes.map((s,i)=>`<polyline points="${writingPoints(s)}" fill="none" stroke="${guide?'#d5dce6':'transparent'}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>${guide&&numbers?`<circle cx="${s[0][0]}" cy="${s[0][1]}" r="4.8" fill="#42856c"/><text x="${s[0][0]}" y="${s[0][1]+1.8}" text-anchor="middle" font-family="Arial,sans-serif" font-size="5" fill="white">${i+1}</text>`:''}`).join('');
+ const ref=model.strokes.map(s=>`<polyline points="${writingPoints(s)}" fill="none" stroke="#d5dce6" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>`).join(''),starts=model.strokes.map((s,i)=>`<circle cx="${s[0][0]}" cy="${s[0][1]}" r="4.8" fill="#42856c"/><text x="${s[0][0]}" y="${s[0][1]+1.8}" text-anchor="middle" font-family="Arial,sans-serif" font-size="5" fill="white">${i+1}</text>`).join('');
  let demo='';if(progress){for(let i=0;i<=progress.stroke&&i<model.strokes.length;i++){const s=model.strokes[i],count=i<progress.stroke?s.length:Math.max(1,Math.ceil(s.length*progress.fraction));demo+=`<polyline points="${writingPoints(s.slice(0,count))}" fill="none" stroke="#e69c3f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;if(i===progress.stroke){const p=s[Math.min(s.length-1,count-1)];demo+=`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#b66e22"/>`;}}}
- return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 115" aria-hidden="true"><rect x="0" y="0" width="100" height="115" rx="5" fill="#fffdf8"/><path d="M4 85H96" stroke="#9bb5d1" stroke-width=".6"/><path d="M4 38H96" stroke="#d8e3ed" stroke-dasharray="2 2" stroke-width=".5"/>${ref}${demo}${ink.map(s=>`<polyline points="${writingPoints(s.length===1?[s[0],[s[0][0]+.01,s[0][1]]]:s)}" fill="none" stroke="#336cb1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 115" aria-hidden="true"><rect x="0" y="0" width="100" height="115" rx="5" fill="#fffdf8"/><path d="M4 85H96" stroke="#9bb5d1" stroke-width=".6"/><path d="M4 38H96" stroke="#d8e3ed" stroke-dasharray="2 2" stroke-width=".5"/><g data-writing-guide display="${guide?'inline':'none'}">${ref}<g data-writing-starts visibility="${numbers?'visible':'hidden'}">${starts}</g></g>${demo}<g data-writing-ink>${ink.map(s=>`<polyline points="${writingPoints(s.length===1?[s[0],[s[0][0]+.01,s[0][1]]]:s)}" fill="none" stroke="#336cb1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</g></svg>`;
+}
+/* Garder le SVG, la cible tactile et les traits en place pendant un geste.
+   Remplacer innerHTML à chaque mouvement peut interrompre la suite des événements
+   tactiles. Seuls les points du trait actif changent désormais. */
+function writingBoardView(board,model){
+ board.innerHTML=writingSVG(model);const guide=board.querySelector('[data-writing-guide]'),starts=board.querySelector('[data-writing-starts]'),ink=board.querySelector('[data-writing-ink]'),paths=[];
+ return ({guide:visible=true,ink:strokes=[],numbers=true}={})=>{guide.setAttribute('display',visible?'inline':'none');starts.setAttribute('visibility',numbers?'visible':'hidden');while(paths.length>strokes.length)paths.pop().remove();strokes.forEach((s,i)=>{let path=paths[i];if(!path){path=document.createElementNS('http://www.w3.org/2000/svg','polyline');for(const [key,value]of Object.entries({fill:'none',stroke:'#336cb1','stroke-width':'4','stroke-linecap':'round','stroke-linejoin':'round'}))path.setAttribute(key,value);ink.append(path);paths.push(path);}path.setAttribute('points',writingPoints(s.length===1?[s[0],[s[0][0]+.01,s[0][1]]]:s));});};
+}
+function writingBoardPoint(board,event){
+ const svg=board.querySelector('svg');if(svg?.createSVGPoint&&svg.getScreenCTM){try{const matrix=svg.getScreenCTM();if(matrix){const p=svg.createSVGPoint();p.x=event.clientX;p.y=event.clientY;const q=p.matrixTransform(matrix.inverse());if(Number.isFinite(q.x)&&Number.isFinite(q.y))return [clamp(q.x,0,100),clamp(q.y,0,115)];}}catch(_){}}
+ const r=(svg||board).getBoundingClientRect(),scale=Math.min(r.width/100,r.height/115);if(!Number.isFinite(scale)||scale<=0)return null;return [clamp((event.clientX-r.left-(r.width-scale*100)/2)/scale,0,100),clamp((event.clientY-r.top-(r.height-scale*115)/2)/scale,0,115)];
+}
+function writingBoardInput(board,{canDraw,begin,extend,finish}){
+ let active=null;const options={passive:false};board.style.touchAction='none';board.style.userSelect='none';board.style.webkitUserSelect='none';board.style.webkitTouchCallout='none';
+ const prevent=e=>{if(e.cancelable!==false)e.preventDefault();},add=e=>{const p=writingBoardPoint(board,e);if(p)extend(p);};
+ const stop=cancelled=>{if(active===null)return;const old=active;active=null;try{if(board.hasPointerCapture?.(old))board.releasePointerCapture(old);}catch(_){}finish(cancelled);};
+ board.addEventListener('pointerdown',e=>{if(active!==null||!canDraw()||e.isPrimary===false||e.button>0)return;const p=writingBoardPoint(board,e);if(!p)return;prevent(e);active=e.pointerId;begin(p);try{board.setPointerCapture(e.pointerId);}catch(_){}},options);
+ board.addEventListener('pointermove',e=>{if(active!==e.pointerId||!canDraw())return;prevent(e);let samples=[];try{samples=e.getCoalescedEvents?.()||[];}catch(_){}for(const sample of samples)add(sample);add(e);},options);
+ board.addEventListener('pointerup',e=>{if(active!==e.pointerId)return;prevent(e);if(canDraw())add(e);stop(false);},options);
+ board.addEventListener('pointercancel',e=>{if(active===e.pointerId)stop(true);},options);
+ board.addEventListener('lostpointercapture',e=>{if(active===e.pointerId)stop(true);});
+ /* Les anciennes versions de Safari sans Pointer Events gardent la même cible
+    touchstart jusqu'au touchend ; aucun événement synthétique n'est nécessaire. */
+ if(typeof window!=='undefined'&&!window.PointerEvent){
+  const touch=e=>Array.from(e.changedTouches||[]).find(t=>t.identifier===active);
+  board.addEventListener('touchstart',e=>{if(active!==null||!canDraw())return;const t=e.changedTouches?.[0],p=t&&writingBoardPoint(board,t);if(!p)return;prevent(e);active=t.identifier;begin(p);},options);
+  board.addEventListener('touchmove',e=>{const t=touch(e);if(!t||!canDraw())return;prevent(e);add(t);},options);
+  board.addEventListener('touchend',e=>{const t=touch(e);if(!t)return;prevent(e);if(canDraw())add(t);stop(false);},options);
+  board.addEventListener('touchcancel',e=>{if(touch(e))stop(true);},options);
+ }
+ return {reset:()=>stop(true)};
 }
 const WRITING_VOICE_LINES=[
  'Regarde le point de départ et le chemin. Puis trace avec ton doigt.',
@@ -68,23 +99,20 @@ function writingItem(symbol,mode='trace',small=false){
  const model=WRITING_MODELS[symbol];if(!model)return null;
  const prompt=small?WRITING_VOICE_LINES[0]:mode==='copy'?WRITING_VOICE_LINES[2]:mode==='recall'?WRITING_VOICE_LINES[3]:WRITING_VOICE_LINES[1];
  return {cls:'upgrade-stage writing-stage',skill:'writing:'+mode,evidenceKey:'writing:'+mode+':'+symbol,exemplar:'writing:'+symbol+':'+mode+':vector-v1',say:model.gesture?prompt:[prompt,...sndHear(WRITING_SOUND_KEYS[symbol])],caption:small?'Dessine le chemin':mode==='copy'?'Copie la lettre':mode==='recall'?'Écris de mémoire':'Trace la lettre',render(st,api){
-  let strokes=[],active=null,pointer=null,aided=false,ghost=mode==='trace',hidden=mode==='recall',recallReady=mode!=='recall',demoToken=0,recorded=false;
+  let strokes=[],active=null,aided=false,ghost=mode==='trace',hidden=mode==='recall',recallReady=mode!=='recall',demoToken=0,recorded=false,input;
   const reference=h('div',{class:'writing-reference',html:writingSVG(model)}),referenceWrap=h('div',{class:'writing-reference-wrap'},h('span',null,model.gesture?'Le modèle':'La lettre'),reference);
   const board=h('div',{class:'writing-board','aria-label':small?'Zone pour dessiner le chemin':'Zone pour écrire la lettre',role:'img'}),status=h('p',{class:'u-note writing-status','aria-live':'polite'},''),tools=h('div',{class:'urow'});
-  const draw=()=>{board.innerHTML=writingSVG(model,{guide:ghost,ink:strokes,numbers:mode==='trace'||aided});};
+  const paint=writingBoardView(board,model),draw=()=>paint({guide:ghost,ink:strokes,numbers:mode==='trace'||aided});
   const redrawReference=progress=>{reference.innerHTML=writingSVG(model,{progress});};
   const demo=async(manual=true)=>{if(manual){aided=true;api.help();Voice.say(WRITING_VOICE_LINES[5]);}const token=++demoToken;referenceWrap.hidden=false;if(mode==='recall'&&recallReady){ghost=true;aided=true;api.help();draw();}for(let si=0;si<model.strokes.length;si++){for(let step=1;step<=24;step++){if(token!==demoToken||!api.alive())return;redrawReference({stroke:si,fraction:step/24});await new Promise(r=>setTimeout(r,35));}await new Promise(r=>setTimeout(r,130));}if(api.alive()&&token===demoToken)redrawReference(null);};
   const show=h('button',{class:'ubtn'},'👀 Regarder');onTap(show,()=>demo(true));
-  const clear=uButton('↶ Refaire',()=>{if(!api.alive())return;strokes=[];active=null;pointer=null;draw();status.textContent='';});
-  const undo=uButton('↶ Un trait',()=>{if(!api.alive())return;strokes.pop();active=null;pointer=null;draw();});
+  const clear=uButton('↶ Refaire',()=>{if(!api.alive())return;input?.reset();strokes=[];active=null;draw();status.textContent='';});
+  const undo=uButton('↶ Un trait',()=>{if(!api.alive())return;input?.reset();strokes.pop();active=null;draw();});
   const done=uButton('✓ Fini',()=>{if(!api.alive()||!recallReady)return;if(!strokes.some(s=>s.length)){Voice.say(small?WRITING_VOICE_LINES[12]:WRITING_VOICE_LINES[6]);return;}const result=writingTraceMetrics(model,strokes,small);if(result.ok){if(!recorded){recorded=true;writingStoreResult(symbol,mode,result,writingEffectiveAid(aided,RUN));}return api.answer(true,{el:board,praise:small?WRITING_VOICE_LINES[10]:WRITING_VOICE_LINES[9]});}const line=result.outside>(small?.42:.34)||result.tooMuch?WRITING_VOICE_LINES[8]:WRITING_VOICE_LINES[7];status.textContent=line;api.answer(false,{el:board,feedback:line});});
   const hide=uButton('🙈 Cacher le modèle',()=>{if(!api.alive())return;demoToken++;recallReady=true;hidden=true;ghost=false;referenceWrap.hidden=true;hide.hidden=true;board.style.visibility='visible';done.hidden=false;strokes=[];draw();if(Shell.item){Shell.item.say=model.gesture?WRITING_VOICE_LINES[4]:[WRITING_VOICE_LINES[4],...sndHear(WRITING_SOUND_KEYS[symbol])];}Shell.caption('Écris de mémoire');Voice.say(WRITING_VOICE_LINES[4]);});
   tools.append(show,undo,clear,done);if(mode==='recall'){board.style.visibility='hidden';done.hidden=true;tools.prepend(hide);}else if(mode==='trace')referenceWrap.classList.add('writing-reference-compact');
   const surface=h('div',{class:'writing-surface'},referenceWrap,board);uWrap(st,surface,tools,status);
-  const point=e=>{const r=board.getBoundingClientRect();return [clamp((e.clientX-r.left)/r.width*100,0,100),clamp((e.clientY-r.top)/r.height*115,0,115)];};
-  board.addEventListener('pointerdown',e=>{if(!api.alive()||!recallReady||pointer!==null||e.isPrimary===false||e.button>0)return;e.preventDefault();pointer=e.pointerId;try{board.setPointerCapture(pointer);}catch(_){}active=[point(e)];strokes.push(active);draw();});
-  board.addEventListener('pointermove',e=>{if(pointer!==e.pointerId||!active||!api.alive())return;e.preventDefault();const p=point(e),last=active.at(-1);if(Math.hypot(p[0]-last[0],p[1]-last[1])>.3&&active.length<1800){active.push(p);draw();}});
-  const end=e=>{if(pointer!==e.pointerId)return;active=null;pointer=null;};board.addEventListener('pointerup',end);board.addEventListener('pointercancel',end);board.addEventListener('lostpointercapture',()=>{active=null;pointer=null;});
+  input=writingBoardInput(board,{canDraw:()=>api.alive()&&recallReady,begin:p=>{active=[p];strokes.push(active);draw();},extend:p=>{if(!active)return;const last=active.at(-1);if(Math.hypot(p[0]-last[0],p[1]-last[1])>.3&&active.length<1800){active.push(p);draw();}},finish:()=>{active=null;}});
   api.strategy=()=>{aided=true;ghost=true;referenceWrap.hidden=false;board.classList.add('reveal');draw();status.textContent=WRITING_VOICE_LINES[11];};
   draw();setTimeout(()=>{if(api.alive()&&writingAutoDemoAllowed(mode,recallReady))demo(false);},550);
  }};

@@ -1,0 +1,11 @@
+{
+  "local_references_checked": 186,
+  "missing_local_references": [],
+  "external_references": [
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+    "https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Grandstander:wght@500;700;800&display=swap",
+    "https://fonts.googleapis.com/css2?family=Playwrite+BE+WAL:wght@300;400&display=swap"
+  ],
+  "note": "Les illustrations de jeu étaient des glyphes emoji, sans fichier image manquant : leur rendu dépendait de la police du système. Les scènes SVG des récits, différences et puzzles sont générées directement dans le code."
+}

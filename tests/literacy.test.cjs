@@ -69,22 +69,8 @@ for(let li=0;li<ORAL_LEVELS.length;li++){
  if(L.objects>1)checkLiteracy(positions.size===L.objects,'Correct object does not stay in a fixed tray position');
 }
 
-// Each story has genuinely distinct frames. Finishing chronology must reach
-// the comprehension question before granting success in the causal stages.
-checkLiteracy(SEQUENCE_STORIES.length===5,'Five original stories');
-const savedSequenceModel=sequenceModel;
-for(const story of SEQUENCE_STORIES){
- checkLiteracy(story.events.length===4&&new Set([0,1,2,3].map(i=>sequenceSVG(story.id,i))).size===4,'Four distinct scenes '+story.id);
- checkLiteracy(new Set([story.answer,...story.distractors]).size===3&&[story.answer,...story.distractors].every(i=>i>=0&&i<4),'One reachable answer and two different distractors '+story.id);
- for(const frames of [2,3,4]){
-  const indices=frames===2?[0,3]:frames===3?[0,2,3]:[0,1,2,3];sequenceModel=()=>({story,indices});const L={frames,cause:true},stage=nodeLiteracy(),api=apiLiteracy();sequenceItem({L}).render(stage,api);
-  for(const i of indices){const card=stage.querySelectorAll('.sequence-card').find(b=>b.getAttribute('aria-label')===story.events[i]);checkLiteracy(!!card,'Required story frame visible');card.click();}
-  checkLiteracy(api.answers.length===0,'Ordering alone does not pass the comprehension stage');checkLiteracy(stage.querySelector('.book-question')?.textContent===story.q,'Story question reached '+story.id);
-  const answers=stage.querySelectorAll('.scene-choice');checkLiteracy(answers.length===3,'Three scene answers');answers.find(b=>b.getAttribute('aria-label')===story.events[story.distractors[0]]).click();checkLiteracy(api.answers[0]===false,'Wrong cause is rejected');answers.find(b=>b.getAttribute('aria-label')===story.events[story.answer]).click();checkLiteracy(api.answers[1]===true,'Correct cause completes story');
- }
-}
-sequenceModel=savedSequenceModel;
-checkLiteracy(GAMES.recit.levels.some(l=>l.cause)&&GAMES.recitP.levels.some(l=>l.cause),'Comprehension reachable for both ages');
+// Redesigned chronology is exercised separately in narrative.test.cjs:
+// distinct unscored model, 2–4 frames, direct completion, help tracking.
 
 // Every actual book must have two unique, answerable questions. Exercise the
 // shuffled real choice handlers to prevent cover-emoji or positional answers.
@@ -105,11 +91,12 @@ const session=resumeSession('game',{gid:'rappel',li:0}),ctxRecall={L:GAMES.rappe
 for(let i=0;i<4;i++){const t=session.reviewPlan[i],item=GAMES.rappel.make({...ctxRecall,i});checkLiteracy(typeof item.render==='function','Every planned review item can render');if(t.kind==='letter')checkLiteracy(LIDX[t.k]<=18,'No untaught letter in review');else checkLiteracy(WORDS.find(w=>w.w===t.word)?.req<=18,'No untaught word in review');}
 P().evidence={};const resumed={L:GAMES.rappel.levels[0],li:0,bag:{},i:2};GAMES.rappel.make(resumed);checkLiteracy(JSON.stringify(resumed.bag.plan)===planBefore&&JSON.stringify(session.reviewPlan)===planBefore,'Interrupted review retains exact plan');
 P().resume=null;const starsBefore=seriesRewards().stars;
-for(const [key,id]of [['oral:placement:0','consignes'],['narrative:order','recit'],['book:chat:ecoute','livres'],['writing:message','messages'],['writing:letter:a','trace'],['encoding:words','rappel'],['reading:words','rappel'],['gp:a','rappel']]){P().evidence={[key]:{due:0,seen:[]}};checkLiteracy(recommendedGame()===id,'Due skill routes to reachable activity '+key);}
+for(const [key,id]of [['oral:placement:0','mots'],['narrative:order','recit'],['book:chat:ecoute','livres'],['writing:message','messages'],['writing:letter:a','trace'],['encoding:words','rappel'],['reading:words','rappel'],['gp:a','rappel']]){P().evidence={[key]:{due:0,seen:[]}};checkLiteracy(recommendedGame()===id,'Due skill routes to reachable activity '+key);}
 checkLiteracy(seriesRewards().stars===starsBefore&&S.current==='luca','Planning and recommendations do not reward or switch children');
-for(const id of ['consignes','recit','rappel','messages'])checkLiteracy(themesOf('grands').some(t=>t.ids.includes(id)),'New activity reachable '+id);
+for(const id of ['lecture','recit','rappel','messages'])checkLiteracy(themesOf('grands').some(t=>t.ids.includes(id)),'New activity reachable '+id);
+checkLiteracy(!themesOf('grands').some(t=>t.ids.includes('consignes')),'Oral placement intentionally removed for Luca');
 P().evidence={'gp:legacy-unknown':{due:0,seen:[]}};checkLiteracy(recommendedGame()!=='rappel','Unknown legacy reading keys do not create an empty review');
 S.current='lola';S.world='petits';P().resume=null;P().evidence={};checkLiteracy(recommendedGame()==='consignesP','Preschool suggestion uses preschool progression');for(const [key,id]of [['oral:placement:0','consignesP'],['narrative:order','recitP']]){P().evidence={[key]:{due:0,seen:[]}};checkLiteracy(recommendedGame()===id&&themesOf('petits').some(t=>t.ids.includes(id)),'Preschool due skill routes to its own progression '+key);}
 `,ctx,{timeout:20000});
 assert.ok(!/autonomousDecodingValidated\s*:\s*true/.test(source),'The app must not certify autonomous decoding from comprehension choices');
-console.log('Lecture/langage : phonèmes, 700 modèles oraux, gestes réels, récits/causes, 24 questions, messages et rappels vérifiés.');
+console.log('Lecture/langage : phonèmes, 700 modèles oraux, gestes réels, récits progressifs, 24 questions, messages et rappels vérifiés.');

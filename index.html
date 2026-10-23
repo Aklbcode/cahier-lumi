@@ -823,7 +823,8 @@ table.notions tr.st-acquis td:last-child{color:#2E9B5C;font-weight:700}
 </style>
 </head>
 <body>
-<script src="speech-engine.js?v=13"></script>
+<script src="speech-engine.js?v=14"></script>
+<script src="assets/illustrations/twemoji-bundle.js?v=1"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -1169,6 +1170,7 @@ const Shell = {
     const voiceNote = h('div', { class: 'game-voice-status', hidden: true, role: 'status', 'aria-live': 'polite', style: { color: '#9a491a', fontSize: '14px', fontWeight: '700', textAlign: 'center' } });
     const close = onTap(h('button', { class: 'round-btn', 'aria-label': 'Quitter le jeu', html: ICON.close }), () => this.close());
     const spk = onTap(h('button', { class: 'round-btn voice-replay', 'aria-label': 'Réécouter la consigne', style: { color: '#3AA2EE' }, html: ICON.speaker }), () => this.replay());
+    this.skipBtn = onTap(h('button', { class: 'skip-exercise', 'aria-label': 'Passer cet exercice en cas de blocage' }, 'Passer l’exercice →'), () => { if(this.skipCurrent)this.skipCurrent(); else this.close(); });
     this.avEl = h('div', { class: 'av-live game-av', role: 'button', 'aria-label': 'Réécouter la consigne' });
     onTap(this.avEl, () => this.replay());
     this.trackEl = h('div', { class: 'dots-track' }, this.dotsEl);
@@ -1176,12 +1178,12 @@ const Shell = {
     this.el = h('div', { class: 'screen', hidden: true, role: 'dialog', 'aria-label': 'Jeu' },
       h('div', { class: 'game-top' }, close, this.trackEl, this.lvlEl, onTap(h('button',{class:'round-btn game-parent','aria-label':'Aide du parent',html:ICON.lock}),()=>parentGate(()=>{this.onClose=null;this.close();parentArea();},'Aide du parent'))),
       h('div', { class: 'stage-wrap' }, this.stage),
-      h('div', { class: 'game-bottom' }, h('div', { class: 'voice-tools' }, spk), h('div', { style: { flex: '1', minWidth: '0' } }, this.capEl, voiceNote), this.avEl));
+      h('div', { class: 'game-bottom' }, h('div', { class: 'voice-tools' }, spk, this.skipBtn), h('div', { style: { flex: '1', minWidth: '0' } }, this.capEl, voiceNote), this.avEl));
     document.body.append(this.el);
   },
   isOpen() { return this.el && !this.el.hidden; },
   open({ bg, level, onClose }) {
-    Voice.stop(); this.clearCeleb();
+    Voice.stop(); this.skipCurrent=null; this.skipBtn.disabled=false; this.clearCeleb();
     this.el.hidden = false; this.bg = bg || '#C8EBA1'; this.stage.style.background = this.bg;
     this.lvlEl.textContent = level || ''; this.lvlEl.hidden = !level;
     this.onClose = onClose || null; this.dotsEl.innerHTML = ''; this.caption('');
@@ -1189,7 +1191,7 @@ const Shell = {
     Timer.resume();
   },
   close() {
-    Voice.stop(); if (RUN) RUN.abort = true; RUN = null;
+    Voice.stop(); this.skipCurrent=null; if (RUN) RUN.abort = true; RUN = null;
     this.clearCeleb(); this.el.hidden = true; this.stage.innerHTML = '';
     const cb = this.onClose; this.onClose = null;
     if (cb) cb(); else renderHome();
@@ -1247,13 +1249,14 @@ const Engine = {
       const st = Shell.stage;
       st.innerHTML = ''; st.className = 'stage ' + (item.cls || '');
       st.style.background = item.bg || Shell.bg;
-      let finished = false, wrongs = run.session && !run.exam ? run.session.partialWrongs || 0 : 0, stepWrongs = 0;
+      let settled = false, finished = false, wrongs = run.session && !run.exam ? run.session.partialWrongs || 0 : 0, stepWrongs = 0;
       if(run.session && !run.exam && run.session.partialHelped)item.helped=true;
       const alive = () => !finished && !run.abort && RUN === run;
-      const sealAnswer = () => { Shell.item = null; $$('button, input, select, textarea, [role="button"]', st).forEach(el => { if ('disabled' in el) el.disabled = true; el.style.pointerEvents = 'none'; }); };
+      const sealAnswer = () => { Shell.item = null; if(settled){Shell.skipCurrent=null;if(Shell.skipBtn)Shell.skipBtn.disabled=true;} $$('button, input, select, textarea, [role="button"]', st).forEach(el => { if ('disabled' in el) el.disabled = true; el.style.pointerEvents = 'none'; }); };
       const exam = !!run.exam;
       const api = {
         stage: st, alive, exam,
+        skip() { if(settled||run.abort||RUN!==run)return; settled=true; finished=true; Voice.stop(); sealAnswer(); const p=P(); p.skips=p.skips||{}; const key=run.gid||run.key||'activite'; p.skips[key]=(p.skips[key]||0)+1; p.skipEvents=[...(p.skipEvents||[]),{activity:key,at:Date.now(),level:run.levelIndex??run.session?.li??run.session?.lv??null,item:run.session?.next??null,exam}].slice(-200); save(); resolve({first:null,wrongs,helped:!!item.helped,skipped:true,exam}); },
         say: p => alive() ? Voice.say(p) : Promise.resolve(),
         help() { item.helped = true; if(run.session && !run.exam){run.session.partialHelped=true;save();} },
         key(el) { if (el && window.__TEST__) el.dataset.key = '1'; },
@@ -1266,7 +1269,7 @@ const Engine = {
             Sfx.play('tap');
             Sfx.play('key'); await Voice.say(pick(DEFI_ACK), { feedback: 'neutral' });
             await sleep(150);
-            resolve({ first: !!ok, exam: true });
+            if(settled)return false; settled=true; sealAnswer(); resolve({ first: !!ok, exam: true });
             return true;
           }
           if (ok) {
@@ -1275,7 +1278,7 @@ const Engine = {
             Sfx.play(o.sfx || 'good'); Lumi.react('happy');
             await Voice.say(o.praise || item.praise || pick(PRAISE), { feedback: 'correct' });
             await sleep(o.wait != null ? o.wait : 250);
-            resolve({ first: wrongs === 0 && !item.helped, wrongs, helped: !!item.helped });
+            if(settled)return false; settled=true; sealAnswer(); resolve({ first: wrongs === 0 && !item.helped, wrongs, helped: !!item.helped });
             return true;
           }
           return api.wrong(o, false);
@@ -1296,10 +1299,10 @@ const Engine = {
           } else if(n>=2 && typeof api.strategy==='function'){api.help();api.strategy();await Voice.say('Regarde la place qui brille.',{feedback:'retry'});} else await Voice.say(o.feedback || pick(TRY), { feedback: 'retry' });
           return false;
         },
-        finish(first, details = {}) { if (!alive()) return; finished = true; resolve({ first, wrongs, ...details, helped: !!item.helped }); }
+        finish(first, details = {}) { if (!alive()) return; settled=true; finished = true; sealAnswer(); resolve({ first, wrongs, ...details, helped: !!item.helped }); }
       };
-      Shell.item = item;
-      try { if(run.session&&!run.exam)withSeed(run.session.seed+(run.session.next||0)*997+31,()=>item.render(st,api));else item.render(st, api); fixSquares(st); } catch (e) { console.error(e); finished = true; resolve({ first: null }); return; }
+      Shell.item = item; Shell.skipCurrent=api.skip; if(Shell.skipBtn)Shell.skipBtn.disabled=false;
+      try { if(run.session&&!run.exam)withSeed(run.session.seed+(run.session.next||0)*997+31,()=>item.render(st,api));else item.render(st, api); fixSquares(st); } catch (e) { console.error(e); st.innerHTML=''; st.append(h('p',{class:'u-note'},'Cet exercice ne se charge pas.'),onTap(h('button',{class:'go-btn'},'Passer l’exercice →'),api.skip)); Shell.caption('Tu peux passer cet exercice.'); return; }
       Shell.caption(item.caption != null ? item.caption : (typeof item.say === 'string' ? item.say : Array.isArray(item.say) ? item.say.filter(x => typeof x === 'string' && x.trim()).join(' ') : ''));
       if (item.say && item.autoSay !== false) setTimeout(() => { if (alive()) Voice.say(item.say); }, item.delay != null ? item.delay : 300);
     });
@@ -1327,20 +1330,20 @@ async function runGame(gid) {
   const gp = gameProg(gid); gp.lvl = clamp(gp.lvl, 0, g.levels.length - 1);
   const L = g.levels[gp.lvl];
   const session=resumeSession('game',{gid,li:gp.lvl});
-  const run = { gid, key:'game:'+gid, session, abort: false, res: [...session.res] }; RUN = run;
+  const run = { gid, levelIndex:gp.lvl, key:'game:'+gid, session, abort: false, res: [...session.res] }; RUN = run;
   Shell.open({ bg: g.stage, level: g.title });
   const n = L.n || g.n || 6;
   Shell.setDots(n);
   const ctx = { g, L, li: gp.lvl, i: 0, n, used: [], bag: {} };
   for (let i = 0; i < n; i++) {
     ctx.i = i; Shell.now(i);
-    let item; try { item = withSeed(session.seed+i*997,()=>g.make(ctx)); } catch (e) { console.error(gid, e); toast('Ce jeu ne se charge pas. Reviens aux jeux.'); return; }
-    if(i<session.next){Shell.mark(i,session.res[i].first?'ok':'half');continue;}
+    let item; try { item = withSeed(session.seed+i*997,()=>g.make(ctx)); } catch (e) { console.error(gid,e); item={say:'Tu peux passer cet exercice.',render(st,api){st.append(h('p',{class:'u-note'},'Cet exercice ne se charge pas.'),onTap(h('button',{class:'go-btn'},'Passer l’exercice →'),api.skip));}}; }
+    if(i<session.next){Shell.mark(i,session.res[i].skipped?'skipped':session.res[i].first?'ok':'half');continue;}
     const r = await Engine.play(item, run);
     if (run.abort || RUN !== run) return;
     run.res.push(r); checkpoint(run,i+1);
     if (r.first != null) { Shell.mark(i, r.first ? 'ok' : 'half'); recordSkill(L.skill || g.skill, r.first); }
-    else Shell.mark(i, 'ok');
+    else Shell.mark(i, r.skipped ? 'skipped' : 'ok');
   }
   if (run.abort || RUN !== run) return;
   finishGame(run, g, gp);
@@ -1583,7 +1586,7 @@ function parentArea() {
         onTap(h('button', { class: 'pbtn' }, '■ Arrêter la voix'), () => Voice.stop())),
       h('div', { class: 'voice-tests', 'aria-label': 'Écouter les sons de référence' }, ['a','i','o','u','é','e','è','ou','on','an','oi','in','eu'].map(k => onTap(h('button', { class: 'pbtn', 'aria-label': 'Écouter le son ' + k }, '▶ ' + k), () => Voice.say([vow(k)])))),
       h('p', { id: 'voice-status', role: 'status', 'aria-live': 'polite' }, 'Prête à écouter.'));
-    w.append(vc);
+    w.append(vc,h('div',{class:'pcard'},h('h3',null,'Images et sons'),h('p',null,'Les dessins sont inclus dans l’application et les animaux utilisent de vrais enregistrements.'),h('a',{href:'assets/illustrations/CREDITS.md',target:'_blank',rel:'noopener'},'Crédits des illustrations'),h('span',null,' · '),h('a',{href:'assets/animaux/credits.md',target:'_blank',rel:'noopener'},'Crédits des sons d’animaux')));
 
     /* Minuteur */
     const tc = h('div', { class: 'pcard' }, h('h3', null, 'Temps d’écran'));
@@ -1960,7 +1963,7 @@ function wardrobeView() { characterView(); }
 /* =========================================================
    LES PETITS (M1 → M3) — 11 jeux à niveaux progressifs
    ========================================================= */
-const card = (content, label, cls = '') => h('button', { class: 'card ' + cls, 'aria-label': label || '' }, content);
+const card = (content, label, cls = '') => h('button', { class: 'card ' + cls, 'aria-label': label || '' }, typeof content==='string'&&typeof lumiIllustration==='function'?lumiIllustration(content,label):content);
 const art = n => startsVowel(n) ? 'l’' + n : 'le ' + n;
 const SKY = 'linear-gradient(#BFE6FF,#E4F5FF 68%,#C8EBA1 68%)';
 function avoidRepeat(ctx, list, key = x => x) { const last = ctx.bag.last; const c = list.filter(x => key(x) !== last); const v = pick(c.length ? c : list); ctx.bag.last = key(v); return v; }
@@ -2647,7 +2650,7 @@ function makeMemo(ctx, L, wordsMode) {
       const grid = h('div', { class: 'memo', style: { gridTemplateColumns: `repeat(${cols},1fr)`, width: Math.max(220, wMax) + 'px' } });
       let open = [], found = 0, misses = 0, lock = false;
       deck.forEach(c => {
-        const back = h('div', { class: 'b' + (c.word ? ' word' : '') }, c.show);
+        const back = h('div', { class: 'b' + (c.word ? ' word' : '') }, c.word?c.show:lumiIllustration(c.show,c.say));
         const el = h('button', { class: 'mcard', 'aria-label': 'carte' }, h('div', { class: 'in' }, h('div', { class: 'f' }), back));
         onTap(el, async () => {
           if (lock || el.classList.contains('up') || !api.alive()) return;
@@ -3837,16 +3840,16 @@ GAMES.sudoku = {
         const cells = [];
         for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
           const v = g[r][c];
-          const b = h('button', { class: (v != null ? 'fix' : '') + (n === 4 && c === 1 ? ' bx-r' : '') + (n === 4 && r === 1 ? ' bx-b' : ''), 'aria-label': v != null ? sym[v][1] : 'case vide' }, v != null ? sym[v][0] : '');
+          const b = h('button', { class: (v != null ? 'fix' : '') + (n === 4 && c === 1 ? ' bx-r' : '') + (n === 4 && r === 1 ? ' bx-b' : ''), 'aria-label': v != null ? sym[v][1] : 'case vide' }, v != null ? lumiIllustration(sym[v][0],sym[v][1]) : '');
           b._r = r; b._c = c; cells.push(b);
           if (n === 4 && (Math.floor(r / 2) + Math.floor(c / 2)) % 2 === 1) b.style.background = v != null ? '#F3E7C4' : '#FFF6DA';
           if (v == null) onTap(b, () => { if (b.textContent) return; cells.forEach(x => x.classList.remove('sel')); b.classList.add('sel'); sel = b; Sfx.play('tap'); });
           grid.append(b);
         }
-        const pal = h('div', { class: 'palette' }, sym.map((s, v) => onTap(h('button', { 'aria-label': s[1] }, s[0]), () => {
+        const pal = h('div', { class: 'palette' }, sym.map((s, v) => onTap(h('button', { 'aria-label': s[1] }, lumiIllustration(s[0],s[1])), () => {
           if (!sel) { Voice.say('Touche d’abord une case vide.'); return; }
           const r = sel._r, c = sel._c;
-          if (sol[r][c] === v) { sel.textContent = s[0]; sel.classList.remove('sel'); g[r][c] = v; sel = null; left--; if (!left) api.answer(true, { el: grid, praise: 'Bravo, la grille est complète !' }); else api.step(true, {}); }
+          if (sol[r][c] === v) { sel.textContent = ''; sel.append(lumiIllustration(s[0],s[1])); sel.classList.remove('sel'); g[r][c] = v; sel = null; left--; if (!left) api.answer(true, { el: grid, praise: 'Bravo, la grille est complète !' }); else api.step(true, {}); }
           else {
             const rowHas = g[r].includes(v), colHas = g.some(row => row[c] === v);
             const br = r - r % 2, bc = c - c % 2; const boxHas = n === 4 && [0, 1].some(i => [0, 1].some(j => g[br + i][bc + j] === v));
@@ -4519,7 +4522,7 @@ function ovScreen(title, onClose, cls = '') {
   const close = () => { el.remove(); document.removeEventListener('keydown', esc); Voice.stop(); (onClose || renderHome)(); };
   const esc = e => { if (e.key === 'Escape' && !Shell.isOpen() && document.body.lastElementChild === el) close(); };
   document.addEventListener('keydown', esc);
-  const top = h('div', { class: 'ov-top' }, onTap(h('button', { class: 'round-btn', 'aria-label': 'Retour', html: ICON.close }), close), h('h2', null, title));
+  const top = h('div', { class: 'ov-top' }, onTap(h('button', { class: 'round-btn', 'aria-label': 'Retour', html: ICON.close }), close), h('h2', null, title),onTap(h('button',{class:'skip-exercise'},'Passer l’activité →'),close));
   const body = h('div', { class: 'ov-body' });
   el.append(top, body); document.body.append(el);
   return { el, top, body, close };
@@ -4561,7 +4564,7 @@ function themesOf(world) {
 const SIMPLE_GAME_NAMES = { lecture: 'Apprendre à lire', calcul: 'Compter et calculer', histoires: 'Les histoires', lettre1: 'Le premier son', balade: 'Les lettres des mots', syllabes: 'Les syllabes', riviere: 'Construire les mots', trace: 'Tracer les lettres', atelier: 'Créer une carte', nombres: 'Les petits nombres', grandpetit: 'Plus ou moins', tailles: 'Grand et petit', ferme: 'Les animaux', couleurs: 'Les couleurs', jardin: 'Le jardin', cuisine: 'La cuisine' };
 function simpleGameTile(id) {
   const g = GAMES[id], name = SIMPLE_GAME_NAMES[id] || g.title;
-  return onTap(h('button', { class: 'simple-game', 'data-gid': id, 'aria-label': name, style: { '--game-color': 'var(--' + g.color + ', var(--sky))' } }, h('span', { class: 'simple-game-picture', 'aria-hidden': 'true' }, g.icon), h('b', null, name)), () => { Voice.stop(); Sfx.play('tap'); CURRENT_ACT = id; lastPlayed()[id] = dayNo(); setTimeout(() => runGame(id), 100); });
+  return onTap(h('button', { class: 'simple-game', 'data-gid': id, 'aria-label': name, style: { '--game-color': 'var(--' + g.color + ', var(--sky))' } }, h('span', { class: 'simple-game-picture', 'aria-hidden': 'true' }, lumiIllustration(g.icon,name)), h('b', null, name)), () => { Voice.stop(); Sfx.play('tap'); CURRENT_ACT = id; lastPlayed()[id] = dayNo(); setTimeout(() => runGame(id), 100); });
 }
 function gardenBadge() {
   const g = garden(); const ripe = g.plots.filter(x => x && x.st >= 3).length; const thirsty = g.plots.filter(x => x && x.st < 3 && x.w !== dayNo()).length;
@@ -5209,9 +5212,9 @@ GAMES.suitesG.levels=[{pats:['AB'],kind:'col',opts:2,len:6},{pats:['AB'],kind:'e
 function monsterItem(ctx){const L=ctx.L,a=rint(1,L.max),b=L.op?rint(1,a):0,target=L.op==='+'?a+b:L.op==='-'?a-b:a;const prompt=L.op?`${nw(a)} ${L.op==='+'?'plus':'moins'} ${nw(b)}. Combien de biscuits ?`:`Donne ${nw(a)} ${a===1?'biscuit':'biscuits'} au monstre.`;return {cls:'upgrade-stage',say:[prompt,'Touche les biscuits pour nourrir le monstre. Quand tu as fini, touche le bouton vert.'],render(st,api){let count=0;const belly=h('div',{class:'monster-mouth'}),monster=h('div',{class:'monster'},belly);const draw=()=>{belly.textContent='🍪'.repeat(count);};api.strategy=()=>{belly.textContent='🍪'.repeat(target);monster.classList.add('reveal');setTimeout(()=>{if(api.alive()){draw();monster.classList.remove('reveal');}},2600);};uWrap(st,h('p',{class:'u-note',style:{fontSize:'32px'}},L.op?`${a} ${L.op} ${b} = ?`:'🍪'.repeat(a)),monster,h('div',{class:'urow'},uButton('🍪 Ajouter',()=>{if(count<20){count++;draw();Sfx.play('pop');}}),uButton('− Enlever',()=>{count=Math.max(0,count-1);draw();})),uButton('✓ C’est prêt',()=>{if(!api.alive())return;if(count===target){monster.classList.add('chew');api.answer(true,{praise:'Miam ! Juste ce qu’il faut !'});}else api.answer(false,{feedback:'Compte les biscuits dans son ventre. Tu peux en ajouter ou en enlever.'});}));}};}
 for(const [id,small] of [['monstreP',true],['monstre',false]]) GAMES[id]={id,title:'Le monstre gourmand',sub:'Compter pour le nourrir',icon:'👾',color:'plum',stage:'#efe8f9',make:monsterItem,levels:(small?[{max:2},{max:3},{max:4},{max:5}]:[{max:3},{max:5},{max:8},{max:4,op:'+'},{max:5,op:'-'},{max:5,op:'+'},{max:9,op:'-'}]).map((x,i)=>({...x,n:4,name:'Le goûter du monstre',skill:'monster:'+id+':'+i,tag:small?'M1–M3':'P1',ref:x.op?'Représenter une opération par une action':'Construire une petite collection'}))};
 /* Construct, split and regroup; quantities precede the written operation. */
-function blocksItem(ctx){const L=ctx.L,a=rint(1,L.max),b=L.op?rint(1,L.op==='-'?a:L.max):0,target=L.op==='+'?a+b:L.op==='-'?a-b:a;return {cls:'upgrade-stage',say:L.op?[`${nw(a)} ${L.op==='+'?'plus':'moins'} ${nw(b)}.`,'Touche les blocs pour construire le nombre. Tu peux en ajouter et en enlever.']:[`Construis le nombre ${nw(a)}.`,'Touche les blocs pour construire le nombre. Tu peux en ajouter et en enlever.'],render(st,api){const cells=[],frames=h('div',{class:'urow'});let phase=0,part=0;const parts={};const total=L.max>5||L.op==='+'?20:10;const filled=new Set(Array.from({length:L.op?a:0},(_,i)=>i));const draw=()=>cells.forEach((c,i)=>{c.classList.toggle('full',filled.has(i));c.style.background=filled.has(i)&&L.split?(parts[i]?'#77b8dd':'#f8bf49'):'';c.setAttribute('aria-pressed',filled.has(i));});for(let f=0;f<total/10;f++){const frame=h('div',{class:'block-frame'});for(let j=0;j<10;j++){const i=f*10+j;const c=h('button',{'aria-label':'Bloc '+(i+1)});onTap(c,()=>{if(filled.has(i))filled.delete(i);else {filled.add(i);parts[i]=part;}draw();Sfx.play('tick');});cells.push(c);frame.append(c);}frames.append(frame);}const eq=h('p',{class:'big-num',style:{fontSize:'38px'}},L.op?`${a} ${L.op} ${b} = ?`:String(a));const go=uButton('✓ Vérifier',()=>{if(filled.size!==target)return api.answer(false,{feedback:'Compte les blocs. Regarde aussi les places vides.'});if(phase===0){phase=1;eq.textContent=L.op?`${a} ${L.op} ${b} = ${target}`:L.split?`${[...filled].filter(i=>!parts[i]).length} + ${[...filled].filter(i=>parts[i]).length} = ${target}`:`${filled.size} = ${target}`;go.textContent='✓ Continuer';Voice.say('Les deux parties font le même nombre en tout.');}else api.answer(true);});api.strategy=()=>{const i=cells.findIndex((c,i)=>filled.has(i)!==(i<target));if(i>=0)cells[i].classList.add('reveal');};const switches=L.split?h('div',{class:'urow'},uButton('🟠 Une partie',()=>part=0),uButton('🔵 L’autre partie',()=>part=1)):null;uWrap(st,eq,frames,switches,go);draw();}};}
+function blocksItem(ctx){const L=ctx.L,a=rint(1,L.max),b=L.op?rint(1,L.op==='-'?a:L.max):0,target=L.op==='+'?a+b:L.op==='-'?a-b:a;return {cls:'upgrade-stage',say:L.op?[`${nw(a)} ${L.op==='+'?'plus':'moins'} ${nw(b)}.`,'Touche les blocs pour construire le nombre. Tu peux en ajouter et en enlever.']:[`Construis le nombre ${nw(a)}.`,'Touche les blocs pour construire le nombre. Tu peux en ajouter et en enlever.'],render(st,api){const cells=[],frames=h('div',{class:'urow'});let phase=0,part=0;const parts={};const total=L.max>5||L.op==='+'?20:10;const filled=new Set(Array.from({length:L.op?a:0},(_,i)=>i));const draw=()=>cells.forEach((c,i)=>{c.classList.toggle('full',filled.has(i));c.style.background=filled.has(i)&&L.split?(parts[i]?'#77b8dd':'#f8bf49'):'';c.setAttribute('aria-pressed',filled.has(i));});for(let f=0;f<total/10;f++){const frame=h('div',{class:'block-frame'});for(let j=0;j<10;j++){const i=f*10+j;const c=h('button',{'aria-label':'Bloc '+(i+1)});onTap(c,()=>{if(filled.has(i))filled.delete(i);else {filled.add(i);parts[i]=part;}draw();Sfx.play('tick');});cells.push(c);frame.append(c);}frames.append(frame);}const eq=h('p',{class:'big-num',style:{fontSize:'38px'}},L.op?`${a} ${L.op} ${b} = ?`:String(a));const go=uButton('✓ Vérifier',()=>{if(filled.size!==target)return api.answer(false,{feedback:'Compte les blocs. Regarde aussi les places vides.'});if(phase===0){phase=1;eq.textContent=L.op?`${a} ${L.op} ${b} = ${target}`:L.split?`${[...filled].filter(i=>!parts[i]).length} + ${[...filled].filter(i=>parts[i]).length} = ${target}`:`${filled.size} = ${target}`;api.answer(true,{praise:'Les deux parties font le même nombre en tout.',wait:700});}else api.answer(true);});api.strategy=()=>{const i=cells.findIndex((c,i)=>filled.has(i)!==(i<target));if(i>=0)cells[i].classList.add('reveal');};const switches=L.split?h('div',{class:'urow'},uButton('🟠 Une partie',()=>part=0),uButton('🔵 L’autre partie',()=>part=1)):null;uWrap(st,eq,frames,switches,go);draw();}};}
 for(const [id,small] of [['blocsP',true],['blocs',false]]) GAMES[id]={id,title:'Les nombres à construire',sub:'Ajouter, séparer, enlever',icon:'🧱',color:'sky',stage:'#e9f2fa',make:blocksItem,levels:(small?[{max:2},{max:3},{max:5}]:[{max:5},{max:5,split:true},{max:10},{max:10,split:true},{max:5,op:'+'},{max:10,op:'-'},{max:8,op:'+'},{max:10,op:'+'}]).map((x,i)=>({...x,name:'Construire les nombres',n:4,skill:'blocks:'+id+':'+i,tag:small?'M1–M3':'P1',ref:'Relier quantité manipulée, nombre et opération'}))};
-function basketItem(ctx){const L=ctx.L,groups=L.groups||2,each=rint(1,L.max),fruit=pick(['🍎','🍐','🍊']);return {cls:'upgrade-stage',say:[`Mets ${nw(each)} ${each===1?'fruit':'fruits'} dans chaque panier.`,'Mets la même quantité dans chaque panier. Touche un panier pour ajouter un fruit.'],render(st,api){const counts=Array(groups).fill(0),row=h('div',{class:'urow'});const draw=()=>[...row.children].forEach((b,i)=>{b.textContent=counts[i]?fruit.repeat(counts[i]):'🧺';b.setAttribute('aria-label',`Panier ${i+1}, ${counts[i]} fruits`);});for(let i=0;i<groups;i++){const b=h('button',{class:'basket'});onTap(b,()=>{counts[i]=(counts[i]+1)%(L.max+2);draw();Sfx.play('pop');});row.append(b);}const note=h('p',{class:'u-note'},'Touche un panier pour ajouter. S’il est plein, touche pour vider.');const eq=h('p',{class:'u-note'});let ready=false;const go=uButton('✓ Vérifier',()=>{if(!counts.every(n=>n===each))return api.answer(false,{feedback:'Compare les paniers. Ils doivent avoir autant de fruits.'});if(!ready){ready=true;eq.textContent=Array(groups).fill(each).join(' + ')+' = '+groups*each+(L.multiply?`  ·  ${groups} × ${each} = ${groups*each}`:'');go.textContent='✓ Continuer';Voice.say('Les paniers sont prêts !');}else api.answer(true);});api.strategy=()=>{const i=counts.findIndex(n=>n!==each);if(i>=0){const b=row.children[i];b.classList.add('reveal');const old=b.textContent;b.textContent=fruit.repeat(each);setTimeout(()=>{if(api.alive()){draw();b.classList.remove('reveal');}},2600);}};uWrap(st,note,row,eq,go);draw();}};}
+function basketItem(ctx){const L=ctx.L,groups=L.groups||2,each=rint(1,L.max),fruit=pick(['🍎','🍐','🍊']);return {cls:'upgrade-stage',say:[`Mets ${nw(each)} ${each===1?'fruit':'fruits'} dans chaque panier.`,'Mets la même quantité dans chaque panier. Touche un panier pour ajouter un fruit.'],render(st,api){const counts=Array(groups).fill(0),row=h('div',{class:'urow'});const draw=()=>[...row.children].forEach((b,i)=>{b.textContent=counts[i]?fruit.repeat(counts[i]):'🧺';b.setAttribute('aria-label',`Panier ${i+1}, ${counts[i]} fruits`);});for(let i=0;i<groups;i++){const b=h('button',{class:'basket'});onTap(b,()=>{counts[i]=(counts[i]+1)%(L.max+2);draw();Sfx.play('pop');});row.append(b);}const note=h('p',{class:'u-note'},'Touche un panier pour ajouter. S’il est plein, touche pour vider.');const eq=h('p',{class:'u-note'});let ready=false;const go=uButton('✓ Vérifier',()=>{if(!counts.every(n=>n===each))return api.answer(false,{feedback:'Compare les paniers. Ils doivent avoir autant de fruits.'});if(!ready){ready=true;eq.textContent=Array(groups).fill(each).join(' + ')+' = '+groups*each+(L.multiply?`  ·  ${groups} × ${each} = ${groups*each}`:'');api.answer(true,{praise:'Les paniers sont prêts !',wait:700});}else api.answer(true);});api.strategy=()=>{const i=counts.findIndex(n=>n!==each);if(i>=0){const b=row.children[i];b.classList.add('reveal');const old=b.textContent;b.textContent=fruit.repeat(each);setTimeout(()=>{if(api.alive()){draw();b.classList.remove('reveal');}},2600);}};uWrap(st,note,row,eq,go);draw();}};}
 GAMES.paniers={id:'paniers',title:'Les paniers',sub:'Des groupes égaux',icon:'🧺',color:'teal',stage:'#e9f4e4',make:basketItem,levels:[{groups:2,max:2},{groups:2,max:3},{groups:3,max:3},{groups:2,max:5,multiply:true},{groups:3,max:4,multiply:true},{groups:4,max:3,multiply:true}].map((x,i)=>({...x,name:'Partager en groupes égaux',n:4,skill:'basket:'+i,tag:'P1',ref:'Relier groupes égaux, addition répétée et multiplication'}))};
 GAMES.gestes={id:'gestes',title:'Les petits gestes',sub:'Une carotte pour chacun',icon:'🐰',color:'teal',stage:'#e9f3de',levels:[1,2,3,4,5].map((max,i)=>({max,n:4,name:'Une carotte chacun',skill:'gesture:'+i,tag:i<2?'M1':'M2–M3',ref:'Correspondance terme à terme, distribution équitable'})),make(ctx){const n=rint(Math.max(1,ctx.L.max-1),ctx.L.max);return {cls:'upgrade-stage',say:'Donne une carotte à chaque lapin. Touche chaque lapin une fois.',render(st,api){const row=h('div',{class:'urow'});let done=new Set();for(let i=0;i<n;i++){const b=h('button',{class:'rabbit','aria-label':'Lapin '+(i+1)},'🐰');onTap(b,()=>{if(done.has(i)||!api.alive())return;done.add(i);b.classList.add('fed');b.textContent='🐰🥕';if(done.size===n)api.answer(true,{praise:'Chaque lapin a sa carotte !'});else api.step(true);});row.append(b);}const demo=uButton('👀 Montre-moi',()=>{api.help();Voice.say('Regarde : une carotte pour un lapin. À toi !');const b=row.children[0];b.classList.add('reveal');setTimeout(()=>b.classList.remove('reveal'),2000);});uWrap(st,row,demo);}};}};
 
@@ -5242,7 +5245,7 @@ const MINI_BOOKS=[
 function bookTokens(text){return text.toLocaleLowerCase('fr').match(/[a-zàâäéèêëîïôöùûüçœ]+/g)||[];}
 function miniBookRequirement(b){let req=0;for(const t of b.pages.flatMap(bookTokens)){const w=WORDS.find(w=>w.w.toLocaleLowerCase('fr')===t);if(!w)return null;req=Math.max(req,w.req);}return req;}
 function miniBookDecodable(b){const req=miniBookRequirement(b);return req!==null&&req<=(P().lecture.unlocked||0);}
-function miniLibrary(){const ov=ovScreen('Mes petits livres');ov.body.append(h('p',{class:'u-note'},S.world==='petits'?'Des histoires à écouter':'📖 Je lis · 🔊 J’écoute avec Lumi'));const list=h('div',{class:'theme-games'});MINI_BOOKS.forEach(b=>list.append(uButton(`${b.em} ${b.title} ${S.world==='grands'&&miniBookDecodable(b)?'📖':'🔊'}`,()=>{ov.el.remove();readMiniBook(b);})));ov.body.append(list);Voice.say('Touche un mot pour l’écouter. Ensuite, tourne la page.');}
+function miniLibrary(){const ov=ovScreen('Mes petits livres');ov.body.append(h('p',{class:'u-note'},S.world==='petits'?'Des histoires à écouter':'📖 Je lis · 🔊 J’écoute avec Lumi'));const list=h('div',{class:'theme-games'});MINI_BOOKS.forEach(b=>list.append(uButton(`${b.em} ${b.title} ${S.world==='grands'&&miniBookDecodable(b)?'📖':'🔊'}`,()=>{ov.el.remove();readMiniBook(b);})));ov.body.append(list);Voice.say('Choisis un petit livre. Lis la phrase. Tu peux toucher un mot pour l’écouter.');}
 async function readMiniBook(b){const run={gid:'livres',res:[],abort:false};RUN=run;Shell.open({bg:'#f6eedb',level:b.title,onClose:miniLibrary});Shell.setDots(b.pages.length+1);let assisted=false;
 for(let i=0;i<b.pages.length;i++){Shell.now(i);const text=b.pages[i];const r=await Engine.play({cls:'upgrade-stage',say:'Touche un mot pour l’écouter. Ensuite, tourne la page.',render(st,api){const words=h('div',{class:'book-words'});text.split(' ').forEach(t=>{const bt=uButton(t,()=>{assisted=true;api.help();Voice.say(t.replace(/[.!?]/g,''));});words.append(bt);});const listen=uButton('🔊 Écouter la page',async()=>{if(!api.alive())return;assisted=true;api.help();for(const bt of words.children)bt.classList.add('reading');await Voice.say(text);for(const bt of words.children)bt.classList.remove('reading');});uWrap(st,h('div',{class:'book-page'},h('div',{class:'book-scene'},b.em),words,listen,uButton('→ Tourner la page',()=>api.finish(null))));}},run);if(run.abort||RUN!==run)return;}
 const opts=shuffle([b.answer,...sample(['🐰','🌧️','🚲','🌙','🎒'].filter(x=>x!==b.answer),2)]);Shell.now(b.pages.length);const r=await Engine.play({cls:'upgrade-stage',say:['Écoute la question et choisis une image.',b.q],render(st,api){uWrap(st,h('p',{class:'u-note'},b.q),h('div',{class:'urow'},opts.map(e=>uButton(e,()=>api.answer(e===b.answer),{style:{fontSize:'55px'}}))));}},run);if(run.abort||RUN!==run)return;const p=P();p.bookEvidence=p.bookEvidence||{};p.bookEvidence[b.id]={at:Date.now(),comprehension:r.first,mode:assisted||!miniBookDecodable(b)?'ecoute-accompagnee':'lecture-declaree',autonomousDecodingValidated:false};save();const sticker=addStars(scoreOf([r]).stars);Celebrate.show({sticker,again:()=>readMiniBook(b),home:()=>{Shell.close();miniLibrary();}});}
@@ -5379,6 +5382,14 @@ function parentProgressCard(){let child=S.current,target=parentInitialTarget(chi
 const originalNextLevel=nextLevel;
 nextLevel=function(mi){const mp=modProg(MODS[mi].id);if(Number.isInteger(mp.parentStart)){for(let i=clamp(mp.parentStart,0,MODS[mi].levels.length-1);i<MODS[mi].levels.length;i++)if(!mp.pass[i]||mp.pass[i].review)return i;return clamp(mp.parentStart,0,MODS[mi].levels.length-1);}return originalNextLevel(mi);};
 document.body.append(h('style',null,`.parent-progress{border:2px solid #b8dcca!important}.parent-progress-form{display:grid;grid-template-columns:1fr 2fr 2fr;gap:12px}.parent-progress-field{display:flex;flex-direction:column;gap:6px;font-weight:700}.parent-progress-field select{width:100%;min-height:46px;border:2px solid var(--line);border-radius:12px;background:white;padding:7px;font:inherit;min-width:0}.parent-action-status{color:#28734e;font-weight:700;min-height:1.4em}.game-parent{width:44px;height:44px;flex:none;color:var(--ink-soft)}.game-top .lvl{max-width:33%;white-space:normal}.game-parent svg{width:22px;height:22px}@media(max-width:650px){.parent-progress-form{grid-template-columns:1fr}.parent-progress-actions{align-items:stretch}.parent-progress-actions button{flex:1 1 170px}.game-top .lvl{font-size:12px;max-width:30%}}`));
+
+
+
+
+
+
+
+
 
 
 
@@ -5525,7 +5536,7 @@ GAMES.recit={id:'recit',title:'Histoire mélangée',sub:'Raconter dans l’ordre
 GAMES.recitP={...GAMES.recit,id:'recitP',levels:GAMES.recit.levels.slice(0,3)};
 
 /* Comprehension choices differ by action/character, not the cover emoji. */
-function portraitSVG(id){if(id==='lola'||id==='milo')return `<svg viewBox="0 0 100 120">${personShape(id,50,55,.8)}</svg>`;return `<svg viewBox="0 0 120 120"><text x="60" y="83" text-anchor="middle" font-size="72">${visitEscape(id)}</text></svg>`;}
+function portraitSVG(id){if(id==='lola'||id==='milo')return `<svg viewBox="0 0 100 120">${personShape(id,50,55,.8)}</svg>`;const local=typeof lumiIllustrationSVG==='function'?lumiIllustrationSVG(id):null;if(local)return local;return `<svg viewBox="0 0 120 120"><text x="60" y="83" text-anchor="middle" font-size="72">${visitEscape(id)}</text></svg>`;}
 function pictureChoices(options,good,api,feedback){const row=h('div',{class:'picture-options'});for(const o of shuffle(options)){const box=h('div',{class:'picture-option'}),b=h('button',{class:'scene-choice','aria-label':o.label,html:portraitSVG(o.picture)});b.append(h('span',null,o.label));onTap(b,()=>api.answer(o.id===good,{el:b,feedback:feedback||'Repense à l’histoire. Tu peux la réécouter.'}));box.append(b,uButton('🔊',()=>Voice.say(o.label),{'aria-label':'Écouter '+o.label,class:'choice-voice'}));row.append(box);}return row;}
 const BOOK_CAST=[{id:'lola',picture:'lola',label:'Lola'},{id:'milo',picture:'milo',label:'Milo'},{id:'bebe',picture:'👶',label:'Le bébé'}];
 function bookPersonQ(id,text,answer,third){const opts=BOOK_CAST.slice(0,2);opts.push(third||BOOK_CAST[2]);return {id,text,options:opts,answer};}
@@ -5546,10 +5557,10 @@ const BOOK_QUESTIONS={
  bateau:[bookObjectQ('navire','Qu’est-ce que le navire a ?','voile',[['voile','⛵','Une voile'],['roues','🛞','Des roues'],['ailes','🪽','Des ailes']]),bookPersonQ('debut','Qui a vu le navire au début ?','milo')],
  dragon:[bookObjectQ('fin','Qui rit à la fin de l’histoire ?','dragon',[['dragon','🐉','Le dragon'],['lola','lola','Lola'],['milo','milo','Milo']]),bookPersonQ('regarde','Qui a vu le dragon ?','lola')]
 };
-readMiniBook=async function(b){const run={gid:'livres',res:[],abort:false};RUN=run;Shell.open({bg:'#f6eedb',level:b.title,onClose:miniLibrary});const questions=BOOK_QUESTIONS[b.id];Shell.setDots(b.pages.length+questions.length);let assisted=false;const started=Date.now();
- for(let i=0;i<b.pages.length;i++){Shell.now(i);const text=b.pages[i];await Engine.play({cls:'upgrade-stage',say:'Touche un mot pour l’écouter. Ensuite, tourne la page.',render(st,api){const words=h('div',{class:'book-words'});text.split(' ').forEach(t=>words.append(uButton(t,()=>{assisted=true;api.help();Voice.say(t.replace(/[.!?]/g,''));})));const cast=h('div',{class:'book-cast'},['lola','milo'].map(id=>uButton('',()=>Voice.say(id==='lola'?'Lola':'Milo'),{html:portraitSVG(id)+(id==='lola'?'Lola':'Milo')})));const listen=uButton('🔊 Écouter la page',async()=>{if(!api.alive())return;assisted=true;api.help();for(const bt of words.children)bt.classList.add('reading');await Voice.say(text);for(const bt of words.children)bt.classList.remove('reading');});uWrap(st,h('div',{class:'book-page'},cast,h('div',{class:'book-scene'},b.em),words,listen,uButton('→ Tourner la page',()=>api.finish(null))));}},run);if(run.abort||RUN!==run)return;}
+readMiniBook=async function(b){const run={gid:'livres',bookId:b.id,res:[],abort:false};RUN=run;Shell.open({bg:'#f6eedb',level:b.title,onClose:miniLibrary});const questions=BOOK_QUESTIONS[b.id];Shell.setDots(b.pages.length+questions.length);let assisted=false;const started=Date.now();
+ for(let i=0;i<b.pages.length;i++){Shell.now(i);const text=b.pages[i];const pageResult=await Engine.play({cls:'upgrade-stage',say:'Lis la phrase. Tu peux toucher un mot pour l’écouter.',render(st,api){const words=h('div',{class:'book-words'});text.split(' ').forEach(t=>words.append(uButton(t,()=>{assisted=true;api.help();Voice.say(t.replace(/[.!?]/g,''));})));const cast=h('div',{class:'book-cast'},['lola','milo'].map(id=>uButton('',()=>Voice.say(id==='lola'?'Lola':'Milo'),{html:portraitSVG(id)+(id==='lola'?'Lola':'Milo')})));const listen=uButton('🔊 Écouter la phrase',async()=>{if(!api.alive())return;assisted=true;api.help();for(const bt of words.children)bt.classList.add('reading');await Voice.say(text);for(const bt of words.children)bt.classList.remove('reading');});uWrap(st,h('div',{class:'book-page'},cast,h('div',{class:'book-scene'},lumiIllustration(b.em,b.title)),words,listen,uButton('→ Phrase suivante',()=>api.finish(null))));}},run);if(run.abort||RUN!==run)return;if(pageResult.skipped){assisted=true;run.res.push(pageResult);}Shell.mark(i,pageResult.skipped?'skipped':'ok');}
  for(let qi=0;qi<questions.length;qi++){const q=questions[qi];Shell.now(b.pages.length+qi);const r=await Engine.play({cls:'upgrade-stage',say:q.text,evidenceKey:'book:'+b.id+':'+(assisted||!miniBookDecodable(b)?'ecoute':'lecture-declaree'),exemplar:q.id,render(st,api){const revisit=uButton('🔊 Réécouter l’histoire',()=>{api.help();assisted=true;Voice.say(b.pages);});uWrap(st,h('p',{class:'book-question'},q.text),pictureChoices(q.options,q.answer,api),revisit);}},run);if(run.abort||RUN!==run)return;run.res.push(r);Shell.mark(b.pages.length+qi,r.first?'ok':'half');}
- const p=P(),all=p.bookEvidence||(p.bookEvidence={}),prev=all[b.id]||{};const attempt={at:Date.now(),started,comprehension:run.res.filter(r=>r.first).length,questions:questions.length,mode:assisted||!miniBookDecodable(b)?'ecoute-accompagnee':'lecture-declaree',autonomousDecodingValidated:false};all[b.id]={...prev,...attempt,attempts:[...(prev.attempts||[]),attempt].slice(-20)};save();const sticker=addStars(scoreOf(run.res).stars);Celebrate.show({sticker,again:()=>readMiniBook(b),home:()=>{Shell.close();miniLibrary();}});
+ const p=P(),all=p.bookEvidence||(p.bookEvidence={}),prev=all[b.id]||{};const attempt={at:Date.now(),started,comprehension:run.res.filter(r=>r.first).length,questions:questions.length,skipped:run.res.filter(r=>r.skipped).length,mode:assisted||!miniBookDecodable(b)?'ecoute-accompagnee':'lecture-declaree',autonomousDecodingValidated:false};all[b.id]={...prev,...attempt,completedAt:prev.completedAt||(prev.at&&!prev.skipped?prev.at:0)||prev.attempts?.find(a=>!a.skipped)?.at||(!attempt.skipped?attempt.at:0),attempts:[...(prev.attempts||[]),attempt].slice(-20)};save();const earned=scoreOf(run.res).stars;const sticker=earned>0?addStars(earned):null;Celebrate.show({sticker,again:()=>readMiniBook(b),home:()=>Shell.close()});
 };
 
 /* A short message has a recipient and becomes an editable card. No claim of free composition. */
@@ -5642,9 +5653,40 @@ function writingTraceMetrics(model,ink,small=false){
 function writingEscape(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));}
 function writingPoints(s){return s.map(p=>p.map(n=>Number(n).toFixed(2)).join(',')).join(' ');}
 function writingSVG(model,{guide=true,ink=[],progress=null,numbers=true}={}){
- const ref=model.strokes.map((s,i)=>`<polyline points="${writingPoints(s)}" fill="none" stroke="${guide?'#d5dce6':'transparent'}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>${guide&&numbers?`<circle cx="${s[0][0]}" cy="${s[0][1]}" r="4.8" fill="#42856c"/><text x="${s[0][0]}" y="${s[0][1]+1.8}" text-anchor="middle" font-family="Arial,sans-serif" font-size="5" fill="white">${i+1}</text>`:''}`).join('');
+ const ref=model.strokes.map(s=>`<polyline points="${writingPoints(s)}" fill="none" stroke="#d5dce6" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>`).join(''),starts=model.strokes.map((s,i)=>`<circle cx="${s[0][0]}" cy="${s[0][1]}" r="4.8" fill="#42856c"/><text x="${s[0][0]}" y="${s[0][1]+1.8}" text-anchor="middle" font-family="Arial,sans-serif" font-size="5" fill="white">${i+1}</text>`).join('');
  let demo='';if(progress){for(let i=0;i<=progress.stroke&&i<model.strokes.length;i++){const s=model.strokes[i],count=i<progress.stroke?s.length:Math.max(1,Math.ceil(s.length*progress.fraction));demo+=`<polyline points="${writingPoints(s.slice(0,count))}" fill="none" stroke="#e69c3f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;if(i===progress.stroke){const p=s[Math.min(s.length-1,count-1)];demo+=`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#b66e22"/>`;}}}
- return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 115" aria-hidden="true"><rect x="0" y="0" width="100" height="115" rx="5" fill="#fffdf8"/><path d="M4 85H96" stroke="#9bb5d1" stroke-width=".6"/><path d="M4 38H96" stroke="#d8e3ed" stroke-dasharray="2 2" stroke-width=".5"/>${ref}${demo}${ink.map(s=>`<polyline points="${writingPoints(s.length===1?[s[0],[s[0][0]+.01,s[0][1]]]:s)}" fill="none" stroke="#336cb1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</svg>`;
+ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 115" aria-hidden="true"><rect x="0" y="0" width="100" height="115" rx="5" fill="#fffdf8"/><path d="M4 85H96" stroke="#9bb5d1" stroke-width=".6"/><path d="M4 38H96" stroke="#d8e3ed" stroke-dasharray="2 2" stroke-width=".5"/><g data-writing-guide display="${guide?'inline':'none'}">${ref}<g data-writing-starts visibility="${numbers?'visible':'hidden'}">${starts}</g></g>${demo}<g data-writing-ink>${ink.map(s=>`<polyline points="${writingPoints(s.length===1?[s[0],[s[0][0]+.01,s[0][1]]]:s)}" fill="none" stroke="#336cb1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`).join('')}</g></svg>`;
+}
+/* Garder le SVG, la cible tactile et les traits en place pendant un geste.
+   Remplacer innerHTML à chaque mouvement peut interrompre la suite des événements
+   tactiles. Seuls les points du trait actif changent désormais. */
+function writingBoardView(board,model){
+ board.innerHTML=writingSVG(model);const guide=board.querySelector('[data-writing-guide]'),starts=board.querySelector('[data-writing-starts]'),ink=board.querySelector('[data-writing-ink]'),paths=[];
+ return ({guide:visible=true,ink:strokes=[],numbers=true}={})=>{guide.setAttribute('display',visible?'inline':'none');starts.setAttribute('visibility',numbers?'visible':'hidden');while(paths.length>strokes.length)paths.pop().remove();strokes.forEach((s,i)=>{let path=paths[i];if(!path){path=document.createElementNS('http://www.w3.org/2000/svg','polyline');for(const [key,value]of Object.entries({fill:'none',stroke:'#336cb1','stroke-width':'4','stroke-linecap':'round','stroke-linejoin':'round'}))path.setAttribute(key,value);ink.append(path);paths.push(path);}path.setAttribute('points',writingPoints(s.length===1?[s[0],[s[0][0]+.01,s[0][1]]]:s));});};
+}
+function writingBoardPoint(board,event){
+ const svg=board.querySelector('svg');if(svg?.createSVGPoint&&svg.getScreenCTM){try{const matrix=svg.getScreenCTM();if(matrix){const p=svg.createSVGPoint();p.x=event.clientX;p.y=event.clientY;const q=p.matrixTransform(matrix.inverse());if(Number.isFinite(q.x)&&Number.isFinite(q.y))return [clamp(q.x,0,100),clamp(q.y,0,115)];}}catch(_){}}
+ const r=(svg||board).getBoundingClientRect(),scale=Math.min(r.width/100,r.height/115);if(!Number.isFinite(scale)||scale<=0)return null;return [clamp((event.clientX-r.left-(r.width-scale*100)/2)/scale,0,100),clamp((event.clientY-r.top-(r.height-scale*115)/2)/scale,0,115)];
+}
+function writingBoardInput(board,{canDraw,begin,extend,finish}){
+ let active=null;const options={passive:false};board.style.touchAction='none';board.style.userSelect='none';board.style.webkitUserSelect='none';board.style.webkitTouchCallout='none';
+ const prevent=e=>{if(e.cancelable!==false)e.preventDefault();},add=e=>{const p=writingBoardPoint(board,e);if(p)extend(p);};
+ const stop=cancelled=>{if(active===null)return;const old=active;active=null;try{if(board.hasPointerCapture?.(old))board.releasePointerCapture(old);}catch(_){}finish(cancelled);};
+ board.addEventListener('pointerdown',e=>{if(active!==null||!canDraw()||e.isPrimary===false||e.button>0)return;const p=writingBoardPoint(board,e);if(!p)return;prevent(e);active=e.pointerId;begin(p);try{board.setPointerCapture(e.pointerId);}catch(_){}},options);
+ board.addEventListener('pointermove',e=>{if(active!==e.pointerId||!canDraw())return;prevent(e);let samples=[];try{samples=e.getCoalescedEvents?.()||[];}catch(_){}for(const sample of samples)add(sample);add(e);},options);
+ board.addEventListener('pointerup',e=>{if(active!==e.pointerId)return;prevent(e);if(canDraw())add(e);stop(false);},options);
+ board.addEventListener('pointercancel',e=>{if(active===e.pointerId)stop(true);},options);
+ board.addEventListener('lostpointercapture',e=>{if(active===e.pointerId)stop(true);});
+ /* Les anciennes versions de Safari sans Pointer Events gardent la même cible
+    touchstart jusqu'au touchend ; aucun événement synthétique n'est nécessaire. */
+ if(typeof window!=='undefined'&&!window.PointerEvent){
+  const touch=e=>Array.from(e.changedTouches||[]).find(t=>t.identifier===active);
+  board.addEventListener('touchstart',e=>{if(active!==null||!canDraw())return;const t=e.changedTouches?.[0],p=t&&writingBoardPoint(board,t);if(!p)return;prevent(e);active=t.identifier;begin(p);},options);
+  board.addEventListener('touchmove',e=>{const t=touch(e);if(!t||!canDraw())return;prevent(e);add(t);},options);
+  board.addEventListener('touchend',e=>{const t=touch(e);if(!t)return;prevent(e);if(canDraw())add(t);stop(false);},options);
+  board.addEventListener('touchcancel',e=>{if(touch(e))stop(true);},options);
+ }
+ return {reset:()=>stop(true)};
 }
 const WRITING_VOICE_LINES=[
  'Regarde le point de départ et le chemin. Puis trace avec ton doigt.',
@@ -5671,23 +5713,20 @@ function writingItem(symbol,mode='trace',small=false){
  const model=WRITING_MODELS[symbol];if(!model)return null;
  const prompt=small?WRITING_VOICE_LINES[0]:mode==='copy'?WRITING_VOICE_LINES[2]:mode==='recall'?WRITING_VOICE_LINES[3]:WRITING_VOICE_LINES[1];
  return {cls:'upgrade-stage writing-stage',skill:'writing:'+mode,evidenceKey:'writing:'+mode+':'+symbol,exemplar:'writing:'+symbol+':'+mode+':vector-v1',say:model.gesture?prompt:[prompt,...sndHear(WRITING_SOUND_KEYS[symbol])],caption:small?'Dessine le chemin':mode==='copy'?'Copie la lettre':mode==='recall'?'Écris de mémoire':'Trace la lettre',render(st,api){
-  let strokes=[],active=null,pointer=null,aided=false,ghost=mode==='trace',hidden=mode==='recall',recallReady=mode!=='recall',demoToken=0,recorded=false;
+  let strokes=[],active=null,aided=false,ghost=mode==='trace',hidden=mode==='recall',recallReady=mode!=='recall',demoToken=0,recorded=false,input;
   const reference=h('div',{class:'writing-reference',html:writingSVG(model)}),referenceWrap=h('div',{class:'writing-reference-wrap'},h('span',null,model.gesture?'Le modèle':'La lettre'),reference);
   const board=h('div',{class:'writing-board','aria-label':small?'Zone pour dessiner le chemin':'Zone pour écrire la lettre',role:'img'}),status=h('p',{class:'u-note writing-status','aria-live':'polite'},''),tools=h('div',{class:'urow'});
-  const draw=()=>{board.innerHTML=writingSVG(model,{guide:ghost,ink:strokes,numbers:mode==='trace'||aided});};
+  const paint=writingBoardView(board,model),draw=()=>paint({guide:ghost,ink:strokes,numbers:mode==='trace'||aided});
   const redrawReference=progress=>{reference.innerHTML=writingSVG(model,{progress});};
   const demo=async(manual=true)=>{if(manual){aided=true;api.help();Voice.say(WRITING_VOICE_LINES[5]);}const token=++demoToken;referenceWrap.hidden=false;if(mode==='recall'&&recallReady){ghost=true;aided=true;api.help();draw();}for(let si=0;si<model.strokes.length;si++){for(let step=1;step<=24;step++){if(token!==demoToken||!api.alive())return;redrawReference({stroke:si,fraction:step/24});await new Promise(r=>setTimeout(r,35));}await new Promise(r=>setTimeout(r,130));}if(api.alive()&&token===demoToken)redrawReference(null);};
   const show=h('button',{class:'ubtn'},'👀 Regarder');onTap(show,()=>demo(true));
-  const clear=uButton('↶ Refaire',()=>{if(!api.alive())return;strokes=[];active=null;pointer=null;draw();status.textContent='';});
-  const undo=uButton('↶ Un trait',()=>{if(!api.alive())return;strokes.pop();active=null;pointer=null;draw();});
+  const clear=uButton('↶ Refaire',()=>{if(!api.alive())return;input?.reset();strokes=[];active=null;draw();status.textContent='';});
+  const undo=uButton('↶ Un trait',()=>{if(!api.alive())return;input?.reset();strokes.pop();active=null;draw();});
   const done=uButton('✓ Fini',()=>{if(!api.alive()||!recallReady)return;if(!strokes.some(s=>s.length)){Voice.say(small?WRITING_VOICE_LINES[12]:WRITING_VOICE_LINES[6]);return;}const result=writingTraceMetrics(model,strokes,small);if(result.ok){if(!recorded){recorded=true;writingStoreResult(symbol,mode,result,writingEffectiveAid(aided,RUN));}return api.answer(true,{el:board,praise:small?WRITING_VOICE_LINES[10]:WRITING_VOICE_LINES[9]});}const line=result.outside>(small?.42:.34)||result.tooMuch?WRITING_VOICE_LINES[8]:WRITING_VOICE_LINES[7];status.textContent=line;api.answer(false,{el:board,feedback:line});});
   const hide=uButton('🙈 Cacher le modèle',()=>{if(!api.alive())return;demoToken++;recallReady=true;hidden=true;ghost=false;referenceWrap.hidden=true;hide.hidden=true;board.style.visibility='visible';done.hidden=false;strokes=[];draw();if(Shell.item){Shell.item.say=model.gesture?WRITING_VOICE_LINES[4]:[WRITING_VOICE_LINES[4],...sndHear(WRITING_SOUND_KEYS[symbol])];}Shell.caption('Écris de mémoire');Voice.say(WRITING_VOICE_LINES[4]);});
   tools.append(show,undo,clear,done);if(mode==='recall'){board.style.visibility='hidden';done.hidden=true;tools.prepend(hide);}else if(mode==='trace')referenceWrap.classList.add('writing-reference-compact');
   const surface=h('div',{class:'writing-surface'},referenceWrap,board);uWrap(st,surface,tools,status);
-  const point=e=>{const r=board.getBoundingClientRect();return [clamp((e.clientX-r.left)/r.width*100,0,100),clamp((e.clientY-r.top)/r.height*115,0,115)];};
-  board.addEventListener('pointerdown',e=>{if(!api.alive()||!recallReady||pointer!==null||e.isPrimary===false||e.button>0)return;e.preventDefault();pointer=e.pointerId;try{board.setPointerCapture(pointer);}catch(_){}active=[point(e)];strokes.push(active);draw();});
-  board.addEventListener('pointermove',e=>{if(pointer!==e.pointerId||!active||!api.alive())return;e.preventDefault();const p=point(e),last=active.at(-1);if(Math.hypot(p[0]-last[0],p[1]-last[1])>.3&&active.length<1800){active.push(p);draw();}});
-  const end=e=>{if(pointer!==e.pointerId)return;active=null;pointer=null;};board.addEventListener('pointerup',end);board.addEventListener('pointercancel',end);board.addEventListener('lostpointercapture',()=>{active=null;pointer=null;});
+  input=writingBoardInput(board,{canDraw:()=>api.alive()&&recallReady,begin:p=>{active=[p];strokes.push(active);draw();},extend:p=>{if(!active)return;const last=active.at(-1);if(Math.hypot(p[0]-last[0],p[1]-last[1])>.3&&active.length<1800){active.push(p);draw();}},finish:()=>{active=null;}});
   api.strategy=()=>{aided=true;ghost=true;referenceWrap.hidden=false;board.classList.add('reveal');draw();status.textContent=WRITING_VOICE_LINES[11];};
   draw();setTimeout(()=>{if(api.alive()&&writingAutoDemoAllowed(mode,recallReady))demo(false);},550);
  }};
@@ -5713,6 +5752,424 @@ function downloadWritingWorksheet(){const url=URL.createObjectURL(new Blob([writ
 const parentBeforeWriting=parentArea;
 parentArea=function(){parentBeforeWriting();const w=$('.parent .wrap');if(!w)return;const box=h('div',{class:'pcard'},h('h3',null,'Écriture : du doigt au crayon'),h('p',null,'Douze lettres script : geste démontré, repassage, copie avec modèle, puis rappel après modèle caché. Les observations concernent seulement le geste sur écran ; elles ne certifient pas une compétence scolaire.'),h('p',null,'Une fiche imprimable permet de reprendre les mêmes lettres au crayon, avec un adulte.'),uButton('⬇ Fiche pour le papier',downloadWritingWorksheet));const p=P(),items=Object.entries(p.writingPractice?.items||{});if(items.length){const table=h('table',{style:{width:'100%',marginTop:'16px',borderCollapse:'collapse',textAlign:'left'}},h('thead',null,h('tr',null,['Mode','Gestes terminés','Aide redemandée'].map(label=>h('th',{style:{padding:'7px',borderBottom:'1px solid var(--line)'}},label))))),body=h('tbody');for(const [mode,label]of [['trace','Repassage guidé'],['copy','Copie avec modèle'],['recall','Rappel après modèle caché']]){const group=items.filter(([key])=>key.endsWith(':'+mode)).map(([,e])=>e);body.append(h('tr',null,[label,group.reduce((n,e)=>n+e.completed,0),group.reduce((n,e)=>n+e.aided,0)].map(text=>h('td',{style:{padding:'7px',borderBottom:'1px solid var(--line)'}},String(text)))));}table.append(body);box.append(table,h('p',null,'Le rappel commence après une présentation du modèle. Une aide reprise après interruption reste comptée comme une aide. Ce n’est pas une mesure du rappel à long terme.'));}w.append(box);};
 if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent=`.writing-surface{display:flex;align-items:center;justify-content:center;gap:clamp(14px,3vw,36px);width:100%;max-width:760px;margin:auto}.writing-board{width:min(46vw,350px);aspect-ratio:100/115;touch-action:none;user-select:none;border:3px solid #bfd0e0;border-radius:18px;box-shadow:0 8px 24px #6352450d;overflow:hidden;background:#fffdf8}.writing-board svg,.writing-reference svg{display:block;width:100%;height:100%;pointer-events:none}.writing-reference-wrap{font-size:15px;color:#716677;text-align:center;max-width:180px}.writing-reference-wrap[hidden]{display:none!important}.writing-reference{width:min(20vw,155px);aspect-ratio:100/115;border:2px solid #e5d8c3;border-radius:12px;overflow:hidden;margin-top:5px}.writing-reference-compact .writing-reference{width:min(16vw,120px)}.writing-stage .urow{gap:8px}.writing-stage .ubtn{font-size:clamp(15px,2vw,19px);padding:12px 16px}.writing-status{min-height:24px}.writing-stage .u-wrap{gap:12px}@media(max-width:520px){.writing-board{width:55vw}.writing-reference{width:24vw}.writing-reference-compact .writing-reference{width:19vw}.writing-surface{gap:10px}.writing-stage .ubtn{padding:10px 12px}}`;document.head.append(style);}
+
+
+/* Twemoji graphics: Twitter, Inc. and other contributors, CC BY 4.0.
+   Vendored drawings and attribution: assets/illustrations/CREDITS.md.
+   Load assets/illustrations/twemoji-bundle.js before this fragment.
+   This helper is deliberately opt-in: no document walk or MutationObserver. */
+function lumiIllustrationCode(codeOrEmoji){
+ const value=String(codeOrEmoji||'').trim();
+ if(/^[0-9a-f]{2,6}(?:-[0-9a-f]{2,6})*$/i.test(value)){const parts=value.toLowerCase().split('-');return (parts.includes('200d')?parts:parts.filter(x=>x!=='fe0f')).join('-');}
+ const text=value.includes('\u200d')?value:value.replace(/\ufe0f/g,'');
+ return Array.from(text,c=>c.codePointAt(0).toString(16)).join('-');
+}
+function lumiIllustrationSVG(codeOrEmoji){
+ const code=lumiIllustrationCode(codeOrEmoji),bank=globalThis.LUMI_ILLUSTRATION_SVGS||{};
+ return Object.prototype.hasOwnProperty.call(bank,code)?bank[code]:null;
+}
+let lumiIllustrationSerial=0;
+function lumiIllustrationUniqueSVG(svg){
+ const prefix='lumi-art-'+(++lumiIllustrationSerial)+'-';
+ return svg.replace(/\bid=(["'])([^"']+)\1/g,(_,quote,id)=>'id='+quote+prefix+id+quote)
+  .replace(/url\((["']?)#([^)'"\s]+)\1\)/g,(_,quote,id)=>'url('+quote+'#'+prefix+id+quote+')')
+  .replace(/((?:xlink:)?href)=(["'])#([^"']+)\2/g,(_,attr,quote,id)=>attr+'='+quote+'#'+prefix+id+quote);
+}
+function lumiIllustration(codeOrEmoji,label){
+ const value=String(codeOrEmoji||''),code=lumiIllustrationCode(value);let emoji=value;
+ if(/^[0-9a-f]{2,6}(?:-[0-9a-f]{2,6})*$/i.test(value))try{emoji=String.fromCodePoint(...value.split('-').map(x=>parseInt(x,16)));}catch(_){emoji=value;}
+ let svgs=[lumiIllustrationSVG(value)];
+ if(!svgs[0]&&typeof Intl.Segmenter==='function'){
+  const parts=[...new Intl.Segmenter('fr',{granularity:'grapheme'}).segment(value)].map(x=>x.segment);
+  if(parts.length>1&&parts.every(p=>lumiIllustrationSVG(p)))svgs=parts.map(lumiIllustrationSVG);
+ }
+ /* Unrecognized values (including letters, numerals and mixed word labels)
+    stay the exact original string; h() can insert them as before. */
+ if(svgs.some(s=>!s))return value;
+ const wrap=document.createElement('span');wrap.className='lumi-illustration';
+ wrap.setAttribute('data-illustration',code);wrap.setAttribute('role','img');wrap.setAttribute('aria-label',String(label||emoji));
+ if(svgs.length>1)wrap.style.width=svgs.length+'em';
+ /* Keep the original emoji as a text node: code comparing button.textContent
+    continues to see the exact same value after a visual replacement. */
+ const source=document.createElement('span');source.className='lumi-illustration-source';source.setAttribute('aria-hidden','true');source.textContent=emoji;
+ const picture=document.createElement('span');picture.className='lumi-illustration-drawing';picture.setAttribute('aria-hidden','true');picture.innerHTML=svgs.map(lumiIllustrationUniqueSVG).join('');
+ wrap.append(source,picture);return wrap;
+}
+function lumiIllustrationStyle(){
+ const style=document.createElement('style');style.textContent=`
+ .lumi-illustration{display:inline-flex;position:relative;width:1em;height:1em;line-height:1;vertical-align:-.12em;flex-shrink:0;align-items:center;justify-content:center}
+ .lumi-illustration-drawing{display:inline-flex;width:100%;height:100%;pointer-events:none}.lumi-illustration-drawing>svg{display:block;width:1em;height:1em;overflow:visible;flex-shrink:0}
+ .lumi-illustration-source{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+ .lumi-illustration.native{width:auto}
+ `;document.head.append(style);
+}
+const bootBeforeLumiIllustrations=boot;boot=function(){lumiIllustrationStyle();bootBeforeLumiIllustrations();};
+
+
+/* Vrais cris animaliers ; crédits détaillés dans assets/animaux/credits.md. */
+const ANIMAL_AUDIO={
+ "🐮": {
+  "file": "assets/animaux/vache.mp3",
+  "name": "vache",
+  "credit": "Mudchute cow 1.ogg — Secretlondon — CC BY-SA 3.0 ; extrait et volume ajusté.",
+  "source": "https://commons.wikimedia.org/wiki/File:Mudchute_cow_1.ogg",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+ },
+ "🐑": {
+  "file": "assets/animaux/mouton.mp3",
+  "name": "mouton",
+  "credit": "Sheep bleating.ogg — earthcalling — Domaine public ; extrait et volume ajusté.",
+  "source": "https://commons.wikimedia.org/wiki/File:Sheep_bleating.ogg",
+  "license": "Domaine public",
+  "licenseUrl": "https://commons.wikimedia.org/wiki/File:Sheep_bleating.ogg#Licensing"
+ },
+ "🐶": {
+  "file": "assets/animaux/chien.mp3",
+  "name": "chien",
+  "credit": "Barking of a dog.ogg — Amada44 — CC BY-SA 3.0 ; extrait et volume ajusté.",
+  "source": "https://commons.wikimedia.org/wiki/File:Barking_of_a_dog.ogg",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+ },
+ "🐱": {
+  "file": "assets/animaux/chat.mp3",
+  "name": "chat",
+  "credit": "Meow.ogg — Dan Crosby (Dcrosby) — CC BY-SA 3.0 ; extrait et volume ajusté.",
+  "source": "https://commons.wikimedia.org/wiki/File:Meow.ogg",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+ },
+ "🦆": {
+  "file": "assets/animaux/canard.mp3",
+  "name": "canard",
+  "credit": "Ducks snatching.ogg — Bert76 — CC0 1.0 ; extrait et volume ajusté.",
+  "source": "https://commons.wikimedia.org/wiki/File:Ducks_snatching.ogg",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+ },
+ "🐓": {
+  "file": "assets/animaux/coq.mp3",
+  "name": "coq",
+  "credit": "Rooster crowing.ogg — Filo gèn' — CC BY-SA 4.0 ; extrait et volume ajusté.",
+  "source": "https://commons.wikimedia.org/wiki/File:Rooster_crowing.ogg",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+ },
+ "🐝": {
+  "file": "assets/animaux/abeille.mp3",
+  "name": "abeille",
+  "credit": "Buzzing bees.ogg — Serg Childed — CC BY-SA 4.0 ; extrait et volume ajusté.",
+  "source": "https://commons.wikimedia.org/wiki/File:Buzzing_bees.ogg",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+ },
+ "🐄": {
+  "file": "assets/animaux/vache.mp3",
+  "name": "vache",
+  "credit": "Mudchute cow 1.ogg — Secretlondon — CC BY-SA 3.0 ; extrait et volume ajusté.",
+  "source": "https://commons.wikimedia.org/wiki/File:Mudchute_cow_1.ogg",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+ }
+};
+
+
+/* Real animal recordings replace synthetic spellings such as “bzzzz”.
+   Spoken guidance and feedback still use the selected Charline voice. */
+const AnimalCalls={serial:0,source:null,buffers:new Map(),
+ stop(){this.serial++;if(this.source){try{this.source.stop();}catch(_){}this.source=null;}},
+ async listen(animal,api,status){
+  Sfx.ensure();const spoken=Voice.say('Écoute ce bruit. Quel animal l’a fait ?'),token=this.serial;
+  await spoken;if(token!==this.serial||!api.alive())return;
+  try{const ctx=Sfx.ensure();if(!ctx)throw Error('Audio indisponible');let data=this.buffers.get(animal.file);if(!data){data=fetch(animal.file).then(r=>{if(!r.ok)throw Error('Audio absent');return r.arrayBuffer();}).then(b=>new Promise((ok,fail)=>{const result=ctx.decodeAudioData(b,ok,fail);if(result?.then)result.then(ok,fail);}));this.buffers.set(animal.file,data);data.catch(()=>this.buffers.delete(animal.file));}const buffer=await data;if(token!==this.serial||!api.alive())return;const source=ctx.createBufferSource(),gain=ctx.createGain();gain.gain.value=.8;source.buffer=buffer;source.connect(gain);gain.connect(ctx.destination);this.source=source;source.onended=()=>{if(this.source===source)this.source=null;};source.start();if(status){status.hidden=true;status.textContent='';}}
+  catch(_){if(token!==this.serial||!api.alive())return;if(status){status.hidden=false;status.textContent='Le bruit ne se charge pas. Réessaie ou passe cet exercice.';}}
+ }
+};
+const stopBeforeAnimalCalls=Voice.stop.bind(Voice);Voice.stop=function(){AnimalCalls.stop();return stopBeforeAnimalCalls();};
+const imagierBeforeRealCalls=GAMES.ferme.make;
+GAMES.ferme.make=function(ctx){if(ctx.L.mode!=='cri')return imagierBeforeRealCalls(ctx);const pool=CRIS.filter(a=>ANIMAL_AUDIO[a[0]]),animal=avoidRepeat(ctx,pool,a=>a[0]),entry=ANIMAL_AUDIO[animal[0]],options=shuffle([animal,...sample(pool.filter(a=>a[0]!==animal[0]),ctx.L.k-1)]);let replay=null;return {autoSay:false,cls:'upgrade-stage',say:'Écoute ce bruit. Quel animal l’a fait ?',caption:'Écoute le vrai bruit de l’animal',evidenceKey:'preschool:animal-calls',exemplar:entry.name,replay:()=>replay&&replay(),render(st,api){let target;const status=h('p',{class:'u-note',role:'status',hidden:true}),row=h('div',{class:'row'},options.map(a=>{const b=card(a[0],a[1]);if(a===animal)target=b;onTap(b,()=>api.answer(a===animal,{el:b,correctEl:target,praise:a[0]==='🐝'?'Oui, c’est une abeille.':`Oui, c’est ${a[1]}.`,feedback:'Écoute encore le bruit, puis choisis l’animal.'}));return b;}));replay=()=>AnimalCalls.listen(entry,api,status);uWrap(st,uButton('🔊 Écouter le bruit',replay),row,status);replay();}};};
+function animalVoiceLines(){return ['Écoute ce bruit. Quel animal l’a fait ?','Écoute encore le bruit, puis choisis l’animal.',...CRIS.filter(a=>ANIMAL_AUDIO[a[0]]).map(a=>a[0]==='🐝'?'Oui, c’est une abeille.':`Oui, c’est ${a[1]}.`)];}
+
+
+/* Child-facing activity selection. Historic progress remains in saved profiles. */
+const RETIRED_ACTIVITIES={grands:new Set(['consignes','histoires','gestes','espace']),petits:new Set(['histoires','livres','gestes','espace'])};
+for(const world of ['grands','petits']){WORLD_TILES[world]=WORLD_TILES[world].filter(id=>!RETIRED_ACTIVITIES[world].has(id));THEMES[world].forEach(t=>t.ids=t.ids.filter(id=>!RETIRED_ACTIVITIES[world].has(id)));}
+const OBJECTIVE_NAMES={lecture:'Apprendre à lire',lettre1:'Trouver la première lettre',balade:'Écrire avec les lettres',riviere:'Assembler les syllabes',mots:'Écrire les mots',syllabes:'Jouer avec les sons',robot:'Suivre un chemin',miroir:'Compléter le papillon',memoG:'Retrouver les paires',memo:'Retrouver les paires',lynxG:'Chercher les différences',lynx:'Chercher les différences',sudoku:'Placer les animaux',suitesG:'Compléter les suites',suites:'Compléter les suites',monstre:'Compter les biscuits',monstreP:'Compter les biscuits',blocs:'Construire les nombres',blocsP:'Construire les nombres',paniers:'Former des groupes',ferme:'Nommer et classer',tailles:'Comparer les tailles',grandpetit:'Comparer les nombres',nombres:'Compter les objets',trace:'Écrire les lettres',pretrace:'Tracer des chemins',atelier:'Créer une carte',messages:'Composer un message',livres:'Mes petits livres',recit:'Ordonner une histoire',recitP:'Ordonner une histoire',heure:'Lire l’heure',ombres:'Associer les silhouettes',formes:'Reconnaître les formes',couleurs:'Reconnaître les couleurs',chemin:'Trouver le chemin',cheminG:'Trouver le chemin'};
+Object.assign(SIMPLE_GAME_NAMES,OBJECTIVE_NAMES);for(const[id,name]of Object.entries(OBJECTIVE_NAMES))if(GAMES[id])GAMES[id].title=name;
+/* Letter NAME and letter SOUND are deliberately separate activities. */
+const ALPHABET_SETS=['AIO','AIOU','AEIOUY','AEIOUYLMRSF','AEIOUYLMRSFBNPTDV','ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+function alphabetItem(ctx){const L=ctx.L,letters=[...L.letters],letter=avoidRepeat(ctx,letters),opts=shuffle([letter,...sample(letters.filter(c=>c!==letter),L.choices-1)]),prompt=`Touche la lettre ${letter}.`;return {cls:'paper',say:prompt,caption:'Le nom des lettres',evidenceKey:'preschool:letter-name',exemplar:letter+(L.lower?':minuscule':':majuscule'),render(st,api){let target;const row=h('div',{class:'row'},opts.map(c=>{const b=card(L.lower?c.toLowerCase():c,'','txt');if(c===letter)target=b;onTap(b,()=>api.answer(c===letter,{el:b,correctEl:target,praise:`Oui, c’est la lettre ${letter}.`,feedback:'Écoute le nom de la lettre, puis regarde sa forme.'}));return b;}));api.key(target);st.append(row);}};}
+GAMES.alphabetP={id:'alphabetP',title:'Reconnaître les lettres',sub:'Écouter le nom et retrouver la lettre',icon:'🔤',color:'plum',stage:'#f6f0ff',levels:[...ALPHABET_SETS.map((letters,i)=>({letters,choices:i<2?2:3,name:i===5?'Les 26 lettres':'Les lettres '+letters.split('').join(' · '),n:5,skill:'preschool:alphabet:'+i,tag:i<3?'M1–M2':'M3',ref:'Reconnaître le nom des lettres en majuscules'})),{letters:ALPHABET_SETS[5],choices:3,lower:true,name:'Les lettres minuscules',n:5,skill:'preschool:alphabet:6',tag:'M3',ref:'Reconnaître le nom des lettres en minuscules'}],make:alphabetItem};
+const FIRST_SOUND_SETS=[['a','i'],['a','i','o'],['a','i','o','u'],['a','i','o','u','é'],['l','m'],['l','m','s'],['l','m','s','f'],['a','i','o','u','é','l','m','s','f']];
+GAMES.sonsP={id:'sonsP',title:'Écouter les sons',sub:'Du son à la lettre',icon:'👂',color:'sky',stage:'#f3f7ff',levels:FIRST_SOUND_SETS.map((keys,i)=>({keys,n:4,name:i<4?'Les sons des voyelles':i<7?'Le début des mots':'Voyelles et débuts des mots',skill:'preschool:sounds:'+i,tag:i<2?'M1–M2':'M2–M3',ref:'Associer une lettre à une voyelle entendue ou à l’initiale d’un mot repère'})),make(ctx){const k=avoidRepeat(ctx,ctx.L.keys),L=LESSONS[LIDX[k]],it=itLettre(L,LIDX[k],ctx.li<2?2:3);return {...it,evidenceKey:'preschool:letter-sound',exemplar:k};}};
+for(const id of ['alphabetP','sonsP']){addThemeGame('petits','lire',id);SIMPLE_GAME_NAMES[id]=GAMES[id].title;}
+THEME_DIFFICULTY_ORDER.petits.lire=['ferme','consignesP','alphabetP','sonsP','recitP','syllabes'];
+THEME_DIFFICULTY_ORDER.grands.lire=THEME_DIFFICULTY_ORDER.grands.lire.filter(id=>!RETIRED_ACTIVITIES.grands.has(id));
+const recommendBeforeRetired=recommendedGame;
+recommendedGame=function(){const id=recommendBeforeRetired();if(RETIRED_ACTIVITIES[S.world]?.has(id))return S.world==='petits'?'alphabetP':'lecture';return id;};
+const homeBeforeRetired=renderHome;
+renderHome=function(theme=HOME_THEME){const p=P();if(p.resume&&RETIRED_ACTIVITIES[S.world]?.has(p.resume.gid)){p.retiredResumes=[...(p.retiredResumes||[]),p.resume].slice(-10);delete p.resume;save();}return homeBeforeRetired(theme);};
+function childUxVoiceLines(){return ['Lis la phrase. Tu peux toucher un mot pour l’écouter.','Choisis un petit livre. Lis la phrase. Tu peux toucher un mot pour l’écouter.','Tu peux passer cet exercice.','Écoute le nom de la lettre, puis regarde sa forme.',...Object.values(OBJECTIVE_NAMES),...['alphabetP','sonsP'].map(id=>GAMES[id].title),...[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].flatMap(c=>[`Touche la lettre ${c}.`,`Oui, c’est la lettre ${c}.`])];}
+if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent=`.voice-tools{display:flex;align-items:center;gap:10px}.skip-exercise{font:600 14px/1.3 var(--font-read);border:1px solid #b6c4ca;background:#fff;color:#536a77;border-radius:18px;padding:10px 14px;white-space:nowrap;min-height:42px}.skip-exercise:disabled{opacity:.45}.ov-top .skip-exercise{margin-left:auto}.dots i.skipped{background:#d9e1e5;border:2px dashed #8197a1}.game-bottom{flex-wrap:wrap}@media(max-width:600px){.skip-exercise{font-size:12px;padding:9px 10px}.voice-tools{gap:5px}.game-bottom .game-av{width:55px}.ov-top h2{font-size:18px}.ov-top{gap:8px}}`;document.head.append(style);}
+
+
+/* Ordonner une histoire : un geste par réponse, repères fixes et aide racontée.
+   Le petit exemple du verre est distinct des trois récits ensuite évalués. */
+const NARRATIVE_LEVELS = [
+ {frames:2,anchor:true,listen:true,name:'Trouver la fin',tag:'M1–M2'},
+ {frames:2,anchor:false,name:'Le début et la fin',tag:'M2–M3'},
+ {frames:3,anchor:true,name:'Trouver la suite',tag:'M3'},
+ {frames:3,anchor:false,name:'Trois images dans l’ordre',tag:'M3–P1'},
+ {frames:4,anchor:false,name:'Quatre images dans l’ordre',tag:'P1'}
+];
+const NARRATIVE_STORY_IDS = ['tour','dessin','bateau'];
+function narrativeModel(ctx){
+ const L=ctx.L,stories=SEQUENCE_STORIES.filter(s=>NARRATIVE_STORY_IDS.includes(s.id));
+ ctx.used=ctx.used||[];
+ const unseen=stories.filter(s=>!ctx.used.includes('narrative:'+s.id));
+ const story=pick(unseen.length?unseen:stories);ctx.used.push('narrative:'+story.id);
+ const indices=L.frames===2?[0,3]:L.frames===3?[0,2,3]:[0,1,2,3];
+ return {story,indices,initial:L.anchor?[indices[0]]:[],options:L.listen?[2,3]:indices.slice(L.anchor?1:0)};
+}
+function narrativePositionLabel(index,length){return index===0?'Début':index===length-1?'Fin':'Ensuite';}
+function narrativePrompt(at,length,listen){
+ if(listen)return 'Touche l’image qui montre la fin.';
+ if(at===0)return 'Touche l’image du début.';
+ if(at===length-1)return 'Touche l’image qui vient à la fin.';
+ return 'Touche l’image qui vient ensuite.';
+}
+function narrativeDemoSVG(full){return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 190"><rect width="250" height="190" rx="20" fill="#e9f3f8"/><path d="M0 159H250V190H0Z" fill="#dcc9b1"/><path d="M83 51H168L157 155H94Z" fill="#ffffff" fill-opacity=".8" stroke="#7198b2" stroke-width="5"/>${full?'<path d="M91 86H160L153 151H98Z" fill="#7dc4e4"/><path d="M91 86Q125 94 160 86" fill="none" stroke="#4c9cc9" stroke-width="3"/>':''}<path d="M98 62L102 132" stroke="#fff" stroke-width="6" stroke-linecap="round"/></svg>`;}
+function narrativeItem(ctx){
+ const m=narrativeModel(ctx),story=m.story;
+ const item={cls:'upgrade-stage',autoSay:false,caption:'Le début → la suite → la fin',
+  exemplar:story.id+':'+m.indices.join(',')+':'+(ctx.L.anchor?'debut-donne':'sans-modele'),
+  evidenceKey:ctx.L.listen?'narrative:listen-order':'narrative:order',
+  render(st,api){
+   let chosen=m.initial.slice(),showing=false;const cards=new Map();
+   const slots=h('div',{class:'narrative-timeline'}),tray=h('div',{class:'picture-options narrative-tray'}),prompt=h('p',{class:'narrative-prompt'});
+   const sayPrompt=()=>narrativePrompt(chosen.length,m.indices.length,ctx.L.listen);
+   const draw=()=>{
+    slots.innerHTML='';
+    for(let i=0;i<m.indices.length;i++){
+     const cell=h('div',{class:'narrative-cell'+(i===chosen.length?' current':'')});
+     cell.append(h('div',{class:'narrative-label'},(i+1)+' · '+narrativePositionLabel(i,m.indices.length)),h('div',{class:'narrative-picture',html:i<chosen.length?sequenceSVG(story.id,chosen[i]):'<span aria-hidden="true">?</span>'}));slots.append(cell);
+     if(i<m.indices.length-1)slots.append(h('span',{class:'narrative-arrow','aria-hidden':'true'},'→'));
+    }
+    for(const [step,b]of cards){const used=chosen.includes(step);b.classList.toggle('used',used);b.disabled=used||showing;b.setAttribute('aria-pressed',String(used));}
+    prompt.textContent=chosen.length===m.indices.length?'Oui, l’histoire est dans le bon ordre !':sayPrompt();Shell.caption(prompt.textContent);
+    if(Shell.item){Shell.item.say=prompt.textContent;Shell.item.replay=()=>Voice.say(prompt.textContent);}
+   };
+   const strategy=()=>{const step=m.indices[chosen.length];cards.get(step)?.classList.add('reveal');slots.querySelector('.current')?.classList.add('reveal');};
+   api.strategy=strategy;
+   const model=async()=>{
+    if(!api.alive()||showing)return;api.help();showing=true;draw();
+    await Voice.say('Regarde et écoute l’histoire dans l’ordre.');
+    for(let i=0;i<m.indices.length;i++){
+     if(!api.alive())return;
+     const picture=slots.children[i*2]?.querySelector('.narrative-picture');
+     if(picture)picture.innerHTML=sequenceSVG(story.id,m.indices[i]);
+     slots.children[i*2]?.classList.add('playing');await Voice.say(story.events[m.indices[i]]);
+     slots.children[i*2]?.classList.remove('playing');
+    }
+    if(!api.alive())return;showing=false;draw();strategy();Voice.say(sayPrompt());
+   };
+   for(const step of shuffle(m.options)){
+    const box=h('div',{class:'picture-option'}),b=h('button',{class:'sequence-card narrative-choice',html:sequenceSVG(story.id,step),'aria-label':story.events[step]});cards.set(step,b);
+    onTap(b,async()=>{
+     if(!api.alive()||showing||chosen.includes(step))return;
+     if(step!==m.indices[chosen.length])return api.step(false,{el:b,feedback:ctx.L.listen?'Écoute encore le début et la fin.':sayPrompt()});
+     chosen.push(step);draw();
+     if(chosen.length===m.indices.length)return api.answer(true,{praise:'Oui, l’histoire est dans le bon ordre !'});
+     api.step(true,{say:[story.events[step],250,sayPrompt()]});
+    });
+    box.append(b,uButton('🔊',()=>{if(api.alive()&&!showing)Voice.say(story.events[step]);},{class:'choice-voice','aria-label':'Écouter cette image'}));tray.append(box);
+   }
+   const initialVoice=()=>ctx.L.listen?['Écoute le début et la fin.',story.events[0],300,story.events[3],300,sayPrompt()]:['Mets les images dans l’ordre de l’histoire.',sayPrompt()];
+   const begin=()=>{
+    if(!api.alive())return;st.innerHTML='';
+    uWrap(st,h('div',{class:'narrative-title'},story.title),slots,prompt,tray,h('div',{class:'sequence-tools'},uButton('🔊 Réécouter',()=>Voice.say(initialVoice())),uButton('👀 Montre-moi',model)));
+    draw();Voice.say(initialVoice());
+   };
+   if(!P().narrativeIntroV2){
+    const start=uButton('À moi de jouer',()=>{if(!api.alive())return;P().narrativeIntroV2=Date.now();save();begin();},{class:'go-btn'});
+    const demo=h('div',{class:'narrative-demo'},h('div',{class:'narrative-cell'},h('div',{class:'narrative-label'},'1 · Début'),h('div',{class:'narrative-picture',html:narrativeDemoSVG(false)})),h('span',{class:'narrative-arrow','aria-hidden':'true'},'→'),h('div',{class:'narrative-cell'},h('div',{class:'narrative-label'},'2 · Fin'),h('div',{class:'narrative-picture',html:narrativeDemoSVG(true)})));
+    const explain=['Regarde cet exemple.','Au début, le verre est vide.','À la fin, le verre est rempli.','Maintenant, à toi avec une autre histoire.'];
+    if(Shell.item){Shell.item.say=explain;Shell.item.replay=()=>Voice.say(explain);}
+    uWrap(st,h('p',{class:'narrative-prompt'},'Un petit exemple'),demo,start);Shell.caption('Du début à la fin');Voice.say(explain);
+   }else begin();
+  }};
+ return item;
+}
+for(const id of ['recit','recitP']){
+ GAMES[id]={...GAMES[id],title:'Ordonner une histoire',sub:'Le début, la suite et la fin',make:narrativeItem,levels:NARRATIVE_LEVELS.slice(0,id==='recitP'?3:5).map((L,i)=>({...L,n:3,skill:'narrative:order:'+i,ref:'Comprendre la succession de situations concrètes ; une démonstration distincte puis une aide facultative'}))};
+ SIMPLE_GAME_NAMES[id]='Ordonner une histoire';
+}
+function narrativeVoiceLines(){return [
+ 'Touche l’image qui montre la fin.','Touche l’image du début.','Touche l’image qui vient à la fin.','Touche l’image qui vient ensuite.',
+ 'Regarde et écoute l’histoire dans l’ordre.','Écoute encore le début et la fin.','Oui, l’histoire est dans le bon ordre !',
+ 'Écoute le début et la fin.','Mets les images dans l’ordre de l’histoire.',
+ 'Regarde cet exemple.','Au début, le verre est vide.','À la fin, le verre est rempli.','Maintenant, à toi avec une autre histoire.'
+ ];}
+function narrativeStyle(){const style=h('style');style.textContent=`
+ .narrative-title{font-weight:800;font-size:clamp(19px,3vw,25px);color:#69517d}.narrative-prompt{font-size:clamp(20px,3vw,27px);font-weight:800;text-align:center;margin:6px 0;max-width:680px}
+ .narrative-timeline,.narrative-demo{display:flex;align-items:center;justify-content:center;width:min(760px,95vw);gap:6px}.narrative-cell{width:min(170px,22vw);flex:1;min-width:0;border-radius:20px;border:3px solid #d4c8e0;background:#fff;overflow:hidden;transition:box-shadow .2s}
+ .narrative-cell.current{border-color:#a185bc;border-style:dashed}.narrative-cell.reveal,.narrative-cell.playing{box-shadow:0 0 0 5px #f4cf62}.narrative-label{text-align:center;font-size:clamp(12px,2vw,17px);font-weight:800;padding:7px 2px;color:#675078;background:#f1eaf8}
+ .narrative-picture{aspect-ratio:250/190;display:flex;align-items:center;justify-content:center;min-height:70px}.narrative-picture svg{width:100%;height:100%;display:block}.narrative-picture span{color:#b2a2c7;font-size:43px}.narrative-arrow{font-size:clamp(16px,3vw,27px);font-weight:900;color:#8e779f;flex-shrink:0}.narrative-choice{min-height:105px;touch-action:manipulation}.narrative-choice.used{visibility:visible;opacity:.25}.narrative-tray{max-width:780px;gap:12px}.narrative-demo{max-width:480px}
+ @media(max-width:560px){.narrative-timeline{gap:3px}.narrative-cell{border-width:2px;border-radius:12px}.narrative-label{font-size:12px;padding:5px 1px}.narrative-timeline .narrative-arrow{font-size:16px}.narrative-picture{min-height:52px}.narrative-tray .sequence-card{width:38vw;max-width:180px}.narrative-tray{gap:10px}.narrative-prompt{font-size:20px}}
+ `;document.head.append(style);}
+const bootBeforeNarrativeRedesign=boot;boot=function(){narrativeStyle();bootBeforeNarrativeRedesign();};
+
+
+/* Niveaux lisibles : repère local à une activité, sans classement ni récompense supplémentaire. */
+function levelState(gid) {
+  const p=P(),g=GAMES[gid];
+  if(!g)return null;
+  if(gid==='lecture'){
+    const li=clamp(p.lecture.unlocked||0,0,LESSONS.length-1);
+    return {current:li+1,total:LESSONS.length,label:'Niveau',items:LESSONS.map((L,i)=>({name:'Le son « '+L.main+' »',open:i<=li,go:()=>runLesson(i)}))};
+  }
+  if(gid==='calcul'){
+    const c=calc(),items=[],active=clamp(c.open||0,0,MODS.length-1),mp=modProg(MODS[active].id),start=Number.isInteger(mp.parentStart)?clamp(mp.parentStart,0,MODS[active].levels.length-1):0;
+    let local=MODS[active].levels.findIndex((L,i)=>i>=start&&(!mp.pass[i]||mp.pass[i].review));if(local<0)local=Math.max(start,MODS[active].levels.length-1);
+    MODS.forEach((M,mi)=>{const progress=modProg(M.id),opened=Number.isInteger(progress.parentStart)?progress.parentStart:0;M.levels.forEach((L,lv)=>items.push({name:M.name+' · '+L.name,open:mi<=c.open&&(lv===0||lv<=opened||!!progress.pass[lv-1]),go:()=>runModule(mi,lv),mi,lv}));});
+    const current=items.findIndex(x=>x.mi===active&&x.lv===local);
+    return {current:current+1,total:items.length,label:'Niveau',items};
+  }
+  if(g.levels?.length){const gp=p.games[gid]||{lvl:0,unlocked:0},li=clamp(gp.lvl||0,0,g.levels.length-1);return {current:li+1,total:g.levels.length,label:'Niveau',items:g.levels.map((L,i)=>({name:L.name||'Niveau '+(i+1),open:i<=Math.max(gp.unlocked||0,li),go:()=>{gameProg(gid).lvl=i;save();runGame(gid);}}))};}
+  if(gid==='livres'){const done=MINI_BOOKS.filter(b=>{const e=p.bookEvidence?.[b.id];return !!e&&(!!e.completedAt||!e.skipped||e.attempts?.some(a=>!a.skipped));}).length;return {current:done,total:MINI_BOOKS.length,label:'Livres terminés',items:MINI_BOOKS.map(b=>({name:b.title,open:true,go:()=>readMiniBook(b)}))};}
+  return null;
+}
+function currentRunLevel(run=RUN){
+  if(!run)return null;
+  const s=run.session;
+  if(s?.kind==='lesson'){const view=levelState('lecture');return {...view,current:s.li+1,name:LESSONS[s.li].main};}
+  if(s?.kind==='module'){const view=levelState('calcul'),i=view.items.findIndex(x=>x.mi===s.mi&&x.lv===s.lv);return {...view,current:i+1,name:MODS[s.mi].levels[s.lv].name};}
+  if(s?.kind==='game'){const view=levelState(run.gid),li=run.levelIndex??s.li;return view?{...view,current:li+1,name:GAMES[run.gid].levels[li].name}:null;}
+  if(run.gid==='livres'&&run.bookId){const view=levelState('livres'),i=MINI_BOOKS.findIndex(b=>b.id===run.bookId);return i>=0?{...view,current:i+1,label:'Livre',name:MINI_BOOKS[i].title}:null;}
+  return null;
+}
+function progressMeter(view,cls='activity-progress'){
+  const value=clamp(view.current,0,view.total),label=`${view.label} ${value} / ${view.total}`;
+  return h('div',{class:cls},h('small',null,label),h('div',{class:'activity-progress-track',role:'progressbar','aria-label':view.label,'aria-valuemin':0,'aria-valuemax':view.total,'aria-valuenow':value},h('i',{style:{width:(value/view.total*100)+'%'}})));
+}
+const gameTileBeforeProgress=simpleGameTile;
+simpleGameTile=function(id){const tile=gameTileBeforeProgress(id),view=levelState(id);if(view){tile.append(progressMeter(view));tile.setAttribute('aria-label',(SIMPLE_GAME_NAMES[id]||GAMES[id].title)+', '+view.label+' '+view.current+' sur '+view.total);}else tile.append(h('small',{class:'activity-free'},'Activité libre'));return tile;};
+function showLevelChoices(view){
+  Voice.stop();
+  const sheet=h('div',{class:'sheet level-choice-sheet'}),modal=h('div',{class:'modal',role:'dialog','aria-modal':'true','aria-label':'Les niveaux de cette activité'},sheet);
+  const close=()=>modal.remove();
+  const list=h('div',{class:'level-choice-list'});
+  view.items.forEach((entry,i)=>{const current=i===view.current-1,b=h('button',{class:'level-choice'+(current?' current':''),disabled:!entry.open,'aria-current':current?'step':null},h('b',null,String(i+1)),h('span',null,entry.name),h('span',{'aria-hidden':'true'},entry.open?(current?'●':'→'):'🔒'));if(entry.open)onTap(b,()=>{close();Voice.stop();if(RUN)RUN.abort=true;Shell.clearCeleb();entry.go();});list.append(b);});
+  sheet.append(h('h3',null,'Les niveaux'),h('p',null,(view.label==='Livre'?'Tu es au livre ':'Tu es au niveau ')+view.current+' sur '+view.total+'.'),list,onTap(h('button',{class:'pbtn'},'Revenir au jeu'),close));document.body.append(modal);
+}
+const shellOpenBeforeProgress=Shell.open.bind(Shell);
+Shell.open=function(options){shellOpenBeforeProgress(options);if(this.skipBtn)this.skipBtn.hidden=false;this.levelView=currentRunLevel();if(!this.progressEl){this.progressEl=h('div',{class:'game-level-progress'});this.el.insertBefore(this.progressEl,$('.stage-wrap',this.el));}this.progressEl.innerHTML='';const view=this.levelView;this.progressEl.hidden=!view;if(view){const button=onTap(h('button',{class:'game-level-button','aria-label':'Voir les niveaux disponibles'},view.label+' '+view.current+' / '+view.total+' ▾'),()=>showLevelChoices(view));this.progressEl.append(button,h('span',{class:'game-level-name'},view.name||''));}};
+const celebrateBeforeProgress=Celebrate.show.bind(Celebrate);
+Celebrate.show=function(options){
+  celebrateBeforeProgress(options);
+  const panel=$('.celebrate',Shell.el),acts=panel&&$('.acts',panel);if(!panel||!acts)return;
+  const view=Shell.levelView,skipped=options.skipped??(RUN?.res||[]).filter(r=>r.skipped).length;
+  if(Shell.skipBtn)Shell.skipBtn.hidden=true;
+  const title=$('h2',panel);if(skipped)title.textContent='Série terminée · '+skipped+' exercice'+(skipped>1?'s':'')+' passé'+(skipped>1?'s':'');else if(view)title.textContent=view.label+' '+view.current+' / '+view.total+' terminé';
+  if(options.note)panel.insertBefore(h('p',{class:'completion-note'},options.note),acts);
+  if(options.next&&options.nextLabel){const next=$('button',acts);if(next)next.textContent=options.nextLabel;}
+};
+/* Keep the completed level distinct from the automatically selected following level.
+   In particular, Rejouer must never silently start a different level. */
+finishGame=function(run,g,gp){
+  clearResume(run);
+  const played=run.levelIndex??run.session?.li??gp.lvl,{pct,stars}=scoreOf(run.res);
+  const skipped=run.res.some(r=>r.skipped);
+  gp.rounds++;if(stars>0)gp.best[played]=Math.max(gp.best[played]||0,stars);
+  let up=false,down=false;
+  if(!skipped){if(pct>=.8){gp.low=0;if(played<g.levels.length-1){gp.lvl=played+1;gp.unlocked=Math.max(gp.unlocked,gp.lvl);up=true;}}
+  else if(pct<.5){gp.low=(gp.low||0)+1;if(gp.low>=2&&played>0){gp.lvl=played-1;gp.low=0;down=true;}}
+  else gp.low=0;}
+  const sticker=stars>0?addStars(stars):null;save();
+  const start=i=>{gp.lvl=i;save();runGame(g.id);},next=played<g.levels.length-1&&gp.unlocked>played?()=>start(played+1):null;
+  Celebrate.show({stars,sticker,note:skipped?'Certains exercices ont été passés.':up?g.levels[played+1].name:down?'Tu peux reprendre le niveau précédent ou rejouer celui-ci.':null,next,nextLabel:'Niveau suivant',again:()=>start(played),home:()=>Shell.close()});
+  const panel=$('.celebrate',Shell.el),acts=panel&&$('.acts',panel);if(acts){const buttons=$$('button',acts),again=buttons[next?1:0];if(again)again.textContent='Rejouer ce niveau';}
+};
+if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent=`
+.simple-game .activity-progress{display:block;width:100%;margin-top:6px;text-align:left}.activity-progress small{display:block;font:600 13px/1.4 var(--font-read);color:var(--ink-soft)}.activity-progress-track{height:7px;overflow:hidden;background:#dfe8ee;border-radius:9px;margin-top:5px}.activity-progress-track i{display:block;height:100%;background:#75b399;border-radius:inherit;min-width:0}.activity-free{display:block;font-size:13px;color:var(--ink-soft);margin-top:7px}.game-level-progress{display:flex;justify-content:center;align-items:center;gap:12px;flex:none;padding:0 22px 4px}.game-level-progress[hidden]{display:none}.game-level-button{border-radius:20px;background:#fff;border:1px solid var(--line);padding:6px 13px;font-size:14px;font-weight:700;white-space:nowrap}.game-level-name{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}.level-choice-sheet{max-width:600px}.level-choice-list{display:grid;gap:7px;max-height:56vh;overflow:auto;padding:5px}.level-choice{display:flex;align-items:center;gap:12px;padding:12px;border:2px solid #dce6e3;border-radius:13px;text-align:left;background:white}.level-choice.current{border-color:#3c9672;background:#edf7f1}.level-choice:disabled{opacity:.5}.level-choice>b{display:grid;place-items:center;background:#e8f3ee;border-radius:50%;width:32px;height:32px;flex:none}.level-choice>span:nth-child(2){flex:1}.completion-note{max-width:560px;text-align:center;padding:0 15px;font-size:18px;color:var(--ink-soft)}@media(max-width:600px){.game-level-progress{padding:0 12px 3px;gap:8px}.game-level-button,.game-level-name{font-size:12px}.game-level-name{max-width:48%}.simple-game .activity-progress small{font-size:12px}.completion-note{font-size:15px}}
+`;document.head.append(style);}
+
+
+/* Passer un exercice reste une navigation : aucune réussite ou erreur inventée. */
+scoreOf=function(res){
+  const sc=res.filter(r=>r&&!r.skipped&&r.first!=null),answered=sc.length,skipped=res.filter(r=>r?.skipped).length,ok=sc.filter(r=>r.first).length;
+  const errors=sc.reduce((sum,r)=>sum+(r.first?0:Math.max(1,r.wrongs||0)),0),base=errors===0?3:errors===1?2:1;
+  /* A skipped item contributes no earned star. A full unanswered series earns none.
+     Demonstrations (first:null, without skipped) are not assessment items. */
+  const stars=answered?Math.floor(base*answered/(answered+skipped)):0;
+  return {pct:answered?ok/answered:0,errors,stars,answered,skipped,ok};
+};
+function skippedNote(n){return n===1?'Un exercice a été passé. Tu peux le reprendre en rejouant ce niveau.':`${n} exercices ont été passés. Tu peux les reprendre en rejouant ce niveau.`;}
+function markResult(i,r){Shell.mark(i,r.skipped?'skipped':r.first==null?'ok':r.first?'ok':'half');}
+function countableResult(r){return r.first!=null&&!r.skipped;}
+runDefi=async function(run,items,memo){
+  run.exam=false;Shell.setLevel('À toi de jouer');Shell.setDots(0);
+  await Engine.play(defiIntro(memo),run);if(run.abort||RUN!==run)return null;
+  run.exam=true;Shell.setDots(items.length);const res=[];
+  for(let i=0;i<items.length;i++){Shell.now(i);const r=await Engine.play(items[i],run);if(run.abort||RUN!==run)return null;res.push(r);Shell.mark(i,r.skipped?'skipped':'rec');}
+  run.exam=false;const skipped=res.filter(r=>r.skipped).length,ok=res.filter(r=>!r.skipped&&r.first).length;
+  return {ok,n:items.length,res,skipped,answered:res.filter(countableResult).length,pass:skipped===0&&ok>=DEFI.pass};
+};
+runLesson=async function(li){
+  Sfx.ensure();const session=resumeSession('lesson',{li}),run={gid:'lecture',levelIndex:li,session,abort:false,res:[...session.res]};RUN=run;
+  Shell.open({bg:'#FFFFFF',level:`Le son ${LESSONS[li].main}`,onClose:()=>openLecture()});
+  const items=withSeed(session.seed,()=>buildLesson(li));Shell.setDots(items.length);
+  for(let i=0;i<items.length;i++){
+    Shell.now(i);if(i<session.next){markResult(i,session.res[i]);continue;}
+    const r=await Engine.play(items[i],run);if(run.abort||RUN!==run)return;
+    run.res.push(r);checkpoint(run,i+1);markResult(i,r);if(countableResult(r)&&items[i].skill)recordGp(items[i].skill,r.first);
+  }
+  const initial=scoreOf(run.res),{pct,stars}=initial,lec=P().lecture,ps=lec.pass[li];
+  let shown=stars,note=null,noteSay=null,next=null,up=false;
+  const nextLesson=()=>runLesson(Math.min(li+1,LESSONS.length-1));
+  if(initial.skipped){note=skippedNote(initial.skipped);if(ps&&!ps.review&&lec.unlocked>li)next=nextLesson;}
+  else if(ps&&!ps.review){if(pct>=.8)lec.done[li]=Math.max(lec.done[li]||0,stars);note='Révision terminée.';next=lec.unlocked>li?nextLesson:null;}
+  else if(pct<.6){shown=stars;note='On s’entraîne encore un peu : rejoue la leçon, puis tu feras le petit défi.';noteSay='Rejoue la leçon, et ensuite, tu feras le petit défi.';}
+  else{
+    const items2=buildDefi([li],items.ctx),d=await runDefi(run,items2,false);if(!d)return;
+    run.res.push(...d.res);d.res.forEach((r,i)=>{if(countableResult(r)&&items2[i].skill)recordGp(items2[i].skill,r.first);});
+    logDefi({li,at:Date.now(),ok:d.ok,n:d.n,skipped:d.skipped,kind:'defi'});
+    if(d.pass){lec.pass[li]={at:Date.now(),score:d.ok};lec.done[li]=Math.max(lec.done[li]||0,stars);if(li===lec.unlocked&&li<LESSONS.length-1){lec.unlocked++;up=true;}note=`Défi réussi : ${d.ok} sur ${d.n}`+(up?` · nouveau son : « ${LESSONS[li+1].main} »`:'');noteSay=up?'Défi réussi ! Tu as débloqué un nouveau son !':'Défi réussi !';next=lec.unlocked>li?nextLesson:null;}
+    else if(d.skipped){note=skippedNote(d.skipped);}
+    else{shown=1;note=`Défi : ${d.ok} sur ${d.n}. Il en faut 5 : rejoue la leçon, puis retente le défi.`;noteSay=`Tu as eu ${nw(d.ok)} sur six. Il en faut cinq. Rejoue la leçon pour t’entraîner, et tu retenteras le défi.`;}
+  }
+  clearResume(run);const finalScore=scoreOf(run.res),sticker=finalScore.stars>0?addStars(finalScore.stars):null;save();Shell.onClose=()=>openLecture();
+  Celebrate.show({stars:shown,sticker,note,noteSay,next,nextLabel:'Niveau suivant',again:()=>runLesson(li),home:()=>openLecture()});
+};
+runModule=async function(mi,lv){
+  Sfx.ensure();const M=MODS[mi],L=M.levels[lv],session=resumeSession('module',{mi,lv}),run={gid:'calcul',levelIndex:lv,key:'calc:'+M.id+':'+lv,session,abort:false,res:[...session.res]};RUN=run;
+  Shell.open({bg:'#EAF3FF',level:M.name,onClose:()=>openCalcul()});const n=8;Shell.setDots(n);const items=withSeed(session.seed,()=>genDistinct(L.gen,n,false));
+  for(let i=0;i<n;i++){
+    Shell.now(i);if(i<session.next){markResult(i,session.res[i]);continue;}
+    const r=await Engine.play(items[i],run);if(run.abort||RUN!==run)return;
+    run.res.push(r);checkpoint(run,i+1);markResult(i,r);if(countableResult(r))recordSkill(`calc:${M.id}:${lv}`,r.first);
+  }
+  const initial=scoreOf(run.res),{pct,stars}=initial,mp=modProg(M.id),c=calc(),ps=mp.pass[lv];let shown=stars,note=null,noteSay=null,next=null;
+  const goOn=()=>{
+    if(lv<M.levels.length-1){next=()=>runModule(mi,lv+1);return mp.pass[lv+1]?null:`Niveau ${lv+2} débloqué : ${M.levels[lv+1].name}`;}
+    if(mi===c.open&&mi<MODS.length-1){c.open++;next=()=>runModule(mi+1,0);return `Nouvelle activité : ${MODS[mi+1].name}`;}
+    if(mi<MODS.length-1&&c.open>mi)next=()=>runModule(mi+1,nextLevel(mi+1));return null;
+  };
+  if(initial.skipped){note=skippedNote(initial.skipped);/* No call to goOn: it may open the following module. */}
+  else if(ps&&!ps.review){if(pct>=.8)mp.done[lv]=Math.max(mp.done[lv]||0,stars);note='Révision terminée.';goOn();}
+  else if(pct<.6){shown=stars;note='On s’entraîne encore un peu : rejoue ce niveau, puis tu feras le petit défi.';noteSay='Rejoue ce niveau, et ensuite, tu feras le petit défi.';}
+  else{
+    const d=await runDefi(run,genDistinct(L.gen,DEFI.n,true),false);if(!d)return;
+    run.res.push(...d.res);d.res.forEach(r=>{if(countableResult(r))recordSkill(`calc:${M.id}:${lv}`,r.first);});logCalc({k:[`${M.id}:${lv}`],at:Date.now(),ok:d.ok,n:d.n,skipped:d.skipped,kind:'defi'});
+    if(d.pass){mp.pass[lv]={at:Date.now(),score:d.ok};mp.done[lv]=Math.max(mp.done[lv]||0,stars);const unlocked=goOn();note=`Défi réussi : ${d.ok} sur ${d.n}`+(unlocked?` · ${unlocked}`:'');noteSay=unlocked?'Défi réussi ! Tu as débloqué la suite !':'Défi réussi !';}
+    else if(d.skipped){note=skippedNote(d.skipped);}
+    else{shown=1;note=`Défi : ${d.ok} sur ${d.n}. Il en faut 5 : rejoue ce niveau, puis retente le défi.`;noteSay=`Tu as eu ${nw(d.ok)} sur six. Il en faut cinq. Rejoue ce niveau pour t’entraîner, et tu retenteras le défi.`;}
+  }
+  clearResume(run);const finalScore=scoreOf(run.res),sticker=finalScore.stars>0?addStars(finalScore.stars):null;save();Shell.onClose=()=>openCalcul();
+  Celebrate.show({stars:shown,sticker,note,noteSay,next,nextLabel:'Niveau suivant',again:()=>runModule(mi,lv),home:()=>openCalcul()});
+};
+if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent='.dots i.skipped{background:#d4d9df;box-shadow:inset 0 0 0 3px #8b96a5;position:relative}.dots i.skipped::after{content:"↪";position:absolute;inset:-4px;font:700 16px/23px sans-serif;text-align:center;color:#4c5c70}';document.head.append(style);}
 
 /* END LEARNING REVISION 20261023 */
 boot();

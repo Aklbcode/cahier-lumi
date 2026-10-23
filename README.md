@@ -80,3 +80,19 @@ Chaque thème affiche les activités dans un ordre stable, du point d’entrée 
 - Luca, Créer : cartes libres, lettres guidées puis messages composés. Découvrir conserve la cuisine et les jeux de saison disponibles.
 
 L’ordre est défini par `THEME_DIFFICULTY_ORDER`, appliqué après l’ajout de tous les jeux et des activités saisonnières. Les étoiles, trésors, étapes, acquis et reprises ne sont pas modifiés par le classement.
+
+
+### Version activités et passage — 23 octobre 2026
+
+- Bouton **Passer l’exercice** dans chaque jeu, utilisable aussi pendant un feedback vocal bloqué ou après une erreur de rendu. Une création libre offre **Passer l’activité**.
+- Passage distinct des réussites et erreurs, sauvegardé dans `skips` / `skipEvents`, conservé lors d’une reprise. Aucune validation ni ouverture automatique après un passage ; zéro étoile si toute la série est passée. Les réussites antérieures restent conservées.
+- Tuiles avec niveau actuel/maximal ; sélecteur des niveaux accessibles ; résultat avec **Niveau suivant** et **Rejouer ce niveau** visant l’indice exact. Les créations restent des activités libres.
+- Pour Luca, retrait d’Écoute et place ; pour Lola, maintien de l’activité, retrait des livres et ajout de Reconnaître les lettres (7 étapes) et Écouter les sons (8 étapes), en séparant nom de lettre et son.
+- Conservation de Mes petits livres pour Luca, suppression du doublon Les histoires. Consignes « Lis la phrase », écoute de la phrase et passage à la phrase suivante. La relecture passée ne fait pas perdre un livre terminé.
+- Ordonner une histoire : exemple distinct, repères fixes, progression de 2 à 4 images, réponse au toucher et aide racontée. Retrait des Petits gestes et d’Où est le chat dans les menus enfants.
+- Blocs et paniers : un seul appui pour valider et poursuivre après l’explication. Tracé : SVG stable pendant le geste, gestion doigt/stylet/souris et anciens Safari.
+- 369 illustrations SVG locales couvrant 371 formes Unicode, pour les cartes, les animaux, les livres, le mémo et le sudoku. Le texte des réponses reste inchangé. Source/licence : [crédits Twemoji](assets/illustrations/CREDITS.md).
+- 7 vrais cris d’animaux courts (dont l’abeille), sans onomatopées synthétiques. Les consignes et feedbacks conservent Charline, français de Belgique. [Crédits sonores](assets/animaux/credits.md).
+- Banque vocale : 17 237 entrées / 182 packs. Toutes les nouvelles phrases répertoriées sont présentes ; les sons dédiés de lecture restent inchangés. Téléchargement hors connexion étendu aux nouvelles images et aux cris.
+
+Validation : 12 suites de tests (activités, langage, tracé, récits, progression, passages, moteur réel, illustrations, alphabet, audio animalier, voix et hors connexion), dont 1 200 générations alphabet/sons. Contrôle navigateur sur profils de démonstration sans sauvegarde réelle ; tablette physique et écoute humaine de l’ensemble des enregistrements non réalisées.
