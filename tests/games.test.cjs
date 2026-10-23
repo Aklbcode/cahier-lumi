@@ -23,6 +23,7 @@ S.current='luca';const oldLuca=JSON.stringify(P().skills),oldStars=seriesRewards
 parentAdjust('luca',{kind:'lecture',index:5},'skip');check(P().lecture.pass[5].parent&&!P().lecture.pass[5].score&&P().lecture.unlocked===6,'Parent reading skip distinct from assessment');check(!P().resume,'Obsolete reading resume cleared');check(seriesRewards().stars===oldStars&&JSON.stringify(P().skills)===oldLuca,'No rewards or skill evidence invented');check(JSON.stringify(S.progress.lola)===lolaBefore&&S.current==='luca','Other child and active profile preserved');
 check(parentUndo('luca').ok&&P().lecture.unlocked===1&&P().resume.li===1&&!P().lecture.pass[5],'Undo targeted fields');
 parentAdjust('luca',{kind:'lecture',index:0},'skip');check(P().lecture.pass[0].score===6&&!P().lecture.pass[0].parent,'Real assessment preserved');
+P().lecture.pass[7]={at:1,score:5,review:true};parentAdjust('luca',{kind:'lecture',index:7},'skip');check(P().lecture.pass[7].parent&&P().lecture.pass[7].previous.score===5,'Keep historical assessment when bypassing a required review');
 parentAdjust('luca',{kind:'calcul',mi:2,index:1},'open');check(calc().open>=2&&nextLevel(2)===1,'Parent opens exact calculation stage');
 parentAdjust('luca',{kind:'calcul',mi:2,index:1},'skip');check(modProg(MODS[2].id).pass[1].parent&&nextLevel(2)===2,'Calculation skip advances without fabricating score');
 parentAdjust('luca',{kind:'calcul',mi:2,index:2},'skip');check(calc().open>=3,'Last calculation stage opens next activity');

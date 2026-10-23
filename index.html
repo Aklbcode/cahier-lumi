@@ -5337,11 +5337,11 @@ function parentAdjust(id,t,action){if(!parentTargetValid(t)||!['open','skip'].in
  const patches=[];const set=(path,value)=>{const before=parentPath(p,path),after=value===undefined?{exists:false}:{exists:true,value};if(JSON.stringify(before)===JSON.stringify(after))return;parentWrite(p,path,after);patches.push({path,before,after:parentPath(p,path)});};
  if(t.kind==='lecture'){
   const lec=p.lecture,passed=lec.pass[t.index];
-  if(action==='skip'&&(!passed||passed.review))set(['lecture','pass',String(t.index)],{at:Date.now(),parent:true});
+  if(action==='skip'&&(!passed||passed.review))set(['lecture','pass',String(t.index)],{at:Date.now(),parent:true,...(passed?{previous:passed}:{})});
   set(['lecture','unlocked'],Math.max(lec.unlocked||0,Math.min(LESSONS.length-1,t.index+(action==='skip'?1:0))));
  }else if(t.kind==='calcul'){
   const c=calc(),M=MODS[t.mi],mp=modProg(M.id),passed=mp.pass[t.index];
-  if(action==='skip'&&(!passed||passed.review))set(['calcul','mods',M.id,'pass',String(t.index)],{at:Date.now(),parent:true});
+  if(action==='skip'&&(!passed||passed.review))set(['calcul','mods',M.id,'pass',String(t.index)],{at:Date.now(),parent:true,...(passed?{previous:passed}:{})});
   const next=Math.min(M.levels.length-1,t.index+(action==='skip'?1:0));set(['calcul','mods',M.id,'parentStart'],next);
   set(['calcul','open'],Math.max(c.open||0,Math.min(MODS.length-1,t.mi+(action==='skip'&&t.index===M.levels.length-1?1:0))));
  }else{
