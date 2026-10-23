@@ -46,3 +46,10 @@ Les tests du lecteur se lancent avec `node tests/speech.test.cjs`. `scripts/buil
 Vérifications : `tests/speech.test.cjs`, `tests/games.test.cjs`, `tests/offline.test.cjs`, couverture des nouvelles phrases et contrôle de tous les fichiers audio. Le test hors connexion simule téléchargements, lecture du cache et panne réseau ; ce n’est pas un essai en mode avion sur chaque appareil. Les essais d’interface utilisent un profil de démonstration sans sauvegarde.
 
 Voir `PROJECT_NOTES.md` pour la reprise ultérieure du potager.
+
+
+## Aide du parent — 23 octobre 2026
+
+Cadenas → **Aider mon enfant**, placé tout en haut : choisissez Luca ou Lola, l’activité et l’étape. **Débloquer ici** ouvre l’accès ; **Passer cette épreuve** permet d’avancer sans réussir le défi. Le bouton **Annuler la dernière action** reste disponible si la progression concernée n’a pas changé depuis.
+
+Un cadenas **Aide du parent** est aussi présent pendant les exercices. Après la vérification adulte habituelle, le panneau sélectionne le jeu et l’étape en cours. Les étapes passées manuellement restent signalées **passées par le parent**, séparément des défis réussis sans aide. Ces décisions n’ajoutent ni étoiles, ni réponses justes, ni compétences acquises. Les reprises d’exercices devenues obsolètes sont retirées ; les autres jeux et l’autre enfant sont préservés. Les anciens téléchargements hors connexion restent utilisables pendant la mise à jour.

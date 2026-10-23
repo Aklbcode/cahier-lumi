@@ -1174,7 +1174,7 @@ const Shell = {
     this.trackEl = h('div', { class: 'dots-track' }, this.dotsEl);
     this.markEl = h('div', { class: 'dot-av', 'aria-hidden': 'true' }); this.trackEl.append(this.markEl);
     this.el = h('div', { class: 'screen', hidden: true, role: 'dialog', 'aria-label': 'Jeu' },
-      h('div', { class: 'game-top' }, close, this.trackEl, this.lvlEl),
+      h('div', { class: 'game-top' }, close, this.trackEl, this.lvlEl, onTap(h('button',{class:'round-btn game-parent','aria-label':'Aide du parent',html:ICON.lock}),()=>parentGate(()=>{this.onClose=null;this.close();parentArea();},'Aide du parent'))),
       h('div', { class: 'stage-wrap' }, this.stage),
       h('div', { class: 'game-bottom' }, h('div', { class: 'voice-tools' }, spk), h('div', { style: { flex: '1', minWidth: '0' } }, this.capEl, voiceNote), this.avEl));
     document.body.append(this.el);
@@ -1517,6 +1517,8 @@ function parentArea() {
     w.innerHTML = '';
     w.append(h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between', flexWrap: 'wrap' } },
       h('h2', null, 'Espace parents'), onTap(h('button', { class: 'pbtn pri' }, 'Retour aux jeux'), close)));
+
+    w.append(parentProgressCard());
 
     /* Enfants */
     const pc = h('div', { class: 'pcard' }, h('h3', null, 'Enfants'));
@@ -3339,7 +3341,7 @@ GAMES.lecture = {
   info() { const lec = P().lecture; const n = Object.keys(lec.pass).length; return { lv: `${n} son${n > 1 ? 's' : ''} sur ${LESSONS.length}`, pct: n / LESSONS.length }; },
   report() {
     const lec = P().lecture; const ps = lec.pass || {};
-    const nV = Object.keys(ps).length;
+    const nV = Object.values(ps).filter(p=>!p.parent).length;
     const box = h('div', { style: { marginTop: '8px' } }, h('b', null, '📖 Lecture magique'), h('span', { style: { color: 'var(--ink-soft)' } }, ` — ${nV}/${LESSONS.length} sons validés par le défi sans aide (leçon en cours : « ${LESSONS[lec.unlocked].main} »)`));
     const rows = [
       ['P1', 'Conscience phonémique : entendre un son dans un mot', LESSONS.map(l => lec.gp[l.k]).filter(Boolean)],
@@ -3348,8 +3350,8 @@ GAMES.lecture = {
       ['P1', 'Lire et comprendre une phrase simple', [lec.gp.phrases].filter(Boolean)]
     ];
     rows.forEach(([tag, lab, arr]) => { const ok = arr.reduce((a, s) => a + s.ok, 0), nn = arr.reduce((a, s) => a + s.n, 0); const pct = nn ? ok / nn : 0; box.append(h('div', { class: 'skill' }, h('span', null, h('span', { class: 'tag' }, tag), lab), h('div', { class: 'meter' }, h('i', { style: { width: Math.round(pct * 100) + '%' } })), h('span', { class: 'num' }, nn ? Math.round(pct * 100) + '%' : '—'))); });
-    const gl = h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' } }, LESSONS.map((l, i) => { const p = ps[i]; const lab = !p ? 'pas encore validé' : `validé le ${frDate(p.at)} (${p.score || '–'}/6)`; return h('span', { title: lab, style: { fontWeight: 700, padding: '3px 8px', borderRadius: '8px', background: !p ? 'var(--ground)' : '#CDEFD9' } }, l.main + (p ? ' ✓' : '')); }));
-    const legend = h('div', { class: 'defi-note' }, 'Vert ✓ : son validé par le défi (5/6 sans aide) · gris : pas encore validé');
+    const gl = h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' } }, LESSONS.map((l, i) => { const p = ps[i]; const lab = !p ? 'pas encore validé' : p.parent ? 'passé par le parent le '+frDate(p.at) : `validé le ${frDate(p.at)} (${p.score || '–'}/6)`; return h('span', { title: lab, style: { fontWeight: 700, padding: '3px 8px', borderRadius: '8px', background: !p ? 'var(--ground)' : p.parent ? '#FFE8B6' : '#CDEFD9' } }, l.main + (p ? p.parent?' ↪':' ✓' : '')); }));
+    const legend = h('div', { class: 'defi-note' }, 'Vert ✓ : défi réussi sans aide · jaune ↪ : passé par le parent · gris : pas encore validé');
     const log = (lec.log || []).slice(-5).reverse();
     const logEl = log.length ? h('div', { class: 'defi-note' }, 'Derniers défis : ' + log.map(e => `${frDate(e.at)} « ${[].concat(e.li).map(i => LESSONS[i].main).join(', ')} » ${e.ok}/${e.n}`).join(' · ')) : null;
     const sel = h('select', { 'aria-label': 'Débloquer la lecture jusqu’à', style: { marginTop: '8px', border: '2px solid var(--line)', borderRadius: '10px', padding: '4px 8px' } }, LESSONS.map((l, i) => h('option', { value: i, selected: i === lec.unlocked }, `Ouvrir jusqu’au son « ${l.main} » (leçon ${i + 1})`)));
@@ -3686,10 +3688,10 @@ GAMES.calcul = {
     const box = h('div', { style: { marginTop: '8px' } }, h('b', null, '🔢 Calcul'));
     MODS.forEach((M, mi) => {
       const mp = modProg(M.id);
-      M.levels.forEach((L, lv) => { const s = pr.skills[`calc:${M.id}:${lv}`]; const pct = s && s.n ? s.ok / s.n : 0; const p = mp.pass[lv]; const st = !p ? '' : ' · acquis'; box.append(h('div', { class: 'skill' }, h('span', null, h('span', { class: 'tag' }, M.id === 'mul' ? 'P2' : 'P1'), `${M.em} ${L.ref}`, st), h('div', { class: 'meter' }, h('i', { style: { width: Math.round(pct * 100) + '%' } })), h('span', { class: 'num' }, s && s.n ? Math.round(pct * 100) + '%' : '—'))); });
+      M.levels.forEach((L, lv) => { const s = pr.skills[`calc:${M.id}:${lv}`]; const pct = s && s.n ? s.ok / s.n : 0; const p = mp.pass[lv]; const st = !p ? '' : p.parent ? ' · passée par le parent' : ' · acquis'; box.append(h('div', { class: 'skill' }, h('span', null, h('span', { class: 'tag' }, M.id === 'mul' ? 'P2' : 'P1'), `${M.em} ${L.ref}`, st), h('div', { class: 'meter' }, h('i', { style: { width: Math.round(pct * 100) + '%' } })), h('span', { class: 'num' }, s && s.n ? Math.round(pct * 100) + '%' : '—'))); });
     });
     const lg = calc().log.slice(-5).reverse();
-    box.append(h('div', { class: 'defi-note' }, 'Acquis après le bilan sans aide (5/6)' + (lg.length ? '. Derniers défis : ' + lg.map(e => `${frDate(e.at)} ${e.ok}/${e.n}`).join(' · ') : '')));
+    box.append(h('div', { class: 'defi-note' }, 'Acquis après le bilan sans aide (5/6). Les étapes passées par le parent sont signalées séparément' + (lg.length ? '. Derniers défis : ' + lg.map(e => `${frDate(e.at)} ${e.ok}/${e.n}`).join(' · ') : '')));
     const sel = h('select', { 'aria-label': 'Ouvrir les îles', style: { marginTop: '8px', border: '2px solid var(--line)', borderRadius: '10px', padding: '4px 8px' } }, MODS.map((M, i) => h('option', { value: i, selected: i === calc().open }, `Ouvrir jusqu’à l’île : ${M.name}`)));
     sel.addEventListener('change', () => { calc().open = +sel.value; save(); });
     box.append(sel);
@@ -5324,6 +5326,58 @@ function wordChainPairs(pool){const pairs=[];for(const a of pool)for(const b of 
 GAMES.mots={id:'mots',title:'Je fabrique les mots',sub:'Écouter, découper, écrire',icon:'🔤',color:'plum',stage:'#f5effa',levels:[3,4,5,6,7,8].map((max,i)=>({max,chain:i>=4,name:i>=4?'Changer un son':'Les sons puis les lettres',n:3,skill:'wordshop:'+i,tag:'P1',ref:'Segmenter un mot en sons, encoder et modifier un phonème'})),make(ctx){const li=P().lecture.unlocked||0,pool=strictWordPool(li,ctx.L.max);if(!pool.length)return itLettre(LESSONS[li],li);const pairs=ctx.L.chain?wordChainPairs(pool):[];if(!pairs.length)return itDictee(pick(pool),li);const {a,b,at,ag,bg}=pick(pairs),answer=bg[at].g,choices=shuffle(uniq([answer,ag[at].g,...sample(pool.flatMap(w=>w.gs.filter(g=>!g.mute).map(g=>g.g)),2)])).slice(0,4);if(!choices.includes(answer))choices[0]=answer;return {cls:'upgrade-stage',say:['Écoute le nouveau mot. Change un seul son pour l’écrire.',b.w],render(st,api){const slots=h('div',{class:'urow'},ag.map((g,i)=>h('span',{class:'slot'+(i===at?' next':''),style:{fontSize:'36px',color:g.mute?'#a9a6b3':''}},g.g)));let chosen=null;const row=h('div',{class:'urow'},choices.map(g=>uButton(g,()=>{chosen=g;slots.children[at].textContent=g;})));const go=uButton('✓ Vérifier',()=>{if(chosen===answer)api.answer(true,{praise:b.w});else api.answer(false,{feedback:'Écoute le nouveau mot. Change un seul son pour l’écrire.'});});api.strategy=()=>{slots.children[at].classList.add('reveal');};uWrap(st,uButton('🔊 '+b.e,()=>Voice.say(b.w),{style:{fontSize:'40px'}}),slots,row,go);}};}};
 addThemeGame('grands','lire','mots');
 UPGRADE_VOICE_LINES.push('Écoute le nouveau mot. Change un seul son pour l’écrire.');
+
+/* Parent decisions change access, never assessment evidence or rewards. */
+function withParentChild(id,fn){if(!S.profiles.some(p=>p.id===id))throw Error('Enfant inconnu');const keep=S.current;try{S.current=id;return fn(P());}finally{S.current=keep;}}
+function parentTargetValid(t){if(!t||!Number.isInteger(t.index))return false;if(t.kind==='lecture')return t.index>=0&&t.index<LESSONS.length;if(t.kind==='calcul')return Number.isInteger(t.mi)&&t.mi>=0&&t.mi<MODS.length&&t.index>=0&&t.index<MODS[t.mi].levels.length;if(t.kind==='game')return !!GAMES[t.gid]?.levels&&t.index>=0&&t.index<GAMES[t.gid].levels.length;return false;}
+function parentTargetName(t){if(t.kind==='lecture')return 'Lire · son « '+LESSONS[t.index].main+' »';if(t.kind==='calcul')return MODS[t.mi].name+' · '+MODS[t.mi].levels[t.index].name;return (SIMPLE_GAME_NAMES[t.gid]||GAMES[t.gid].title)+' · étape '+(t.index+1);}
+function parentPath(p,path){let o=p;for(const k of path){if(o==null||!Object.prototype.hasOwnProperty.call(o,k))return {exists:false};o=o[k];}return {exists:true,value:JSON.parse(JSON.stringify(o))};}
+function parentWrite(p,path,value){let o=p;for(const k of path.slice(0,-1)){if(!o[k]||typeof o[k]!=='object')o[k]={};o=o[k];}if(value.exists)o[path.at(-1)]=JSON.parse(JSON.stringify(value.value));else delete o[path.at(-1)];}
+function parentAdjust(id,t,action){if(!parentTargetValid(t)||!['open','skip'].includes(action))throw Error('Choix de progression invalide');const result=withParentChild(id,p=>{
+ const patches=[];const set=(path,value)=>{const before=parentPath(p,path),after=value===undefined?{exists:false}:{exists:true,value};if(JSON.stringify(before)===JSON.stringify(after))return;parentWrite(p,path,after);patches.push({path,before,after:parentPath(p,path)});};
+ if(t.kind==='lecture'){
+  const lec=p.lecture,passed=lec.pass[t.index];
+  if(action==='skip'&&(!passed||passed.review))set(['lecture','pass',String(t.index)],{at:Date.now(),parent:true});
+  set(['lecture','unlocked'],Math.max(lec.unlocked||0,Math.min(LESSONS.length-1,t.index+(action==='skip'?1:0))));
+ }else if(t.kind==='calcul'){
+  const c=calc(),M=MODS[t.mi],mp=modProg(M.id),passed=mp.pass[t.index];
+  if(action==='skip'&&(!passed||passed.review))set(['calcul','mods',M.id,'pass',String(t.index)],{at:Date.now(),parent:true});
+  const next=Math.min(M.levels.length-1,t.index+(action==='skip'?1:0));set(['calcul','mods',M.id,'parentStart'],next);
+  set(['calcul','open'],Math.max(c.open||0,Math.min(MODS.length-1,t.mi+(action==='skip'&&t.index===M.levels.length-1?1:0))));
+ }else{
+  const gp=gameProg(t.gid),next=Math.min(GAMES[t.gid].levels.length-1,t.index+(action==='skip'?1:0));
+  if(action==='skip'&&!gp.parentPassed?.[t.index])set(['games',t.gid,'parentPassed',String(t.index)],{at:Date.now(),parent:true});
+  set(['games',t.gid,'lvl'],next);set(['games',t.gid,'unlocked'],Math.max(gp.unlocked||0,next));set(['games',t.gid,'low'],0);
+ }
+ const resume=p.resume;if(resume&&(t.kind==='lecture'&&resume.kind==='lesson'||t.kind==='calcul'&&resume.kind==='module'||t.kind==='game'&&resume.kind==='game'&&resume.gid===t.gid))set(['resume'],undefined);
+ if(patches.length){const log=p.parentActions||(p.parentActions=[]);log.push({at:Date.now(),action,target:{...t},label:parentTargetName(t),patches});if(log.length>30)log.shift();}
+ return {changed:!!patches.length,message:(action==='skip'?'Passée par le parent : ':'Accès ouvert : ')+parentTargetName(t)};
+ });if(result.changed)save();return result;}
+function parentUndo(id){const result=withParentChild(id,p=>{const entry=(p.parentActions||[]).at(-1);if(!entry||entry.undone)return {ok:false,message:'Aucune action à annuler.'};
+ const valid=entry.patches?.every(x=>Array.isArray(x.path)&&['lecture','calcul','games','resume'].includes(x.path[0])&&x.path.every(k=>typeof k==='string'&&!['__proto__','prototype','constructor'].includes(k))&&JSON.stringify(parentPath(p,x.path))===JSON.stringify(x.after));
+ if(!valid)return {ok:false,message:'La progression a changé depuis cette action. Elle est conservée.'};
+ for(const x of [...entry.patches].reverse())parentWrite(p,x.path,x.before);entry.undone=Date.now();return {ok:true,message:'Dernière action annulée.'};});if(result.ok)save();return result;}
+function parentInitialTarget(id){return withParentChild(id,p=>{const r=p.resume;if(r?.kind==='lesson')return {kind:'lecture',index:r.li};if(r?.kind==='module')return {kind:'calcul',mi:r.mi,index:r.lv};if(r?.kind==='game'&&GAMES[r.gid]?.levels)return {kind:'game',gid:r.gid,index:gameProg(r.gid).lvl};return prof().world==='grands'?{kind:'lecture',index:p.lecture.unlocked||0}:{kind:'game',gid:'gestes',index:gameProg('gestes').lvl};});}
+function parentProgressCard(){let child=S.current,target=parentInitialTarget(child);const box=h('div',{class:'pcard parent-progress','aria-label':'Aider mon enfant'}),status=h('p',{role:'status','aria-live':'polite',class:'parent-action-status'}),form=h('div',{class:'parent-progress-form'}),details=h('p',{class:'defi-note'}),history=h('p',{class:'defi-note'});
+ box.append(h('h3',null,'🔓 Aider mon enfant'),h('p',null,'Choisissez une activité pour l’ouvrir ou passer une épreuve. Aucun point n’est ajouté. « Passée par le parent » reste distinct d’une réussite autonome.'),form,details,status,history);
+ const who=h('select',{'aria-label':'Enfant à accompagner'},S.profiles.map(p=>h('option',{value:p.id,selected:p.id===child},kid(p.id).name))),activity=h('select',{'aria-label':'Activité à débloquer'}),step=h('select',{'aria-label':'Étape à ouvrir'});
+ const field=(label,input)=>h('label',{class:'parent-progress-field'},h('span',null,label),input);
+ form.append(field('Enfant',who),field('Activité',activity),field('Étape',step));
+ const key=t=>t.kind==='lecture'?'lecture':t.kind==='calcul'?'calcul:'+t.mi:'game:'+t.gid;
+ const selectTarget=()=>{const value=activity.value;if(value==='lecture')return {kind:'lecture',index:+step.value};if(value.startsWith('calcul:'))return {kind:'calcul',mi:+value.slice(7),index:+step.value};return {kind:'game',gid:value.slice(5),index:+step.value};};
+ const currentTarget=()=>withParentChild(child,p=>{const v=activity.value;if(v==='lecture')return {kind:'lecture',index:p.lecture.unlocked||0};if(v.startsWith('calcul:')){const mi=+v.slice(7);return {kind:'calcul',mi,index:nextLevel(mi)};}const gid=v.slice(5);return {kind:'game',gid,index:gameProg(gid).lvl};});
+ const stateOf=t=>withParentChild(child,p=>t.kind==='lecture'?p.lecture.pass[t.index]:t.kind==='calcul'?modProg(MODS[t.mi].id).pass[t.index]:gameProg(t.gid).parentPassed?.[t.index]);
+ const refreshDescription=()=>{target=selectTarget();const st=stateOf(target);details.textContent=parentTargetName(target)+(st?.parent?' · passée par le parent':st&&!st.review?' · défi réussi sans aide':'');const last=withParentChild(child,p=>(p.parentActions||[]).at(-1));history.textContent=last&&!last.undone?'Dernière action : '+(last.action==='skip'?'passer « ':'ouvrir « ')+last.label+' »':'';undo.hidden=!last||!!last.undone;};
+ const fillSteps=t=>{step.innerHTML='';const levels=t.kind==='lecture'?LESSONS.map(l=>({name:'Son « '+l.main+' »'})):t.kind==='calcul'?MODS[t.mi].levels:GAMES[t.gid].levels;levels.forEach((L,i)=>{const st=stateOf({...t,index:i});step.append(h('option',{value:i,selected:i===t.index},`${i+1}. ${L.name}`+(st?.parent?' · parent':st&&!st.review?' · réussi':'')));});refreshDescription();};
+ const fillActivities=()=>{activity.innerHTML='';const world=S.profiles.find(p=>p.id===child).world;const options=[['lecture','📖 Lire — les sons'],...MODS.map((M,mi)=>['calcul:'+mi,'🔢 Calcul — '+M.name]),...WORLD_TILES[world].filter(id=>GAMES[id]?.levels).map(id=>['game:'+id,(GAMES[id].icon||'')+' '+(SIMPLE_GAME_NAMES[id]||GAMES[id].title)])];if(!options.some(([v])=>v===key(target)))target=parentInitialTarget(child);options.forEach(([v,label])=>activity.append(h('option',{value:v,selected:v===key(target)},label)));fillSteps(target);};
+ const apply=action=>{target=selectTarget();try{const result=parentAdjust(child,target,action);status.textContent=result.message;fillSteps(target);}catch(e){status.textContent=e.message;}};
+ const undo=onTap(h('button',{class:'pbtn'},'Annuler la dernière action'),()=>{const result=parentUndo(child);status.textContent=result.message;fillSteps(target);});
+ box.append(h('div',{class:'prow parent-progress-actions'},onTap(h('button',{class:'pbtn pri'},'Débloquer ici'),()=>apply('open')),onTap(h('button',{class:'pbtn'},'Passer cette épreuve'),()=>apply('skip')),undo));
+ who.addEventListener('change',()=>{child=who.value;target=parentInitialTarget(child);status.textContent='';fillActivities();});activity.addEventListener('change',()=>{status.textContent='';fillSteps(currentTarget());});step.addEventListener('change',refreshDescription);fillActivities();return box;
+}
+const originalNextLevel=nextLevel;
+nextLevel=function(mi){const mp=modProg(MODS[mi].id);if(Number.isInteger(mp.parentStart)){for(let i=clamp(mp.parentStart,0,MODS[mi].levels.length-1);i<MODS[mi].levels.length;i++)if(!mp.pass[i]||mp.pass[i].review)return i;return clamp(mp.parentStart,0,MODS[mi].levels.length-1);}return originalNextLevel(mi);};
+document.body.append(h('style',null,`.parent-progress{border:2px solid #b8dcca!important}.parent-progress-form{display:grid;grid-template-columns:1fr 2fr 2fr;gap:12px}.parent-progress-field{display:flex;flex-direction:column;gap:6px;font-weight:700}.parent-progress-field select{width:100%;min-height:46px;border:2px solid var(--line);border-radius:12px;background:white;padding:7px;font:inherit;min-width:0}.parent-action-status{color:#28734e;font-weight:700;min-height:1.4em}.game-parent{width:44px;height:44px;flex:none;color:var(--ink-soft)}.game-top .lvl{max-width:33%;white-space:normal}.game-parent svg{width:22px;height:22px}@media(max-width:650px){.parent-progress-form{grid-template-columns:1fr}.parent-progress-actions{align-items:stretch}.parent-progress-actions button{flex:1 1 170px}.game-top .lvl{font-size:12px;max-width:30%}}`));
 
 boot();
 </script>
