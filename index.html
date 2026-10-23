@@ -1252,7 +1252,7 @@ const Engine = {
       let settled = false, finished = false, wrongs = run.session && !run.exam ? run.session.partialWrongs || 0 : 0, stepWrongs = 0;
       if(run.session && !run.exam && run.session.partialHelped)item.helped=true;
       const alive = () => !finished && !run.abort && RUN === run;
-      const sealAnswer = () => { Shell.item = null; if(settled){Shell.skipCurrent=null;if(Shell.skipBtn)Shell.skipBtn.disabled=true;} $$('button, input, select, textarea, [role="button"]', st).forEach(el => { if ('disabled' in el) el.disabled = true; el.style.pointerEvents = 'none'; }); };
+      const sealAnswer = () => { if(run.abort||RUN!==run)return; Shell.item = null; if(settled){Shell.skipCurrent=null;if(Shell.skipBtn)Shell.skipBtn.disabled=true;} $$('button, input, select, textarea, [role="button"]', st).forEach(el => { if ('disabled' in el) el.disabled = true; el.style.pointerEvents = 'none'; }); };
       const exam = !!run.exam;
       const api = {
         stage: st, alive, exam,
@@ -1269,7 +1269,7 @@ const Engine = {
             Sfx.play('tap');
             Sfx.play('key'); await Voice.say(pick(DEFI_ACK), { feedback: 'neutral' });
             await sleep(150);
-            if(settled)return false; settled=true; sealAnswer(); resolve({ first: !!ok, exam: true });
+            if(settled||run.abort||RUN!==run)return false; settled=true; sealAnswer(); resolve({ first: !!ok, exam: true });
             return true;
           }
           if (ok) {
@@ -1278,7 +1278,7 @@ const Engine = {
             Sfx.play(o.sfx || 'good'); Lumi.react('happy');
             await Voice.say(o.praise || item.praise || pick(PRAISE), { feedback: 'correct' });
             await sleep(o.wait != null ? o.wait : 250);
-            if(settled)return false; settled=true; sealAnswer(); resolve({ first: wrongs === 0 && !item.helped, wrongs, helped: !!item.helped });
+            if(settled||run.abort||RUN!==run)return false; settled=true; sealAnswer(); resolve({ first: wrongs === 0 && !item.helped, wrongs, helped: !!item.helped });
             return true;
           }
           return api.wrong(o, false);
