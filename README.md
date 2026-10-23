@@ -53,3 +53,17 @@ Voir `PROJECT_NOTES.md` pour la reprise ultérieure du potager.
 Cadenas → **Aider mon enfant**, placé tout en haut : choisissez Luca ou Lola, l’activité et l’étape. **Débloquer ici** ouvre l’accès ; **Passer cette épreuve** permet d’avancer sans réussir le défi. Le bouton **Annuler la dernière action** reste disponible si la progression concernée n’a pas changé depuis.
 
 Un cadenas **Aide du parent** est aussi présent pendant les exercices. Après la vérification adulte habituelle, le panneau sélectionne le jeu et l’étape en cours. Les étapes passées manuellement restent signalées **passées par le parent**, séparément des défis réussis sans aide. Ces décisions n’ajoutent ni étoiles, ni réponses justes, ni compétences acquises. Les reprises d’exercices devenues obsolètes sont retirées ; les autres jeux et l’autre enfant sont préservés. Les anciens téléchargements hors connexion restent utilisables pendant la mise à jour.
+
+## Lire, écrire et comprendre — 23 octobre 2026
+
+- Douze formes script : démonstration, repassage, copie et rappel après modèle caché ; prégraphisme pour les petits et fiche A4 dans l’espace parents.
+- Petits messages à composer, destinataire, espaces et point ; résultat conservé comme carte modifiable. Prérequis de lecture contrôlés.
+- « Écoute et place » : relations spatiales, choix des objets, puis deux actions. « Histoire mélangée » : cinq récits originaux, deux à quatre scènes et questions de compréhension. Versions plus courtes pour Lola.
+- Deux vraies questions pour chacun des douze petits livres ; mode d’écoute conservé, sans certification du décodage oral.
+- Comptage des phonèmes sur lexique explicite ; mots à semi-voyelles non enseignées exclus du déchiffrage annoncé ; « nounours » corrigé. Les graphèmes ne sont plus pris pour des phonèmes par défaut.
+- Quatre reprises dans « Mon petit rappel » ; exemples identifiés par contenu et réussites différées séparées des essais immédiats.
+- 306 nouvelles phrases Charline ; sons de référence conservés. Les mises à jour du moteur et de l’index vocal prennent le réseau en priorité, avec repli hors connexion.
+
+[Analyse et changements](analyses/Analyse-et-changements-2026-10-23.md) : panorama de 18 offres/éditions, dossier de recherche et correspondance avec les changements. Les tests logiciels ne constituent pas une étude d’efficacité de Lumi ni une certification de l’écriture manuscrite.
+
+Sources des nouveaux modules : `learning-language-fragment.js` et `learning-writing-fragment.js`. `python3 scripts/integrate_learning.py` les intègre au HTML autonome. Vérification complémentaire : `node tests/literacy.test.cjs` et `node tests/writing.test.cjs`.

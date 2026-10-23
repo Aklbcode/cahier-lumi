@@ -1,0 +1,8 @@
+tests/games.test.cjs : OK
+tests/writing.test.cjs : OK
+tests/literacy.test.cjs : OK
+tests/speech.test.cjs : OK
+tests/offline.test.cjs : OK
+scripts/inventory_feedback.cjs : OK
+scripts/check_reading_coverage.cjs : OK
+Audio : 17124 entrées décodées, aucune erreur.
