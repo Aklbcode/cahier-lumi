@@ -107,3 +107,8 @@ Validation : 12 suites de tests (activités, langage, tracé, récits, progressi
 - Site indépendant pour écran e-ink : https://aklbcode.github.io/cahier-lumi/boox/ — données et fichiers séparés. Compatibilité technique préparée pour Android ancien ; essai sur la tablette physique encore nécessaire.
 
 Vérifications supplémentaires : `tests/cursive.test.cjs`, `tests/admin.test.cjs`, `tests/admin-integration.test.cjs`, `tests/favorite-characters.test.cjs`. Tous les 17 261 extraits audio de cette version sont décodables.
+
+
+## Correction tablette classique — 24 octobre 2026
+
+L’initialisation des modèles cursifs utilisait `Array.at`, absent de certains anciens navigateurs. Une bibliothèque de compatibilité locale est désormais chargée avant les jeux. La présentation, les activités et les progrès restent conservés. Un écran Réessayer remplace la page blanche en cas de panne. Voir `analyses/Correctif-classique-20261024.md` et `tests/classic-compat.test.cjs`.

@@ -14,5 +14,7 @@
   "assets/fonts/Borel-OFL.txt",
   "assets/personnages/petit-poilu.png",
   "assets/personnages/barbapapa.png",
-  "assets/personnages/CREATION.md"
+  "assets/personnages/CREATION.md",
+  "assets/compat/core-js.js",
+  "assets/compat/CORE-JS-LICENSE"
 ]
