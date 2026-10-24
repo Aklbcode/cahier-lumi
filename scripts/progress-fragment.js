@@ -55,13 +55,14 @@ Celebrate.show=function(options){
 /* Keep the completed level distinct from the automatically selected following level.
    In particular, Rejouer must never silently start a different level. */
 function memoryLevelCompleted(run,g){
-  if(!['memo','memoG','memoMots'].includes(g.id))return false;
+  const memory=['memo','memoG','memoMots'].includes(g.id);
+  if(!memory&&!g.advanceOnCompletion)return false;
   const played=run.levelIndex??run.session?.li??0,L=g.levels[played],expected=L?.n||g.n||6;
   /* Turning over a nonmatching pair is ordinary exploration in a memory game.
      Completion opens the next board; mistakes still determine the star score.
      Historical resume records have no completed flag, but their boolean first
      result was emitted only after all pairs had been found. */
-  return run.res.length===expected&&run.res.every(r=>r&&!r.skipped&&(r.completed===true||typeof r.first==='boolean'));
+  return run.res.length===expected&&run.res.every(r=>r&&!r.skipped&&(r.completed===true||(memory&&typeof r.first==='boolean')));
 }
 finishGame=function(run,g,gp){
   clearResume(run);

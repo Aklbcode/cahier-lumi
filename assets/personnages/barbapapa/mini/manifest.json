@@ -1,0 +1,66 @@
+[
+  {
+    "id": "barbapapa",
+    "src": "assets/personnages/barbapapa/mini/barbapapa.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/barbapapa.gif",
+    "width": 113,
+    "height": 83,
+    "frames": 1
+  },
+  {
+    "id": "barbamama",
+    "src": "assets/personnages/barbapapa/mini/barbamama.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/barbamama.gif",
+    "width": 103,
+    "height": 83,
+    "frames": 1
+  },
+  {
+    "id": "barbabelle",
+    "src": "assets/personnages/barbapapa/mini/barbabelle.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/barbabelle.gif",
+    "width": 83,
+    "height": 83,
+    "frames": 1
+  },
+  {
+    "id": "barbalala",
+    "src": "assets/personnages/barbapapa/mini/barbalala.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/barbalala.gif",
+    "width": 101,
+    "height": 83,
+    "frames": 1
+  },
+  {
+    "id": "barbibul",
+    "src": "assets/personnages/barbapapa/mini/barbibul.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/barbibul.gif",
+    "width": 112,
+    "height": 83,
+    "frames": 1
+  },
+  {
+    "id": "barbidou",
+    "src": "assets/personnages/barbapapa/mini/barbidou.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/barbidou.gif",
+    "width": 103,
+    "height": 83,
+    "frames": 1
+  },
+  {
+    "id": "barbidur",
+    "src": "assets/personnages/barbapapa/mini/barbidur.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/barbidur.gif",
+    "width": 95,
+    "height": 83,
+    "frames": 1
+  },
+  {
+    "id": "barbotine",
+    "src": "assets/personnages/barbapapa/mini/barbotine.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/barbotine.gif",
+    "width": 83,
+    "height": 95,
+    "frames": 1
+  }
+]

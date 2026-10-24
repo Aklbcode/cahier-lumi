@@ -4,7 +4,15 @@ const FAVORITE_ACTIVITIES={recit:'petit',recitP:'petit'};
 function favoriteGuide(key){const friend=FAVORITE_CHARACTERS[key];if(!friend)return null;const picture=h('img',{src:friend.image,alt:friend.name,width:70,height:70});picture.addEventListener('error',()=>picture.hidden=true);return h('aside',{class:'favorite-guide','aria-label':friend.label},picture,h('span',null,friend.label));}
 const playBeforeFavorites=Engine.play.bind(Engine);
 Engine.play=function(item,run){const friend=FAVORITE_ACTIVITIES[run.gid];if(!friend||run.exam)return playBeforeFavorites(item,run);const render=item.render;return playBeforeFavorites({...item,render(st,api){render(st,api);if(!st.querySelector('.favorite-guide'))st.prepend(favoriteGuide(friend));}},run);};
-function characterPicture(person){const image=h('img',{class:'character-picture',src:person.src,alt:person.name,loading:'eager'});image.addEventListener('dragstart',e=>e.preventDefault());image.addEventListener('error',()=>{image.hidden=true;const parent=image.parentNode;if(parent&&!parent.querySelector('.character-image-error'))parent.append(h('span',{class:'character-image-error'},'Image indisponible'));});return image;}
+function characterPicture(person){
+ const unavailable=image=>{image.hidden=true;const parent=image.parentNode;if(parent&&!parent.querySelector('.character-image-error'))parent.append(h('span',{class:'character-image-error'},'Image indisponible'));};
+ if(person.contentBounds){
+  const [x,y,right,bottom]=person.contentBounds,box=h('span',{class:'character-picture character-crop',role:'img','aria-label':person.name});
+  box.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+[x,y,right-x,bottom-y].join(' ')+'" width="100%" height="100%" aria-hidden="true" style="display:block;pointer-events:none"><image href="'+person.src+'" x="0" y="0" width="'+person.width+'" height="'+person.height+'"/></svg>';
+  const raster=box.querySelector('image');if(raster)raster.addEventListener('error',()=>unavailable(box));return box;
+ }
+ const image=h('img',{class:'character-picture',src:person.src,alt:person.name,loading:'eager'});image.addEventListener('dragstart',e=>e.preventDefault());image.addEventListener('error',()=>unavailable(image));return image;
+}
 function characterMemoDeck(ctx){const count=clamp(ctx.L.pairs,2,BLUEY_CARDS.length);let selected;if(count===2&&ctx.li===0)selected=BLUEY_CARDS.filter(c=>['bluey','bingo'].includes(c.id));else selected=sample(BLUEY_CARDS,count);return {pairs:selected.length,deck:shuffle(selected.flatMap(c=>[{...c},{...c}]))};}
 function makeCharacterMemo(ctx){
  const model=characterMemoDeck(ctx);

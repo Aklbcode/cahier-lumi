@@ -1,0 +1,34 @@
+[
+  {
+    "id": "petit-poilu",
+    "name": "Petit Poilu",
+    "src": "assets/personnages/petit-poilu-univers/petit-poilu.png",
+    "sourceURL": "https://www.petitpoilu.com/assets/img/home/activites/activites_pp.png",
+    "sourcePage": "https://www.petitpoilu.com/",
+    "width": 3200,
+    "height": 1837,
+    "bytes": 24767,
+    "contentBounds": [
+      2229,
+      805,
+      3064,
+      1382
+    ]
+  },
+  {
+    "id": "prince",
+    "name": "Le prince",
+    "src": "assets/personnages/petit-poilu-univers/prince.png",
+    "sourceURL": "https://www.petitpoilu.com/assets/img/home/avis/avis_prince.png",
+    "sourcePage": "https://www.petitpoilu.com/",
+    "width": 1394,
+    "height": 1066,
+    "bytes": 99672,
+    "contentBounds": [
+      183,
+      39,
+      1037,
+      753
+    ]
+  }
+]

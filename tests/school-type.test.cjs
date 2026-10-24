@@ -1,0 +1,24 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict'),{loadApp}=require('./helpers/render-fixture.cjs');
+const root=path.join(__dirname,'..'),moduleText=fs.readFileSync(path.join(root,'school-type-fragment.js'),'utf8'),{ctx,source}=loadApp({Blob,URL,AbortController,setTimeout:()=>0,clearTimeout(){}});
+vm.runInContext(`S=defState();S.current='luca';P().lecture.unlocked=6;P().skills.sentinel={ok:2,n:3};const typeBefore={state:JSON.stringify(S),lessons:JSON.stringify(LESSONS),words:JSON.stringify(WORDS),models:JSON.stringify(SCHOOL_WRITING_MODELS),levels:JSON.stringify(Object.fromEntries(Object.entries(GAMES).map(([id,g])=>[id,g.levels]))),numeric:JSON.stringify(withSeed(100,()=>GAMES.suitesG.make({L:GAMES.suitesG.levels.find(l=>l.num),i:0,li:0,used:[],bag:{}})).say)};`,ctx);
+if(!source.includes('const SCHOOL_TYPE_FAMILY='))vm.runInContext(moduleText,ctx);
+vm.runInContext(`
+const typeCheck=(ok,msg)=>{if(!ok)throw Error(msg)};
+typeCheck(JSON.stringify(S)===typeBefore.state,'Typography never changes child state or progress');
+typeCheck(JSON.stringify(LESSONS)===typeBefore.lessons&&JSON.stringify(WORDS)===typeBefore.words,'All graphemes, words and questions remain unchanged');
+typeCheck(JSON.stringify(SCHOOL_WRITING_MODELS)===typeBefore.models,'All vector stroke coordinates, starts and exits remain unchanged');
+typeCheck(JSON.stringify(Object.fromEntries(Object.entries(GAMES).map(([id,g])=>[id,g.levels])))===typeBefore.levels,'Activity levels and skills are untouched');
+typeCheck(JSON.stringify(withSeed(100,()=>GAMES.suitesG.make({L:GAMES.suitesG.levels.find(l=>l.num),i:0,li:0,used:[],bag:{}})).say)===typeBefore.numeric,'Numerical questions are unchanged');
+typeCheck(['--font-read:','--font-display:','--font-cursive:'].every(v=>SCHOOL_TYPE_CSS.includes(v+'"Borel Lumi",cursive')),'All three application font roles use the chosen cursive');
+typeCheck(SCHOOL_TYPE_CSS.includes('body,body *,body *::before,body *::after{font-family:"Borel Lumi",cursive!important'),'Inline and component-specific UI font families are overridden');
+typeCheck(SCHOOL_TYPE_CSS.includes('svg text,svg tspan{font-family:"Borel Lumi",cursive!important}'),'Live SVG labels and numerals use cursive');
+typeCheck(SCHOOL_TYPE_CSS.includes('.word>.s0,.word>.s1,.word .s0>span,.word .s1>span{display:inline}'),'Colored grapheme spans remain in a continuous inline text flow for cursive shaping');
+typeCheck(!/https?:|fonts.googleapis|fonts.gstatic/.test(SCHOOL_TYPE_CSS),'Typeface stylesheet has no external dependency');
+typeCheck(!/text-transform|font-size:\\s*0|display:\\s*none|visibility:\\s*hidden/.test(SCHOOL_TYPE_CSS),'No content is capitalized, hidden or erased to fit the new type');
+typeCheck(SCHOOL_TYPE_CSS.includes('.slot,.ltile{height:auto!important')&&SCHOOL_TYPE_CSS.includes('.stage{overflow:auto}'),'Tall letter metrics have room and overflowing exercises remain reachable');
+typeCheck(SCHOOL_TYPE_CSS.includes('@media(max-height:760px)')&&SCHOOL_TYPE_CSS.includes('@media(max-width:600px)'),'Laptop, landscape tablet and portrait sizing rules exist');
+const installed=document.head.querySelectorAll('style').filter(e=>e.getAttribute('id')==='school-type-style');typeCheck(installed.length===1&&installed[0].textContent===SCHOOL_TYPE_CSS,'One global local stylesheet is installed before startup');
+`,ctx,{timeout:10000});
+assert.ok(fs.statSync(path.join(root,'assets/fonts/Borel-Regular.ttf')).size>10000,'The local cursive font is bundled');
+assert.ok(fs.readFileSync(path.join(root,'assets/fonts/Borel-OFL.txt'),'utf8').includes('SIL OPEN FONT LICENSE'),'Typeface redistribution license is bundled');
+console.log('Typographie : Borel locale dans tous les rôles et textes SVG ; contenus, calculs, compétences et tracés vectoriels inchangés.');
