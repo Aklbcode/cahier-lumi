@@ -1,6 +1,6 @@
 {
-  "added": 1166,
-  "bytes": 32056560,
+  "added": 1186,
+  "bytes": 32458560,
   "phrases": [
     "la carte",
     "la coupe",
@@ -1167,6 +1167,26 @@
     "Barbapapa cherche la même forme que toi",
     "Guide Peter Pan. Touche la case voisine pour aller à la maison.",
     "Guide Peter Pan",
-    "Bravo, Peter Pan est arrivé !"
+    "Bravo, Peter Pan est arrivé !",
+    "Regarde le personnage. Touche la pastille de la même couleur.",
+    "Regarde le personnage",
+    "Touche la pastille de la même couleur",
+    "Oui, tu as trouvé la bonne couleur",
+    "Regarde encore les couleurs",
+    "Regarde l’image qui brille",
+    "Touche l’image rouge",
+    "Touche l’image bleue",
+    "Touche l’image jaune",
+    "Touche l’image verte",
+    "Touche l’image orange",
+    "Touche l’image violette",
+    "Touche l’image rose",
+    "Touche l’image noire",
+    "Touche l’image blanche",
+    "Touche l’image brune",
+    "Touche l’image grise",
+    "Regarde bien les deux images. Essaie une autre paire.",
+    "Regarde bien les deux images",
+    "Essaie une autre paire"
   ]
 }

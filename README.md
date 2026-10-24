@@ -112,3 +112,13 @@ Vérifications supplémentaires : `tests/cursive.test.cjs`, `tests/admin.test.cj
 ## Correction tablette classique — 24 octobre 2026
 
 L’initialisation des modèles cursifs utilisait `Array.at`, absent de certains anciens navigateurs. Une bibliothèque de compatibilité locale est désormais chargée avant les jeux. La présentation, les activités et les progrès restent conservés. Un écran Réessayer remplace la page blanche en cas de panne. Voir `analyses/Correctif-classique-20261024.md` et `tests/classic-compat.test.cjs`.
+
+
+## Jouer avec les personnages — 24 octobre 2026
+
+- Les paires de Bluey montrent deux images identiques de chaque personnage : Bluey, Bingo, Bandit, Chilli, Muffin, Socks, Coco et Snickers. Six étapes progressives chez les grands.
+- Les couleurs des Barbapapa utilisent réellement les personnages et leur couleur corporelle, puis le transfert vers des pastilles neutres. Les illustrations et sources sont dans `assets/personnages/CREDITS.md`.
+- Le mémo avance lorsque toutes les grilles sont terminées, même après une mauvaise paire ; les erreurs servent encore aux étoiles. Le bouton Niveau suivant est proposé. Les exercices passés ne débloquent pas une étape.
+- L’ancien mémo français mot/image reste disponible séparément dans Les paires des mots. Les anciens scores des nouveaux jeux d’images sont archivés, leurs accès sont conservés par taille de grille.
+
+Détails et validation : `analyses/Personnages-en-jeu-20261024.md`, `tests/character-games.test.cjs` et `tests/memory-progression.test.cjs`.

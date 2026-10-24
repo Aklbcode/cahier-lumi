@@ -1,0 +1,66 @@
+[
+  {
+    "id": "bluey",
+    "name": "Bluey",
+    "src": "assets/personnages/bluey/bluey.png",
+    "sourceURL": "https://www.bluey.tv/wp-content/uploads/2023/07/Bluey.png",
+    "sourcePage": "https://www.bluey.tv/characters/bluey/",
+    "bytes": 168307
+  },
+  {
+    "id": "bingo",
+    "name": "Bingo",
+    "src": "assets/personnages/bluey/bingo.png",
+    "sourceURL": "https://www.bluey.tv/wp-content/uploads/2023/07/B2.png",
+    "sourcePage": "https://www.bluey.tv/characters/bingo/",
+    "bytes": 157945
+  },
+  {
+    "id": "bandit",
+    "name": "Bandit",
+    "src": "assets/personnages/bluey/bandit.png",
+    "sourceURL": "https://www.bluey.tv/wp-content/uploads/2023/07/Bandit.png",
+    "sourcePage": "https://www.bluey.tv/characters/bandit/",
+    "bytes": 239439
+  },
+  {
+    "id": "chilli",
+    "name": "Chilli",
+    "src": "assets/personnages/bluey/chilli.png",
+    "sourceURL": "https://www.bluey.tv/wp-content/uploads/2023/07/Chilli.png",
+    "sourcePage": "https://www.bluey.tv/characters/chilli/",
+    "bytes": 193334
+  },
+  {
+    "id": "muffin",
+    "name": "Muffin",
+    "src": "assets/personnages/bluey/muffin.png",
+    "sourceURL": "https://www.bluey.tv/wp-content/uploads/2023/07/Muffin-1.png",
+    "sourcePage": "https://www.bluey.tv/characters/muffin/",
+    "bytes": 179604
+  },
+  {
+    "id": "socks",
+    "name": "Socks",
+    "src": "assets/personnages/bluey/socks.png",
+    "sourceURL": "https://www.bluey.tv/wp-content/uploads/2023/07/Socks-1.png",
+    "sourcePage": "https://www.bluey.tv/characters/socks/",
+    "bytes": 192705
+  },
+  {
+    "id": "coco",
+    "name": "Coco",
+    "src": "assets/personnages/bluey/coco.png",
+    "sourceURL": "https://www.bluey.tv/wp-content/uploads/2023/07/Coco.png",
+    "sourcePage": "https://www.bluey.tv/characters/coco/",
+    "bytes": 154549
+  },
+  {
+    "id": "snickers",
+    "name": "Snickers",
+    "src": "assets/personnages/bluey/snickers.png",
+    "sourceURL": "https://www.bluey.tv/wp-content/uploads/2023/07/Snickers.png",
+    "sourcePage": "https://www.bluey.tv/characters/snickers/",
+    "bytes": 137925
+  }
+]

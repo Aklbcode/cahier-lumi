@@ -1,0 +1,98 @@
+[
+  {
+    "id": "barbapapa",
+    "name": "Barbapapa",
+    "color": "rose",
+    "src": "assets/personnages/barbapapa/barbapapa.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/characters_anim/anim_02barbapapa.gif",
+    "sourcePage": "https://www.barbapapa.com/the-barbapa-family-en/",
+    "width": 410,
+    "height": 500,
+    "bytes": 172564,
+    "format": "Original GIF"
+  },
+  {
+    "id": "barbamama",
+    "name": "Barbamama",
+    "color": "noir",
+    "src": "assets/personnages/barbapapa/barbamama.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/characters_anim/anim_03barbamama.gif",
+    "sourcePage": "https://www.barbapapa.com/barbamama-en/",
+    "width": 360,
+    "height": 500,
+    "bytes": 204571,
+    "format": "Original GIF"
+  },
+  {
+    "id": "barbabelle",
+    "name": "Barbabelle",
+    "color": "violet",
+    "src": "assets/personnages/barbapapa/barbabelle.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/characters_anim/anim_04barbabelle.gif",
+    "sourcePage": "https://www.barbapapa.com/barbabelle-en/",
+    "width": 300,
+    "height": 350,
+    "bytes": 52631,
+    "format": "Original GIF"
+  },
+  {
+    "id": "barbalala",
+    "name": "Barbalala",
+    "color": "vert",
+    "src": "assets/personnages/barbapapa/barbalala.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/characters_anim/anim_05barbalala.gif",
+    "sourcePage": "https://www.barbapapa.com/barbalala-en/",
+    "width": 330,
+    "height": 350,
+    "bytes": 266459,
+    "format": "Original GIF"
+  },
+  {
+    "id": "barbibul",
+    "name": "Barbibul",
+    "color": "bleu",
+    "src": "assets/personnages/barbapapa/barbibul.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/characters_anim/anim_06barbibul.gif",
+    "sourcePage": "https://www.barbapapa.com/barbabright-en/",
+    "width": 310,
+    "height": 390,
+    "bytes": 125585,
+    "format": "Original GIF"
+  },
+  {
+    "id": "barbidou",
+    "name": "Barbidou",
+    "color": "jaune",
+    "src": "assets/personnages/barbapapa/barbidou.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/characters_anim/anim_07barbidou.gif",
+    "sourcePage": "https://www.barbapapa.com/barbazoo-en/",
+    "width": 410,
+    "height": 410,
+    "bytes": 145654,
+    "format": "Original GIF"
+  },
+  {
+    "id": "barbidur",
+    "name": "Barbidur",
+    "color": "rouge",
+    "src": "assets/personnages/barbapapa/barbidur.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/characters_anim/anim_08barbidur.gif",
+    "sourcePage": "https://www.barbapapa.com/barbabravo-en/",
+    "width": 400,
+    "height": 400,
+    "bytes": 343040,
+    "format": "Original GIF"
+  },
+  {
+    "id": "barbotine",
+    "name": "Barbotine",
+    "color": "orange",
+    "src": "assets/personnages/barbapapa/barbotine.gif",
+    "sourceURL": "https://www.barbapapa.com/wp-content/themes/barbapapa-from-twentytwelve/images/characters_anim/anim_09barbotine.gif",
+    "sourcePage": "https://www.barbapapa.com/barbalib-en/",
+    "width": 310,
+    "height": 310,
+    "bytes": 34173,
+    "format": "Original GIF"
+  }
+]

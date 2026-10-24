@@ -12,3 +12,6 @@ Les requêtes Peter Pan et Bluey n’ont pas fourni d’illustration retenue apr
 Placement : Petit Poilu accompagne l’écoute et l’ordre des histoires ; Barbapapa accompagne les formes et les silhouettes. Les illustrations se situent hors des choix de réponse. Les cubes tenus par Barbapapa ne servent jamais de collection à compter. Bluey donne un contexte aux paires ; Peter Pan est guidé de case en case.
 
 Références d’identification : [Petit Poilu, Dupuis](https://www.dupuis.com/univers/FR/petitpoilu.html), [Bluey, site officiel](https://www.bluey.tv/characters/bluey/). Les noms et personnages restent ceux de leurs auteurs et ayants droit.
+
+
+Mise à jour du 24 octobre 2026 : les initiales des anciens jeux ne servent plus de représentation à Bluey. Les cartes utilisent maintenant des images existantes des personnages issues du site officiel, décrites dans `bluey/manifest.json`. Les couleurs utilisent les personnages de la famille Barbapapa issus de leur site officiel (`barbapapa/manifest.json`). Ces fichiers sont conservés dans leur format source sans transformation. Voir `CREDITS.md`. Les descriptions de génération ci-dessus concernent uniquement les deux anciennes illustrations du 23 octobre, conservées comme historique.

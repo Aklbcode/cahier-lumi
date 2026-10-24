@@ -54,13 +54,22 @@ Celebrate.show=function(options){
 };
 /* Keep the completed level distinct from the automatically selected following level.
    In particular, Rejouer must never silently start a different level. */
+function memoryLevelCompleted(run,g){
+  if(!['memo','memoG','memoMots'].includes(g.id))return false;
+  const played=run.levelIndex??run.session?.li??0,L=g.levels[played],expected=L?.n||g.n||6;
+  /* Turning over a nonmatching pair is ordinary exploration in a memory game.
+     Completion opens the next board; mistakes still determine the star score.
+     Historical resume records have no completed flag, but their boolean first
+     result was emitted only after all pairs had been found. */
+  return run.res.length===expected&&run.res.every(r=>r&&!r.skipped&&(r.completed===true||typeof r.first==='boolean'));
+}
 finishGame=function(run,g,gp){
   clearResume(run);
   const played=run.levelIndex??run.session?.li??gp.lvl,{pct,stars}=scoreOf(run.res);
   const skipped=run.res.some(r=>r.skipped);
   gp.rounds++;if(stars>0)gp.best[played]=Math.max(gp.best[played]||0,stars);
   let up=false,down=false;
-  if(!skipped){if(pct>=.8){gp.low=0;if(played<g.levels.length-1){gp.lvl=played+1;gp.unlocked=Math.max(gp.unlocked,gp.lvl);up=true;}}
+  if(!skipped){if(pct>=.8||memoryLevelCompleted(run,g)){gp.low=0;if(played<g.levels.length-1){gp.lvl=played+1;gp.unlocked=Math.max(gp.unlocked,gp.lvl);up=true;}}
   else if(pct<.5){gp.low=(gp.low||0)+1;if(gp.low>=2&&played>0){gp.lvl=played-1;gp.low=0;down=true;}}
   else gp.low=0;}
   const sticker=stars>0?addStars(stars):null;save();
