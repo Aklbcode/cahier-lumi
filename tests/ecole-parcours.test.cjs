@@ -96,7 +96,7 @@ function nextKey(id,st,api){
  const have=new Set(manifest.files.map(f=>f.emoji.replace(/️/g,'')));
  const src=fs.readFileSync(path.join(root,'ecole-parcours-fragment.js'),'utf8');
  const used=[...new Set([...src.matchAll(/'([^'\w\s,.:;!?’()[\]{}<>=+\-*/\\"`#%&|^~@$]{1,8})'/g)].map(m=>m[1]).filter(c=>[...c].some(ch=>ch.codePointAt(0)>0x2000)))];
- const absent=used.filter(e=>!have.has(e.replace(/️/g,'')));
+ const absent=used.filter(e=>!['≠','→'].includes(e)&&!have.has(e.replace(/\ufe0f/g,'')));
  check(absent.length===0,'Images absentes du lot local : '+absent.join(' '));
  console.log('ecole-parcours: '+IDS.length+' jeux, '+voiceLines.size+' phrases, '+used.length+' images — OK');
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -9,6 +9,10 @@ const ECOLE_LABELS={help:'Aide',intro:'J’ai compris',replay:'Réécouter'};
 const ECOLE_VOICE={
  helpWord:'Écoute encore le mot.',
  mirrorAsk:'Quelle lettre manque dans ce mot ?',
+ mirrorSame:'Si les deux lettres sont pareilles, touche le signe égal. Sinon, touche le signe barré.',
+ mirrorSameYes:'Oui, elles sont pareilles.',mirrorSameNo:'Oui, elles sont différentes.',
+ mirrorSameWrong:'Regarde bien le sens de chaque lettre.',
+ graphComplete:'Complète le mot avec les bonnes lettres.',graphCompleteWrong:'Regarde comment ce mot était écrit tout à l’heure.',
  mirrorWrong:'Regarde bien la forme de la lettre, et écoute encore le mot.',
  mirrorRule:{
   b:'Pour écrire b, on trace d’abord le grand trait, puis le ventre.',
@@ -105,8 +109,17 @@ const ECOLE_MIRROR_LEVEL_POOLS=[
  {pool:()=>ecoleMirrorEntries(['p','q'],k=>k),opts:['p','q']},
  {pool:()=>ecoleMirrorEntries(['bStart','dStart','bMid','dMid','p','q'],k=>k[0]),opts:['b','d','p','q']}
 ];
+function ecoleMirrorSameItem(ctx){
+ const a=pick(['b','d','p','q']),same=Math.random()<.5,b=same?a:pick(['b','d','p','q'].filter(x=>x!==a));
+ return {cls:'ecole-stage ecole-mirror',say:ECOLE_VOICE.mirrorSame,caption:'Pareilles ou différentes ?',exemplar:'miroir-pareil:'+a+b,
+  render(st,api){let target;
+   const row=ecoleRow(2,[['=',true],['≠',false]].map(([sym,v])=>{const btn=ecoleTextCard(sym,v?'pareilles':'différentes','ecole-letter-card');if(v===same)target=btn;
+    onTap(btn,()=>api.answer(v===same,{el:btn,correctEl:target,feedback:ECOLE_VOICE.mirrorSameWrong,praise:same?ECOLE_VOICE.mirrorSameYes:ECOLE_VOICE.mirrorSameNo}));return btn;}));
+   api.key(target);uWrap(st,h('div',{class:'ecole-letter-pair'},h('span',null,a),h('span',null,b)),row);}};
+}
 function ecoleMirrorItem(ctx){
- const spec=ECOLE_MIRROR_LEVEL_POOLS[ctx.li],W=ecoleFresh(ctx,spec.pool(),x=>x.w),gap=W.w.indexOf(W.letter);
+ if(ctx.L.same)return ecoleMirrorSameItem(ctx);
+ const spec=ECOLE_MIRROR_LEVEL_POOLS[ctx.L.pool],W=ecoleFresh(ctx,spec.pool(),x=>x.w),gap=W.w.indexOf(W.letter);
  return {cls:'ecole-stage ecole-mirror',say:[W.w,350,ECOLE_VOICE.mirrorAsk],caption:'Quelle lettre manque ?',exemplar:'miroir:'+W.w,
   render(st,api){
    const word=h('div',{class:'ecole-gap-word','aria-label':'mot à compléter'},[...W.w].map((c,i)=>i===gap?h('span',{class:'ecole-gap'},'?'):h('span',null,c)));
@@ -119,7 +132,7 @@ function ecoleMirrorItem(ctx){
   }};
 }
 ecoleRegister('lettresMiroir',{title:'Les lettres miroirs',sub:'Ne plus confondre b, d, p et q',icon:'🪞',color:'plum',stage:'#f4f0fa',
- levels:ecoleLevels('miroir','P1',[{name:'b ou d au début du mot'},{name:'b ou d au milieu du mot'},{name:'p ou q'},{name:'b, d, p ou q'}]),make:ecoleMirrorItem},'grands','lire','balade');
+ levels:ecoleLevels('miroir','P1',[{same:true,name:'Pareilles ou différentes ?'},{pool:0,name:'b ou d au début du mot'},{pool:1,name:'b ou d au milieu du mot'},{pool:2,name:'p ou q'},{pool:3,name:'b, d, p ou q'}]),make:ecoleMirrorItem},'grands','lire','balade');
 
 /* ---------- 2. Les sons qui s’écrivent autrement ---------- */
 const ECOLE_VOWEL_CHARS='aeiouyéèêëâàîïôûù';
@@ -175,6 +188,15 @@ function ecoleGraphItem(ctx){
  if(!mix&&ctx.i===0)return ecoleGraphIntroItem(fam);
  const entries=fam.words.map(([w,e])=>({w,e})),W=ecoleFresh(ctx,entries,x=>x.w),others=sample(entries.filter(x=>x.w!==W.w),2),opts=shuffle([W,...others]);
  const mark=!mix&&ctx.i<=3,hear=ctx.i%2===1;
+ const ALT={au:['au','eau'],ai:['ai','ei'],er:['er','ez']}[fam.id];
+ if(ALT&&!mix&&ctx.i===(ctx.n||7)-1){
+  const [a,b]=ecoleGraphRanges(fam.id,W.w)[0],part=W.w.slice(a,b),opts=ALT.includes(part)?ALT:[part,...ALT.filter(x=>x!==part)].slice(0,2);
+  return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphComplete],caption:'Complète le mot',exemplar:'graphie-complete:'+W.w,render(st,api){
+   const gap=h('span',{class:'ecole-gap'},'?');let target;
+   const row=ecoleRow(2,shuffle(opts).map(o=>{const btn=ecoleTextCard(o,o);if(o===part)target=btn;onTap(btn,()=>api.answer(o===part,{el:btn,correctEl:target,feedback:ECOLE_VOICE.graphCompleteWrong,praise:['Oui !',W.w]}).then(ok=>{if(ok){gap.textContent=part;gap.classList.add('filled');}}));return btn;}));
+   api.key(target);uWrap(st,h('div',{class:'ecole-picture-line'},ecolePic(W.e,W.w,'big'),h('div',{class:'ecole-gap-word'},W.w.slice(0,a),gap,W.w.slice(b))),row);
+  }};
+ }
  if(hear)return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphHear],caption:'Touche le mot que tu entends',exemplar:'graphie-ecoute:'+W.w,render(st,api){
   let target;const row=h('div',{class:'ecole-word-list'},opts.map(o=>{const b=h('button',{class:'card txt ecole-word-card','aria-label':o.w},ecoleGraphWordEl(fam,o.w,mark));if(o===W)target=b;
    onTap(b,()=>api.answer(o===W,{el:b,correctEl:target,feedback:ECOLE_VOICE.graphWrongHear,praise:['Oui !',W.w]}));return b;}));
@@ -323,7 +345,7 @@ const ECOLE_SEASONS=[{id:'hiver',e:'❄️',months:['janvier','février']},{id:'
 const ECOLE_CAL_START=2,ECOLE_CAL_LENGTH=30;
 function ecoleSeasonSentence(m,s){return `${m} est ${s.id==='printemps'?'au':'en'} ${s.id}.`;}
 function ecoleCalendarChoice(api,list,ans,wrong,praise){
- let target;const row=h('div',{class:'ecole-word-list'},list.map(v=>{const b=ecoleTextCard(v,v);const spk=h('span',{class:'spk',html:ICON.speaker,role:'button','aria-label':'écouter '+v});spk.addEventListener('click',ev=>{ev.stopPropagation();ev.preventDefault();Voice.say(v);});b.append(spk);if(v===ans)target=b;
+ let target;const row=h('div',{class:'ecole-day-row'},list.map(v=>{const b=ecoleTextCard(v,v,'ecole-day');const spk=h('span',{class:'spk',html:ICON.speaker,role:'button','aria-label':'écouter '+v});spk.addEventListener('click',ev=>{ev.stopPropagation();ev.preventDefault();Voice.say(v);});b.append(spk);if(v===ans)target=b;
   onTap(b,()=>api.answer(v===ans,{el:b,correctEl:target,feedback:wrong,praise:['Oui !',praise||ans]}));return b;}));api.key(target);return row;
 }
 function ecoleCalendarItem(ctx){
@@ -538,6 +560,7 @@ if(typeof document!=='undefined'&&document.head){const style=h('style');style.te
 .ecole-gap{display:inline-block;line-height:1.15;min-width:1.1em;text-align:center;color:#b46a1f;border-bottom:4px dashed #d79a52;margin:0 .05em}
 .ecole-gap.filled{color:#2b8050;border-bottom-color:#2b8050}
 .ecole-gap.big{font-size:clamp(46px,9vw,80px);min-width:1.4em}
+.ecole-letter-pair{display:flex;gap:40px;font-size:clamp(90px,16vw,150px);background:#fff;border-radius:26px;padding:0 40px 18px;box-shadow:0 6px 0 rgba(31,46,69,.10)}
 .ecole-letter-card .ecole-card-text{font-size:clamp(52px,10vw,86px)}
 .ecole-card-text{font-size:clamp(28px,5vw,44px);line-height:1.4}
 .ecole-card-text.small{font-size:20px}
@@ -571,12 +594,17 @@ if(typeof document!=='undefined'&&document.head){const style=h('style');style.te
 .ecole-days-strip{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:clamp(22px,3.6vw,32px)}
 .ecole-days-strip>*{background:#fff;border-radius:16px;padding:6px 16px 12px}
 .ecole-days-strip b{font-weight:400;background:#fff0b0}
-.ecole-month{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;background:#fff;border-radius:18px;padding:10px;max-width:min(520px,92vw);width:100%}
-.ecole-month b{font-weight:400;font-size:17px;text-align:center;color:#55647b}
-.ecole-month span{font-size:22px;text-align:center;border-radius:10px;background:#f1f5fa;padding:4px 0 8px}
+.ecole-month{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;background:#fff;border-radius:18px;padding:8px;max-width:min(430px,92vw);width:100%}
+.ecole-month b{font-weight:400;font-size:15px;line-height:1.3;text-align:center;color:#55647b}
+.ecole-month span{font-size:18px;line-height:1.3;text-align:center;border-radius:8px;background:#f1f5fa;padding:2px 0 4px}
 .ecole-month span.empty{background:transparent}
 .ecole-month span.ring{background:#fff0b0;box-shadow:0 0 0 3px #d1491f}
 .ecole-season{flex-direction:column;gap:4px}
+.ecole-day-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.ecole-day{position:relative;min-width:clamp(150px,24vw,210px);min-height:84px;padding-right:38px}
+.ecole-day .ecole-card-text{font-size:clamp(26px,4.2vw,36px)}
+.ecole-day .spk{position:absolute;right:8px;bottom:8px;width:28px;height:28px;color:#6b7c95}
+.ecole-calendar .upgrade-wrap{gap:12px}
 .ecole-shape{display:block;width:96px;height:96px}
 .ecole-shape.big{width:min(180px,40vw);height:min(180px,40vw)}
 .ecole-shape svg{display:block;width:100%;height:100%}
