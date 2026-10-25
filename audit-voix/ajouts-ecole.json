@@ -1,8 +1,8 @@
 {
  "voice": "fr-BE-CharlineNeural",
  "rate": "-5%",
- "added": 564,
- "bytes": 9994080,
+ "added": 571,
+ "bytes": 10167120,
  "phrases": [
   "À la fin d’un mot, e r et e z font souvent le son",
   "à quoi sert cet objet ?",
@@ -567,6 +567,13 @@
   "zéro et quatre, ça fait quatre",
   "zéro et sept, ça fait sept",
   "zéro et six, ça fait six",
-  "zéro et trois, ça fait trois"
+  "zéro et trois, ça fait trois",
+  "Complète le mot avec les bonnes lettres",
+  "Oui, elles sont différentes",
+  "Oui, elles sont pareilles",
+  "Regarde bien le sens de chaque lettre",
+  "Regarde comment ce mot était écrit tout à l’heure",
+  "Si les deux lettres sont pareilles, touche le signe égal",
+  "Sinon, touche le signe barré"
  ]
 }
