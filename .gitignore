@@ -2,3 +2,4 @@
 livraison/
 __pycache__/
 *.pyc
+.asset-build/

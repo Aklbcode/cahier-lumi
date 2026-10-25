@@ -1,0 +1,38 @@
+name: Voix Charline (nouvelles phrases)
+# Enregistre avec la voix Charline (fr-BE) les phrases listées dans
+# audit-voix/phrases-ecole.json, puis les ajoute à la banque voix/.
+# Seuls les textes publics de l'application sont envoyés au service vocal.
+on:
+  push:
+    branches: ['lumi-*']
+    paths: ['audit-voix/phrases-ecole.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: voix-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  voix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Outils
+        run: pip install edge-tts==7.3.1 numpy imageio-ffmpeg soundfile
+      - name: Générer les enregistrements
+        working-directory: scripts
+        run: python build_ecole_voices.py
+      - name: Contrôler les fichiers audio
+        run: python scripts/check_audio.py --bank voix/index-belge.json --output audit-voix/controle-audio-belge.json
+      - name: Enregistrer dans la branche
+        run: |
+          git config user.name "lumi-voix[bot]"
+          git config user.email "lumi-voix@users.noreply.github.com"
+          git add voix/ audit-voix/
+          if git diff --cached --quiet; then echo "Rien à ajouter"; exit 0; fi
+          git commit -m "Voix Charline : phrases des compléments école"
+          git push

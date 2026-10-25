@@ -11,6 +11,18 @@ Jeux éducatifs pour Luca (5-6 ans, 1re primaire) et Lola (3 ans, maternelle) : 
 - Les sons de référence utilisent des enregistrements dédiés à vitesse d’origine. Une absence de fichier demande une nouvelle écoute et ne déclenche jamais une prononciation automatique de remplacement. Les bruitages baissent pendant la parole.
 - Espace parents → Voix de Lumi : tester une consigne, un encouragement, une correction ou chacun des 13 sons voyelles, et régler la vitesse des consignes. Tous les messages utilisent Charline ; aucune voix de remplacement de l’appareil n’est utilisée automatiquement.
 
+## Compléments école — 25 octobre 2026
+
+Onze nouveaux jeux comblent des parties du programme de maternelle et de 1re primaire repérées en analysant les parcours d’ANTON. Seuls les mécanismes sont repris ; les contenus sont propres à Lumi. Détails : [analyse et compléments](analyses/Analyse-ANTON-et-complements-ecole-2026-10-25.md).
+
+- **Luca, Lire** : Les lettres miroirs (b, d, p, q) ; Les petits mots (un/une, le/la, il/elle, pluriel) ; Remettre la phrase en ordre ; Les sons qui s’écrivent autrement (au/eau, ai/ei, er/ez, c et g doux, s entre deux voyelles, gn, ill, ph).
+- **Luca, Calculer** : La maison des nombres ; Les nombres en lettres (à la belge) ; Figures et solides ; Les jours et les mois.
+- **Lola** : Ce qui va ensemble (et les contraires) dans Écouter ; Copier le modèle et Pareil que le modèle dans Jouer.
+- Un bouton **Aide** relit le mot ou la phrase dans les nouveaux jeux de Luca ; il compte comme une aide. Les règles d’étoiles et de trésors ne changent pas.
+- Voix Charline pour toutes les nouvelles phrases, générées par GitHub Actions (`.github/workflows/voix-charline.yml`). Pour en ajouter : modifier le jeu, lancer `node scripts/inventory_ecole_voice.cjs`, puis pousser la liste `audit-voix/phrases-ecole.json` sur une branche `lumi-*`.
+- Plus de pause imposée (auparavant 15 min pour Lola, 20 pour Luca) : par défaut, sans limite ; l’espace parents permet encore d’en choisir une. Plus de démonstration ni d’exemple avant les exercices.
+- Vérification : `node tests/ecole-parcours.test.cjs`.
+
 ## Vérification des voix
 
 Le moteur se trouve dans `speech-engine.js` ; les progrès gardent leur sauvegarde habituelle. `audit-voix/Voix-belge-et-sons-de-lecture.md` décrit la nouvelle version. L’ancien rapport est conservé pour retracer la première intervention. `audit-voix/controle-audio-belge.json` contient les contrôles de la nouvelle banque sonore.
