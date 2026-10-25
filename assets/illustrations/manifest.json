@@ -2426,6 +2426,24 @@
       "code": "1faae",
       "sha256": "8cba215c92e438462d4b3ccb2cc2f1f0b2860675b5943e5d02b62518a89d5a37",
       "bytes": 1822
+    },
+    {
+      "emoji": "🥫",
+      "code": "1f96b",
+      "sha256": "3fed4fcde0ff19b682cf8322f0fb05a03e6e792a4cca4fd352065c2d2fa20b37",
+      "bytes": 1706
+    },
+    {
+      "emoji": "🍦",
+      "code": "1f366",
+      "sha256": "d7ac9b50cc187c218801caddbc1a9b728022c5c00f44a3bd2cd0920af808bc5f",
+      "bytes": 1822
+    },
+    {
+      "emoji": "😀",
+      "code": "1f600",
+      "sha256": "41478e547c5b6ad66bfcf91ead5350fa0bc247956c3ff912020327e3e9ad0d2b",
+      "bytes": 450
     }
   ],
   "missing": []

@@ -38,6 +38,7 @@ const ECOLE_VOICE={
  houseDone:'Tous les étages sont remplis !',
  houseKey:'Tape le nombre qui manque.',
  wordToDigit:'Lis le nombre écrit en lettres. Touche le bon nombre.',
+ hearToWord:'Écoute le nombre. Touche le mot qui l’écrit.',
  digitToWord:'Touche le mot qui correspond à ce nombre.',
  numberWordWrong:'Relis le mot, lettre après lettre.',
  calendarWrong:'Récite les jours dans l’ordre : lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche.',
@@ -56,6 +57,9 @@ const ECOLE_VOICE={
  modelAsk:'Regarde le modèle. Quelle couleur va dans la case qui brille ?',
  modelWrong:'Regarde la même case sur le modèle.',
  modelDone:'Tu as copié le modèle !',
+ modelError:'Regarde le modèle, puis la copie. Une case n’a pas la bonne couleur. Touche-la.',
+ modelErrorWrong:'Cette case est pareille sur le modèle. Cherche encore.',modelErrorDone:'Oui, c’est cette case qui n’est pas pareille !',
+ oppositeWrong:'Cherche ce qui est tout l’inverse.',
  pairWrong:'Réfléchis : à quoi sert cet objet ?',
  detailAsk:'Regarde le modèle en haut. Touche le dessin qui est tout pareil.',
  detailWrong:'Regarde bien : ce dessin a une petite différence.',
@@ -330,6 +334,13 @@ function ecoleNumberWordItem(ctx){
   let target;const list=h('div',{class:'ecole-word-list'},opts.map(v=>{const b=ecoleTextCard(nw(v),nw(v));if(v===n)target=b;onTap(b,()=>api.answer(v===n,{el:b,correctEl:target,feedback:ECOLE_VOICE.numberWordWrong,praise:['Oui !',nw(n)]}));return b;}));
   api.key(target);uWrap(st,h('div',{class:'ecole-big-number'},String(n)),list,ecoleHelp(api,nw(n)));
  }};
+ if(ctx.i%2===1){
+  const words=shuffle([n,...sample(near,2)]);
+  return {cls:'ecole-stage ecole-number-word',say:[nw(n),350,ECOLE_VOICE.hearToWord],caption:'Écoute et touche le bon mot',exemplar:'ecoute-mot:'+n,render(st,api){
+   let target;const list=h('div',{class:'ecole-word-list'},words.map(v=>{const b=ecoleTextCard(nw(v),nw(v));if(v===n)target=b;onTap(b,()=>api.answer(v===n,{el:b,correctEl:target,feedback:ECOLE_VOICE.numberWordWrong,praise:['Oui !',nw(n)]}));return b;}));
+   api.key(target);uWrap(st,onTap(h('button',{class:'hint-btn'},icon('speaker'),ECOLE_LABELS.replay),()=>Voice.say(nw(n))),list);
+  }};
+ }
  return {cls:'ecole-stage ecole-number-word',say:ECOLE_VOICE.wordToDigit,caption:'Lis le nombre écrit en lettres',exemplar:'mot-nombre:'+n,render(st,api){
   let target;const row=ecoleRow(opts.length,opts.map(v=>{const b=ecoleTextCard(String(v),nw(v),'ecole-num');if(v===n)target=b;onTap(b,()=>api.answer(v===n,{el:b,correctEl:target,feedback:ECOLE_VOICE.numberWordWrong,praise:['Oui !',nw(n)]}));return b;}));
   api.key(target);uWrap(st,h('div',{class:'ecole-big-word'},nw(n)),ecoleHelp(api,nw(n)),row);
@@ -394,13 +405,15 @@ const ECOLE_FIGURES={
 const ECOLE_SHAPE_COLORS=['#e25b4f','#3b82c4','#f0b731','#46a663','#9a62c6'];
 function ecoleFigureSVG(name,color,turn=0){return `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(${turn} 50 50)" stroke="#2c3e55" stroke-width="3" stroke-linejoin="round">${ECOLE_FIGURES[name].svg(color)}</g></svg>`;}
 const ECOLE_SOLIDS={
- cube:{rolls:false,svg:`<polygon points="20,35 55,35 55,80 20,80" fill="#f6c443"/><polygon points="20,35 40,18 75,18 55,35" fill="#ffe08a"/><polygon points="55,35 75,18 75,63 55,80" fill="#d9a520"/>`},
+ cube:{rolls:false,svg:`<polygon points="20,40 62,40 62,82 20,82" fill="#f6c443"/><polygon points="20,40 38,22 80,22 62,40" fill="#ffe08a"/><polygon points="62,40 80,22 80,64 62,82" fill="#d9a520"/>`},
  pavé:{rolls:false,svg:`<polygon points="8,42 66,42 66,82 8,82" fill="#7fb6ec"/><polygon points="8,42 26,26 84,26 66,42" fill="#b8d8f7"/><polygon points="66,42 84,26 84,66 66,82" fill="#4f8ccc"/>`},
  boule:{rolls:true,svg:`<defs><radialGradient id="g" cx="38%" cy="35%" r="65%"><stop offset="0" stop-color="#ffd0cc"/><stop offset="1" stop-color="#d9463b"/></radialGradient></defs><circle cx="50" cy="52" r="38" fill="url(#g)"/>`},
  cylindre:{rolls:true,svg:`<path d="M24 24 V76 A26 9 0 0 0 76 76 V24" fill="#5fbf7c"/><ellipse cx="50" cy="24" rx="26" ry="9" fill="#a9e5bb"/>`},
  cône:{rolls:true,svg:`<path d="M50 10 L80 76 A30 10 0 0 1 20 76 Z" fill="#b48ae0"/><ellipse cx="50" cy="76" rx="30" ry="10" fill="#8a5fc0" opacity=".35"/>`},
  pyramide:{rolls:false,svg:`<polygon points="50,10 18,74 52,88" fill="#f0a35a"/><polygon points="50,10 52,88 86,70" fill="#c7782f"/>`}
 };
+const ECOLE_EVERYDAY=[['⚽','le ballon','boule'],['🍊','l’orange','boule'],['🎲','le dé','cube'],['🧊','le glaçon','cube'],['📦','le carton','pavé'],['🥫','la boîte de conserve','cylindre'],['🥁','le tambour','cylindre'],['🕯️','la bougie','cylindre'],['🍦','le cornet de glace','cône']].map(([e,label,solid])=>({e,label,solid}));
+function ecoleSolidName(n){return n==='boule'?'une boule':n==='pyramide'?'une pyramide':'un '+n;}
 function ecoleSolidSVG(name){return `<svg viewBox="0 0 100 100" aria-hidden="true"><g stroke="#2c3e55" stroke-width="2.5" stroke-linejoin="round">${ECOLE_SOLIDS[name].svg}</g></svg>`;}
 function ecoleFigureCard(content,label){return h('button',{class:'card pic ecole-shape-card','aria-label':label},h('span',{class:'ecole-shape',html:content}));}
 function ecoleShapesItem(ctx){
@@ -424,12 +437,18 @@ function ecoleShapesItem(ctx){
   return {cls:'ecole-stage ecole-shapes',say,caption:say,exemplar:'solide:'+ans,render(st,api){let target;
    const row=ecoleRow(3,opts.map(n=>{const b=ecoleFigureCard(ecoleSolidSVG(n),'solide');if(n===ans)target=b;onTap(b,()=>api.answer(n===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.solidWrong,praise:['Oui !',ans==='boule'||ans==='pyramide'?`C’est la ${ans}.`:`C’est le ${ans}.`]}));return b;}));api.key(target);uWrap(st,row);}};
  }
+ if(kind==='everyday'){
+  const O=ecoleFresh(ctx,ECOLE_EVERYDAY,x=>x.label),opts=shuffle([O.solid,...sample(names.filter(n=>n!==O.solid),2)]),say=`Quel solide a la même forme que ${O.label} ?`;
+  return {cls:'ecole-stage ecole-shapes',say,caption:'Les solides autour de nous',exemplar:'quotidien:'+O.label,render(st,api){let target;
+   const row=ecoleRow(3,opts.map(n=>{const b=ecoleFigureCard(ecoleSolidSVG(n),'solide');if(n===O.solid)target=b;onTap(b,()=>api.answer(n===O.solid,{el:b,correctEl:target,feedback:ECOLE_VOICE.solidWrong,praise:['Oui !',`C’est ${ecoleSolidName(O.solid)}.`]}));return b;}));
+   api.key(target);uWrap(st,ecolePic(O.e,O.label,'big'),row);}};
+ }
  const roller=ecoleFresh(ctx,names.filter(n=>ECOLE_SOLIDS[n].rolls)),opts=shuffle([roller,...sample(names.filter(n=>!ECOLE_SOLIDS[n].rolls),2)]);
  return {cls:'ecole-stage ecole-shapes',say:ECOLE_VOICE.rollAsk,caption:'Quel solide roule ?',exemplar:'roule:'+opts.join(','),render(st,api){let target;
   const row=ecoleRow(3,opts.map(n=>{const b=ecoleFigureCard(ecoleSolidSVG(n),'solide');if(n===roller)target=b;onTap(b,()=>api.answer(n===roller,{el:b,correctEl:target,feedback:ECOLE_VOICE.rollWrong,praise:['Oui !',roller==='boule'?'La boule roule.':roller==='cône'?'Le cône roule.':'Le cylindre roule.']}));return b;}));api.key(target);uWrap(st,row);}};
 }
 ecoleRegister('formesSolides',{title:'Figures et solides',sub:'Côtés, sommets, cubes et boules',icon:'🔷',color:'sky',stage:'#eef5fd',
- levels:ecoleLevels('geometrie','P1',[{kind:'name',name:'Reconnaître les figures'},{kind:'sides',name:'Compter les côtés'},{kind:'corners',name:'Compter les sommets'},{kind:'solid',name:'Reconnaître les solides'},{kind:'roll',name:'Ce qui roule'}]),make:ecoleShapesItem},'grands','calculer','grandeurs');
+ levels:ecoleLevels('geometrie','P1',[{kind:'name',name:'Reconnaître les figures'},{kind:'sides',name:'Compter les côtés'},{kind:'corners',name:'Compter les sommets'},{kind:'solid',name:'Reconnaître les solides'},{kind:'everyday',name:'Les solides autour de nous'},{kind:'roll',name:'Ce qui roule'}]),make:ecoleShapesItem},'grands','calculer','grandeurs');
 
 /* =========================================================
    LOLA — Jouer et écouter
@@ -441,7 +460,17 @@ const ECOLE_MODEL_LEVELS=[{cols:2,rows:1,colors:2},{cols:2,rows:2,colors:2},{col
 function ecoleModelGrid(spec,cells,focus){
  return h('div',{class:'ecole-grid',style:{gridTemplateColumns:`repeat(${spec.cols},1fr)`}},cells.map((c,i)=>h('span',{class:'ecole-cell'+(i===focus?' focus':'')},c?h('i',{style:{background:c.hex}}):null)));
 }
+function ecoleModelErrorItem(ctx){
+ const spec={cols:3,rows:2,colors:3},palette=sample(ECOLE_MODEL_COLORS,3),size=6,model=Array.from({length:size},()=>pick(palette));
+ const bad=rnd(size),copy=model.slice();copy[bad]=pick(palette.filter(c=>c.id!==model[bad].id));
+ return {cls:'ecole-stage ecole-model',say:ECOLE_VOICE.modelError,caption:'Trouve l’erreur',exemplar:'modele-erreur:'+model.map(c=>c.id).join(',')+':'+bad,render(st,api){
+  let target;const grid=h('div',{class:'ecole-grid',style:{gridTemplateColumns:`repeat(${spec.cols},1fr)`}},copy.map((c,i)=>{const b=h('button',{class:'ecole-cell ecole-cell-button','aria-label':'case '+(i+1)},h('i',{style:{background:c.hex}}));if(i===bad)target=b;
+   onTap(b,()=>api.answer(i===bad,{el:b,correctEl:target,feedback:ECOLE_VOICE.modelErrorWrong,praise:ECOLE_VOICE.modelErrorDone}));return b;}));
+  api.key(target);uWrap(st,h('div',{class:'ecole-model-pair'},h('div',{class:'ecole-model-ref'},h('small',null,'Le modèle'),ecoleModelGrid(spec,model,-1)),h('div',{class:'ecole-model-ref'},h('small',null,'La copie'),grid)));
+ }};
+}
 function ecoleModelItem(ctx){
+ if(ctx.L.error)return ecoleModelErrorItem(ctx);
  const spec=ECOLE_MODEL_LEVELS[ctx.li],palette=sample(ECOLE_MODEL_COLORS,spec.colors),size=spec.cols*spec.rows;
  let model=Array.from({length:size},()=>pick(palette));let guard=0;
  while(new Set(model.map(c=>c.id)).size<Math.min(spec.colors,size)&&guard++<20)model=Array.from({length:size},()=>pick(palette));
@@ -456,7 +485,7 @@ function ecoleModelItem(ctx){
  }};
 }
 ecoleRegister('copieModele',{title:'Copier le modèle',sub:'Les couleurs à la bonne place',icon:'🟥',color:'gold',stage:'#fffaf0',
- levels:ecoleLevels('modele','M1',[{name:'Deux cases, deux couleurs',n:4},{name:'Quatre cases, deux couleurs',n:4},{name:'Quatre cases, trois couleurs',n:4},{name:'Six cases, trois couleurs',n:4},{name:'Neuf cases, trois couleurs',n:4}]),make:ecoleModelItem},'petits','jouer','formes');
+ levels:ecoleLevels('modele','M1',[{name:'Deux cases, deux couleurs',n:4},{name:'Quatre cases, deux couleurs',n:4},{name:'Quatre cases, trois couleurs',n:4},{name:'Six cases, trois couleurs',n:4},{name:'Neuf cases, trois couleurs',n:4},{error:true,name:'Trouve l’erreur dans la copie',n:5}]),make:ecoleModelItem},'petits','jouer','formes');
 
 /* ---------- 10. Ce qui va ensemble ---------- */
 const ECOLE_TOGETHER=[
@@ -477,8 +506,19 @@ const ECOLE_TOGETHER=[
  {g:'nature',a:['🐟','le poisson'],b:['💧','l’eau'],why:'Le poisson nage dans l’eau.'},
  {g:'bebe',a:['🍼','le biberon'],b:['👶','le bébé'],why:'Le bébé boit au biberon.'}
 ];
+const ECOLE_OPPOSITES=[[['☀️','le jour'],['🌙','la nuit']],[['🔥','chaud'],['❄️','froid']],[['🐘','grand'],['🐭','petit']],[['😀','content'],['😢','triste']],[['🐇','rapide'],['🐢','lent']],[['⬆️','en haut'],['⬇️','en bas']]];
+function ecoleOppositeItem(ctx){
+ const k=rnd(ECOLE_OPPOSITES.length),pair=ECOLE_OPPOSITES[k],flip=Math.random()<.5,A=flip?pair[1]:pair[0],B=flip?pair[0]:pair[1];
+ const others=sample(ECOLE_OPPOSITES.filter((_,i)=>i!==k).map(p=>p[rnd(2)]),ctx.L.options-1),opts=shuffle([B,...others]);
+ return {cls:'ecole-stage ecole-together',say:`Quel est le contraire de ${A[1]} ?`,caption:'Les contraires',exemplar:'contraire:'+A[1]+':'+others.map(o=>o[1]).join(','),render(st,api){
+  let target;const row=ecoleRow(opts.length,opts.map(o=>{const b=h('button',{class:'card pic ecole-pic-card','aria-label':o[1]},ecolePic(o[0],o[1]));if(o===B)target=b;
+   onTap(b,()=>api.answer(o===B,{el:b,correctEl:target,feedback:ECOLE_VOICE.oppositeWrong,praise:['Oui !',`Le contraire de ${A[1]}, c’est ${B[1]}.`]}));return b;}));
+  api.key(target);uWrap(st,h('div',{class:'ecole-together-model'},ecolePic(A[0],A[1],'big'),h('span',{class:'ecole-plus','aria-hidden':'true'},'↔'),h('span',{class:'ecole-gap big'},'?')),row);
+ }};
+}
 function ecoleTogetherAsk(p){return `Qu’est-ce qui va avec ${p.a[1]} ?`;}
 function ecoleTogetherItem(ctx){
+ if(ctx.L.opposite)return ecoleOppositeItem(ctx);
  const P0=ecoleFresh(ctx,ECOLE_TOGETHER,x=>x.a[1]),others=sample(ECOLE_TOGETHER.filter(x=>x.g!==P0.g),ctx.L.options-1),opts=shuffle([P0,...others]);
  return {cls:'ecole-stage ecole-together',say:ecoleTogetherAsk(P0),caption:'Ce qui va ensemble',exemplar:'ensemble:'+P0.a[1]+':'+others.map(o=>o.b[1]).join(','),render(st,api){
   let target;const row=ecoleRow(opts.length,opts.map(o=>{const b=h('button',{class:'card pic ecole-pic-card','aria-label':o.b[1]},ecolePic(o.b[0],o.b[1]));if(o===P0)target=b;
@@ -486,8 +526,8 @@ function ecoleTogetherItem(ctx){
   api.key(target);uWrap(st,h('div',{class:'ecole-together-model'},ecolePic(P0.a[0],P0.a[1],'big'),h('span',{class:'ecole-plus','aria-hidden':'true'},'+'),h('span',{class:'ecole-gap big'},'?')),row);
  }};
 }
-ecoleRegister('ensemble',{title:'Ce qui va ensemble',sub:'Associer les objets',icon:'🧦',color:'teal',stage:'#edf6f2',
- levels:ecoleLevels('ensemble','M1',[{options:2,name:'Deux images'},{options:3,name:'Trois images'},{options:4,name:'Quatre images'}]),make:ecoleTogetherItem},'petits','lire','ferme');
+ecoleRegister('ensemble',{title:'Ce qui va ensemble',sub:'Associer les objets et les contraires',icon:'🧦',color:'teal',stage:'#edf6f2',
+ levels:ecoleLevels('ensemble','M1',[{options:2,name:'Deux images'},{options:3,name:'Trois images'},{options:4,name:'Quatre images'},{options:2,opposite:true,name:'Les contraires, deux images'},{options:3,opposite:true,name:'Les contraires, trois images'}]),make:ecoleTogetherItem},'petits','lire','ferme');
 
 /* ---------- 11. Pareil que le modèle ---------- */
 const ECOLE_MONSTER_COLORS=['#e8574e','#3c87d6','#f2c230','#47ad66'];
@@ -544,8 +584,10 @@ function ecoleParcoursVoiceLines(){
  for(let k=3;k<=6;k++)add(`${nw(k)} côtés.`,`${nw(k)} sommets.`);
  Object.keys(ECOLE_SOLIDS).forEach(n=>{const fem=n==='boule'||n==='pyramide';add(fem?`Touche la ${n}.`:`Touche le ${n}.`,fem?`C’est la ${n}.`:`C’est le ${n}.`);});
  add('La boule roule.','Le cône roule.','Le cylindre roule.');
+ ECOLE_EVERYDAY.forEach(o=>add(`Quel solide a la même forme que ${o.label} ?`));Object.keys(ECOLE_SOLIDS).forEach(n=>add(`C’est ${ecoleSolidName(n)}.`));
  ECOLE_MODEL_COLORS.forEach(c=>add(c.id));
  ECOLE_TOGETHER.forEach(p=>add(ecoleTogetherAsk(p),p.why));
+ ECOLE_OPPOSITES.forEach(([a,b])=>[[a,b],[b,a]].forEach(([x,y])=>add(`Quel est le contraire de ${x[1]} ?`,`Le contraire de ${x[1]}, c’est ${y[1]}.`)));
  return uniq(out);
 }
 
@@ -609,12 +651,14 @@ if(typeof document!=='undefined'&&document.head){const style=h('style');style.te
 .ecole-shape.big{width:min(180px,40vw);height:min(180px,40vw)}
 .ecole-shape svg{display:block;width:100%;height:100%}
 .ecole-shape-card{padding:10px}
+.ecole-shape-card .ecole-shape{width:clamp(96px,14vw,128px);height:clamp(96px,14vw,128px)}
 .ecole-model-pair{display:flex;gap:26px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
 .ecole-model-ref{display:flex;flex-direction:column;align-items:center;gap:4px;background:#fff;border-radius:20px;padding:8px 14px 14px}
 .ecole-model-ref small{font-size:18px;color:#55647b}
 .ecole-grid{display:grid;gap:8px}
 .ecole-cell{width:clamp(62px,13vw,96px);height:clamp(62px,13vw,96px);border-radius:16px;border:3px dashed #9fb0c6;background:#fff;display:flex;align-items:center;justify-content:center}
 .ecole-model-ref .ecole-cell{border-style:solid}
+.ecole-cell-button{padding:0;cursor:pointer}
 .ecole-cell.focus{border:4px solid #e1b23a;background:#fff8d6;animation:ecole-glow 1.2s ease-in-out infinite alternate}
 .ecole-cell i{display:block;width:70%;height:70%;border-radius:50%}
 @keyframes ecole-glow{from{box-shadow:0 0 0 0 #f1c94a}to{box-shadow:0 0 0 8px #f1c94a55}}

@@ -96,7 +96,7 @@ function nextKey(id,st,api){
  const have=new Set(manifest.files.map(f=>f.emoji.replace(/️/g,'')));
  const src=fs.readFileSync(path.join(root,'ecole-parcours-fragment.js'),'utf8');
  const used=[...new Set([...src.matchAll(/'([^'\w\s,.:;!?’()[\]{}<>=+\-*/\\"`#%&|^~@$]{1,8})'/g)].map(m=>m[1]).filter(c=>[...c].some(ch=>ch.codePointAt(0)>0x2000)))];
- const absent=used.filter(e=>!['≠','→'].includes(e)&&!have.has(e.replace(/\ufe0f/g,'')));
+ const absent=used.filter(e=>!['≠','→','↔'].includes(e)&&!have.has(e.replace(/\ufe0f/g,'')));
  check(absent.length===0,'Images absentes du lot local : '+absent.join(' '));
  console.log('ecole-parcours: '+IDS.length+' jeux, '+voiceLines.size+' phrases, '+used.length+' images — OK');
 })().catch(e=>{console.error(e);process.exit(1);});
@@ -111,7 +111,7 @@ async function playItemSafe(id,li,seed,i){
   check(api.results.length===1&&api.results[0].ok,'Phrase : les mots dans l’ordre forment la phrase '+sentence.join(' '));
   all(st,'.ecole-help')[0].click();check(api.helped,'Phrase : l’aide est comptée');return;
  }
- if(id==='copieModele'){
+ if(id==='copieModele'&&!run(`!!GAMES.copieModele.levels[${li}].error`)){
   const item=run(`withSeed(${seed},()=>GAMES.copieModele.make({g:GAMES.copieModele,L:GAMES.copieModele.levels[${li}],li:${li},i:${i},n:4,used:[],bag:{}}))`);
   collect(item.say);const st=ctx.document.createElement('div'),api=makeApi();item.render(st,api);
   const model=run(`(${JSON.stringify(item.exemplar)}).slice(7).split(',')`);const paints=all(st,'.ecole-paint');
