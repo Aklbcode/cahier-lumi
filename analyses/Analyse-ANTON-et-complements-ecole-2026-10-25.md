@@ -58,7 +58,7 @@ Mécanisme ajouté dans les nouveaux jeux de Luca : un bouton **Aide** qui relit
 
 ## Voix et images
 
-- 571 nouvelles phrases Charline (fr-BE), générées par `.github/workflows/voix-charline.yml` avec les mêmes réglages que la banque existante (`scripts/build_ecole_voices.py`). La liste à générer est produite par `node scripts/inventory_ecole_voice.cjs`.
+- 619 nouvelles phrases Charline (fr-BE), générées par `.github/workflows/voix-charline.yml` avec les mêmes réglages que la banque existante (`scripts/build_ecole_voices.py`). La liste à générer est produite par `node scripts/inventory_ecole_voice.cjs`.
 - 36 dessins Twemoji ajoutés au lot local (CC BY 4.0), par `scripts/build_illustration_bundle.py`.
 
 ## Vérifications

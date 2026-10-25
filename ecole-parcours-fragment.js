@@ -310,7 +310,7 @@ function ecoleHouseItem(ctx){
    api.key(target);uWrap(st,wrap,tiles);
   }};
  }
- const N=rint(L.min,L.max),a=rint(0,N),ans=N-a,say=ecoleHouseSay(N,a);
+ const N=rint(L.min,L.max),a=rint(1,N-1),ans=N-a,say=ecoleHouseSay(N,a);
  if(L.keypad)return {...kpItem({say,caption:'La maison du '+nw(N),visual:()=>ecoleHouseEl(N,[{a,b:null,focus:true}],false),ans,hint:'Pense à la maison : '+nw(a)+' et combien font '+nw(N)+' ?'}),cls:'ecole-stage ecole-house-stage',exemplar:'maison-clavier:'+N+':'+a};
  const opts=[ans,...sample(Array.from({length:N+1},(_,v)=>v).filter(v=>v!==ans),Math.min(3,N))].sort((x,y)=>x-y);
  return {cls:'ecole-stage ecole-house-stage',say,caption:'La maison du '+nw(N),exemplar:'maison:'+N+':'+a,render(st,api){
@@ -602,7 +602,7 @@ if(typeof document!=='undefined'&&document.head){const style=h('style');style.te
 .ecole-gap{display:inline-block;line-height:1.15;min-width:1.1em;text-align:center;color:#b46a1f;border-bottom:4px dashed #d79a52;margin:0 .05em}
 .ecole-gap.filled{color:#2b8050;border-bottom-color:#2b8050}
 .ecole-gap.big{font-size:clamp(46px,9vw,80px);min-width:1.4em}
-.ecole-letter-pair{display:flex;gap:40px;font-size:clamp(90px,16vw,150px);background:#fff;border-radius:26px;padding:0 40px 18px;box-shadow:0 6px 0 rgba(31,46,69,.10)}
+.ecole-letter-pair{display:flex;gap:40px;line-height:1.25;font-size:clamp(90px,16vw,150px);background:#fff;border-radius:26px;padding:0 40px 18px;box-shadow:0 6px 0 rgba(31,46,69,.10)}
 .ecole-letter-card .ecole-card-text{font-size:clamp(52px,10vw,86px)}
 .ecole-card-text{font-size:clamp(28px,5vw,44px);line-height:1.4}
 .ecole-card-text.small{font-size:20px}
