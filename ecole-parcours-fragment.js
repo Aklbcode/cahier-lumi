@@ -180,20 +180,12 @@ function ecoleGraphWordEl(fam,w,mark){
  ranges.forEach(([a,b])=>{if(a>i)out.append(h('span',null,w.slice(i,a)));out.append(h('b',{class:'ecole-graph-mark'},w.slice(a,b)));i=b;});
  if(i<w.length)out.append(h('span',null,w.slice(i)));return out;
 }
-function ecoleGraphIntroItem(fam){
- return {cls:'ecole-stage ecole-graph',say:fam.rule(),caption:fam.name,exemplar:'graphie-intro:'+fam.id,render(st,api){
-  const go=onTap(h('button',{class:'go-btn'},ECOLE_LABELS.intro,icon('next')),()=>api.finish(null));
-  uWrap(st,h('div',{class:'ecole-rule-card'},ecolePic(fam.anchor[1],fam.anchor[0],'big'),h('div',{class:'ecole-rule-word'},ecoleGraphWordEl(fam,fam.anchor[0],true))),
-   onTap(h('button',{class:'hint-btn'},icon('speaker'),ECOLE_LABELS.replay),()=>Voice.say(fam.rule())),go);
- }};
-}
 function ecoleGraphItem(ctx){
  const mix=ctx.L.family==='mix',fam=mix?pick(ECOLE_GRAPH_FAMILIES):ECOLE_GRAPH_FAMILIES.find(f=>f.id===ctx.L.family);
- if(!mix&&ctx.i===0)return ecoleGraphIntroItem(fam);
  const entries=fam.words.map(([w,e])=>({w,e})),W=ecoleFresh(ctx,entries,x=>x.w),others=sample(entries.filter(x=>x.w!==W.w),2),opts=shuffle([W,...others]);
  const mark=!mix&&ctx.i<=3,hear=ctx.i%2===1;
  const ALT={au:['au','eau'],ai:['ai','ei'],er:['er','ez']}[fam.id];
- if(ALT&&!mix&&ctx.i===(ctx.n||7)-1){
+ if(ALT&&!mix&&ctx.i===(ctx.n||6)-1){
   const [a,b]=ecoleGraphRanges(fam.id,W.w)[0],part=W.w.slice(a,b),opts=ALT.includes(part)?ALT:[part,...ALT.filter(x=>x!==part)].slice(0,2);
   return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphComplete],caption:'Complète le mot',exemplar:'graphie-complete:'+W.w,render(st,api){
    const gap=h('span',{class:'ecole-gap'},'?');let target;
@@ -206,13 +198,13 @@ function ecoleGraphItem(ctx){
    onTap(b,()=>api.answer(o===W,{el:b,correctEl:target,feedback:ECOLE_VOICE.graphWrongHear,praise:['Oui !',W.w]}));return b;}));
   api.key(target);uWrap(st,ecolePic(W.e,W.w,'big'),onTap(h('button',{class:'hint-btn'},icon('speaker'),ECOLE_LABELS.replay),()=>Voice.say(W.w)),row);
  }};
- return {cls:'ecole-stage ecole-graph',say:ECOLE_VOICE.graphRead,caption:'Lis le mot, puis touche la bonne image',exemplar:'graphie-lecture:'+W.w,render(st,api){
+ return {cls:'ecole-stage ecole-graph',say:!mix&&ctx.i===0?[...fam.rule(),400,ECOLE_VOICE.graphRead]:ECOLE_VOICE.graphRead,caption:'Lis le mot, puis touche la bonne image',exemplar:'graphie-lecture:'+W.w,render(st,api){
   let target;const row=ecoleRow(3,opts.map(o=>{const b=ecolePicCard(o.e,'image');if(o===W)target=b;onTap(b,()=>api.answer(o===W,{el:b,correctEl:target,feedback:ECOLE_VOICE.graphWrongRead,praise:['Oui !',W.w]}));return b;}));
   api.key(target);uWrap(st,h('div',{class:'ecole-big-word'},ecoleGraphWordEl(fam,W.w,mark)),ecoleHelp(api,W.w),row);
  }};
 }
 ecoleRegister('graphies',{title:'Les sons qui s’écrivent autrement',sub:'au, eau, ai, ei, gn, ill, ph…',icon:'🔤',color:'plum',stage:'#f4f0fa',
- levels:ecoleLevels('graphies','P1',[...ECOLE_GRAPH_FAMILIES.map(f=>({family:f.id,name:f.name,n:7})),{family:'mix',name:'Tous les sons mélangés'}]),make:ecoleGraphItem},'grands','lire','phraseOrdre');
+ levels:ecoleLevels('graphies','P1',[...ECOLE_GRAPH_FAMILIES.map(f=>({family:f.id,name:f.name,n:6})),{family:'mix',name:'Tous les sons mélangés'}]),make:ecoleGraphItem},'grands','lire','phraseOrdre');
 
 /* ---------- 3. Les petits mots : un/une, le/la, il/elle, singulier/pluriel ---------- */
 const ECOLE_NOUNS=[

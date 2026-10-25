@@ -76,7 +76,7 @@ function narrativeItem(ctx){
     if(typeof favoriteGuide==='function'&&!RUN?.exam){const guide=favoriteGuide('petit');if(guide)st.prepend(guide);}
     draw();Voice.say(initialVoice());
    };
-   if(!P().narrativeIntroV2){
+   if(false&&!P().narrativeIntroV2){ /* exemple d’introduction retiré le 25/10/2026 */
     const start=uButton('À moi de jouer',()=>{if(!api.alive())return;P().narrativeIntroV2=Date.now();save();begin();},{class:'go-btn'});
     const demo=h('div',{class:'narrative-demo'},h('div',{class:'narrative-cell'},h('div',{class:'narrative-label'},'1 · Début'),h('div',{class:'narrative-picture',html:narrativeDemoSVG(false)})),h('span',{class:'narrative-arrow','aria-hidden':'true'},'→'),h('div',{class:'narrative-cell'},h('div',{class:'narrative-label'},'2 · Fin'),h('div',{class:'narrative-picture',html:narrativeDemoSVG(true)})));
     const explain=['Regarde cet exemple.','Au début, le verre est vide.','À la fin, le verre est rempli.','Maintenant, à toi avec une autre histoire.'];

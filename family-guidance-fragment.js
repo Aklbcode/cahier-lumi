@@ -130,6 +130,8 @@ function familyVisualActions(st){if(S.world!=='petits')return;
  }
 }
 let FAMILY_DEMO_ACTIVE=false;
+/* 25/10/2026 : à la demande du parent, plus de démonstration avant les exercices. */
+let FAMILY_DEMOS_ENABLED=false;
 function familyShowDemo(id,run,p){return new Promise(resolve=>{
  const st=Shell.stage,cover=familyDemoNode(id);let released=false;FAMILY_DEMO_ACTIVE=cover;st.innerHTML='';st.append(cover);Shell.item={say:[FAMILY_LINES.demo,cover.demoLine]};Shell.caption('Un petit exemple');
  const release=()=>{if(released)return;released=true;cover.remove();if(FAMILY_DEMO_ACTIVE===cover){FAMILY_DEMO_ACTIVE=false;Timer.last=Date.now();Voice.stop();}if(Shell.skipCurrent===release)Shell.skipCurrent=null;const active=!run.abort&&RUN===run;if(active){p.familyDemos=p.familyDemos||{};p.familyDemos[id]=Date.now();save();}resolve(active);};
@@ -138,7 +140,7 @@ function familyShowDemo(id,run,p){return new Promise(resolve=>{
 const familyEngineBefore=Engine.play.bind(Engine);
 Engine.play=async function(item,run){
  const id=run.gid||'activite',p=P(),owner=S.current;
- if(!run.exam&&!window.__TEST__&&(document.defaultView||window.__DEMO_TEST__)&&!p.familyDemos?.[id]&&GAMES[id]){
+ if(FAMILY_DEMOS_ENABLED&&!run.exam&&!window.__TEST__&&(document.defaultView||window.__DEMO_TEST__)&&!p.familyDemos?.[id]&&GAMES[id]){
   const active=await familyShowDemo(id,run,p);if(!active)return {first:null,skipped:true,cancelled:true,demoOnly:true};
  }
  let observer=null,result;try{
@@ -151,7 +153,8 @@ Engine.play=async function(item,run){
   const events=p.familyEvents||(p.familyEvents=[]);events.push({at:Date.now(),id,first:result.first,helped:!!result.helped,skipped:!!result.skipped,exam:!!run.exam,level:run.levelIndex??null,key:item.evidenceKey||item.skill||id});if(events.length>600)events.splice(0,events.length-600);save();
  }return result;
 };
-function familyTimerLimit(id=S.current){const raw=S.settings.pauseByChild?.[id];if(raw!==undefined){const n=Number(raw);if(Number.isFinite(n)&&n>=0)return Math.min(180,n);}if(id==='admin')return 0;const old=Number(S.settings.timerMin);if(Number.isFinite(old)&&old>0)return Math.min(180,old);return id==='lola'?15:id==='admin'?0:20;}
+/* 25/10/2026 : à la demande du parent, plus de pause imposée par défaut. Les anciens réglages (15/20 min) ne s’appliquent plus ; seul un nouveau choix explicite du parent rétablit une limite. */
+function familyTimerLimit(id=S.current){const raw=S.settings.pauseLimitByChild?.[id];if(raw!==undefined){const n=Number(raw);if(Number.isFinite(n)&&n>=0)return Math.min(180,n);}return 0;}
 function familyLocalDay(time=Date.now()){const d=new Date(time);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 Timer.byChildUsed={};Timer.familyOwner=S.current;
 Timer.tick=function(){const now=Date.now(),delta=Math.min(30000,Math.max(0,now-this.last));this.last=now;const id=S.current;
@@ -185,7 +188,7 @@ const familyShellBefore=Shell.open.bind(Shell);
 Shell.open=function(opts){familyShellBefore(opts);if(S.world==='petits'&&this.progressEl){const b=this.progressEl.querySelector('.game-level-button');if(b){const text=h('span',{class:'family-level-label'},b.textContent.replace(' ▾',''));this.progressEl.insertBefore(text,b);b.remove();}}};
 function familyEnhanceParent(){const wrap=$('.parent .wrap');if(!wrap||wrap.querySelector('.family-week'))return;const panel=h('div',{class:'pcard family-week'},h('h3',null,'Cette semaine'));
  for(const id of ['luca','lola']){const p=S.progress[id]||{};panel.append(h('h4',null,kid(id).name),...familyWeekSummary(p).map(line=>h('p',null,line)));}panel.append(h('small',null,'Réussi seul décrit des réponses dans le jeu, sans certifier un acquis scolaire.'));wrap.insertBefore(panel,wrap.children[1]);
- const timer=$('#timer',wrap);if(timer){const box=timer.parentNode.parentNode;box.innerHTML='';box.append(h('h3',null,'Temps d’écran'));for(const id of ['luca','lola']){const value=familyTimerLimit(id),sel=h('select',{'aria-label':'Pause pour '+kid(id).name,'data-family-timer':id},uniq([0,10,15,20,30,45,value]).sort((a,b)=>a-b).map(n=>h('option',{value:n,selected:value===n},n?n+' min':'Sans limite')));sel.value=String(value);sel.addEventListener('change',()=>{S.settings.pauseByChild=S.settings.pauseByChild||{};S.settings.pauseByChild[id]=+sel.value;Timer.byChildUsed[id]=0;if(S.current===id)Timer.used=0;Timer.last=Date.now();save();});box.append(h('div',{class:'prow'},h('label',null,kid(id).name),sel));}box.append(h('p',null,'Par défaut : quinze minutes pour Lola, vingt pour Luca. Réglage libre par le parent.'));}
+ const timer=$('#timer',wrap);if(timer){const box=timer.parentNode.parentNode;box.innerHTML='';box.append(h('h3',null,'Temps d’écran'));for(const id of ['luca','lola']){const value=familyTimerLimit(id),sel=h('select',{'aria-label':'Pause pour '+kid(id).name,'data-family-timer':id},uniq([0,10,15,20,30,45,value]).sort((a,b)=>a-b).map(n=>h('option',{value:n,selected:value===n},n?n+' min':'Sans limite')));sel.value=String(value);sel.addEventListener('change',()=>{S.settings.pauseLimitByChild=S.settings.pauseLimitByChild||{};S.settings.pauseLimitByChild[id]=+sel.value;Timer.byChildUsed[id]=0;if(S.current===id)Timer.used=0;Timer.last=Date.now();save();});box.append(h('div',{class:'prow'},h('label',null,kid(id).name),sel));}box.append(h('p',null,'Par défaut : sans limite. Le parent peut choisir une pause.'));}
  const access=h('div',{class:'pcard family-access'},h('h3',null,'Ouvrir une activité')),who=h('select',{'aria-label':'Enfant pour ouvrir une activité'},['luca','lola'].map(id=>h('option',{value:id},kid(id).name))),activity=h('select',{'aria-label':'Activité à ouvrir'}),status=h('p',{role:'status'});who.value=['luca','lola'].includes(S.current)?S.current:'luca';
  const fill=()=>{const previous=activity.value;activity.innerHTML='';const world=S.profiles.find(p=>p.id===who.value)?.world||'grands',ids=uniq(themesOf(world).flatMap(t=>t.ids));for(const id of ids)activity.append(h('option',{value:id},SIMPLE_GAME_NAMES[id]||GAMES[id].title));activity.value=ids.includes(previous)?previous:(ids[0]||'');};who.addEventListener('change',fill);fill();access.append(who,activity,uButton('Ouvrir cet accès',()=>{if(!GAMES[activity.value]||!['luca','lola'].includes(who.value))return;withParentChild(who.value,p=>{p.familyAccess=p.familyAccess||{};p.familyAccess[activity.value]=Date.now();});save();status.textContent='Accès ouvert. Aucun résultat ni étoile n’a été ajouté.';}),status);wrap.insertBefore(access,wrap.children[2]);
  const progress=$('#prog-who',wrap);if(progress&&!progress.familyEnhanced){progress.familyEnhanced=true;progress.addEventListener('change',()=>familyEnhanceParent());}

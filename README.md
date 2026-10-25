@@ -20,6 +20,7 @@ Onze nouveaux jeux comblent des parties du programme de maternelle et de 1re pri
 - **Lola** : Ce qui va ensemble (et les contraires) dans Écouter ; Copier le modèle et Pareil que le modèle dans Jouer.
 - Un bouton **Aide** relit le mot ou la phrase dans les nouveaux jeux de Luca ; il compte comme une aide. Les règles d’étoiles et de trésors ne changent pas.
 - Voix Charline pour toutes les nouvelles phrases, générées par GitHub Actions (`.github/workflows/voix-charline.yml`). Pour en ajouter : modifier le jeu, lancer `node scripts/inventory_ecole_voice.cjs`, puis pousser la liste `audit-voix/phrases-ecole.json` sur une branche `lumi-*`.
+- Plus de pause imposée (auparavant 15 min pour Lola, 20 pour Luca) : par défaut, sans limite ; l’espace parents permet encore d’en choisir une. Plus de démonstration ni d’exemple avant les exercices.
 - Vérification : `node tests/ecole-parcours.test.cjs`.
 
 ## Vérification des voix

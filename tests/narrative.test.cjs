@@ -25,10 +25,8 @@ async function main(){
   }
   // The example is a different situation and must never finish an assessment.
   delete P().narrativeIntroV2;let stage=document.createElement('div'),api=apiN(),item=narrativeItem({L:NARRATIVE_LEVELS[0],used:[]});Shell.item=item;item.render(stage,api);
-  checkN(stage.querySelector('.narrative-demo')&&api.answers.length===0&&api.steps.length===0,'Distinct tutorial is unscored');
-  await stage.querySelectorAll('button').find(b=>b.textContent==='À moi de jouer').click();
-  checkN(stage.querySelector('.favorite-guide')?.textContent.includes('Petit Poilu'),'Petit Poilu stays after the tutorial clears the stage');
-  checkN(P().narrativeIntroV2&&stage.querySelectorAll('.sequence-card').length===2&&api.answers.length===0,'One touch begins real task without granting success');
+  checkN(!stage.querySelector('.narrative-demo')&&stage.querySelectorAll('.sequence-card').length===2&&api.answers.length===0,'Plus d’exemple avant l’histoire : la vraie tâche commence directement, sans réussite accordée');
+  checkN(stage.querySelector('.favorite-guide')?.textContent.includes('Petit Poilu'),'Petit Poilu accompagne la tâche');
   // Exercise the real handlers with and without an initial frame. The final
   // image completes the task; no second validation or Continue is required.
   P().narrativeIntroV2=1;
