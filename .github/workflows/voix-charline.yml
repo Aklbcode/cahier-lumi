@@ -1,0 +1,12 @@
+name: Voix Charline (nouvelles phrases)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  voix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test réseau
+        run: curl -sI https://speech.platform.bing.com | head -1 || true
