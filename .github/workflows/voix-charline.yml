@@ -1,6 +1,8 @@
 name: Voix Charline (nouvelles phrases)
 on:
-  workflow_dispatch:
+  push:
+    branches: ['lumi-*']
+    paths: ['.github/workflows/voix-charline.yml', 'audit-voix/phrases-a-generer.json']
 permissions:
   contents: write
 jobs:
@@ -9,4 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test réseau
-        run: curl -sI https://speech.platform.bing.com | head -1 || true
+        run: |
+          pip install edge-tts==7.3.1 >/dev/null
+          python3 -c "
+          import asyncio, edge_tts
+          async def m():
+              n=0
+              async for e in edge_tts.Communicate('Bonjour Luca.','fr-BE-CharlineNeural').stream():
+                  if e['type']=='audio': n+=len(e['data'])
+              print('audio bytes',n)
+          asyncio.run(m())"
