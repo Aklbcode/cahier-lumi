@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-26",
+  "version": "2.7.0",
+  "environment": "Navigateur intégré, origine de test locale 127.0.0.1:4182, profils séparés du site public",
+  "checks": [
+    {"name":"Accueil", "result":"passed", "details":"Version 2.7.0 et date du 26/10/2026 visibles ; compteur initial trois étoiles."},
+    {"name":"Lire", "result":"passed", "details":"Six sections ; sons/lettres, mots, phrases, autres graphies, rappels et oral parallèle. Activités prématurées signalées à préparer."},
+    {"name":"Préparer la lecture", "result":"passed", "details":"Écrire les mots ouvre une explication et un bouton direct vers Apprendre à lire ; ce bouton ouvre effectivement le chemin des sons."},
+    {"name":"Calculer", "result":"passed", "details":"Sept sections, y compris branches parallèles et extension ; parcours principal de 33 étapes."},
+    {"name":"Préparer un problème", "result":"passed", "details":"Le premier problème jusqu’à dix oriente vers Je compte sur un profil vierge ; aucun prérequis de multiplication ni nombres jusqu’à cent."},
+    {"name":"Passage", "result":"passed", "details":"Huit exercices passés : bilan explicitement passé, aucun niveau déclaré réussi et compteur conservé à trois étoiles."},
+    {"name":"Affichage tablette", "result":"passed", "details":"À 768 × 1024, largeur du document 768 pour une fenêtre 768 ; six groupes de lecture présents. Réglage de largeur réinitialisé ensuite."},
+    {"name":"Console", "result":"passed", "details":"Aucune erreur JavaScript relevée dans les essais de cette session."}
+  ],
+  "limits": ["Pas d’essai sur la Samsung physique.", "Pas d’écoute humaine de toute la banque sonore.", "Les réussites et les frontières de tous les niveaux sont testées par les suites automatisées ; seuls les scénarios décrits ici ont été effectués par l’interface."]
+}

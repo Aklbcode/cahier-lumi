@@ -1,5 +1,11 @@
 # Le Cahier de Lumi
 
+## Version 2.7.0 — parcours logiques du 26 octobre 2026
+
+Lire et Calculer sont regroupés par objectifs et prérequis locaux. Les premiers problèmes ne dépendent plus de la multiplication ; les textes de lecture suivent les sons réellement rencontrés. Les branches orales, formes, mesures et calendrier restent parallèles. Les anciens accès, les profils, les récompenses et le passage parent sont conservés, sans devenir des compétences fictives.
+
+[Analyse approfondie et détail des changements](analyses/Analyse-et-parcours-2026-10-26.md). La voix Charline et les sons dédiés sont conservés. Le bilan et le compteur utilisent désormais le même score final. Sur le site GitHub, les progrès restent propres à chaque appareil, avec export/import manuel.
+
 Jeux éducatifs pour Luca (5-6 ans, 1re primaire) et Lola (3 ans, maternelle) : lecture phonique, calcul, logique, grands jeux.
 
 **Ouvrir :** https://aklbcode.github.io/cahier-lumi/

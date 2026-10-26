@@ -1543,7 +1543,7 @@ function parentArea() {
     const devSel = h('select', { id: 'device-kid', 'aria-label': 'Enfant de cet appareil' }, [['', 'Demander « Qui joue ? » à chaque fois'], ['luca', 'Ouvrir directement le monde de Luca'], ['lola', 'Ouvrir directement le monde de Lola']].map(([v, t]) => h('option', { value: v, selected: dev === v }, t)));
     devSel.addEventListener('change', () => { try { if (devSel.value) localStorage.setItem(DEVICE_KEY, devSel.value); else localStorage.removeItem(DEVICE_KEY); } catch (e) { } toast('Réglage enregistré pour cet appareil'); });
     pc.append(h('div', { class: 'prow', style: { borderTop: '1px solid var(--line)', paddingTop: '10px' } }, h('label', { for: 'device-kid' }, 'Sur cet appareil'), devSel),
-      h('p', null, 'Réglage propre à cet appareil (par exemple : le Mac de Luca, l’iPad de Lola). Connectés au même compte Claude, les appareils partagent la progression de chaque enfant.'),
+      h('p', null, 'Réglage propre à cet appareil (par exemple : le Mac de Luca, l’iPad de Lola). Sur ce site web, les progrès restent propres à chaque appareil. Utilisez l’export et l’import pour les transférer ; une connexion à Claude dans une autre page ne synchronise pas ce site.'),
       h('p', null, 'Les personnages sont des dessins inspirés des photos : aucune photo n’est enregistrée dans l’application.'));
     w.append(pc);
 
@@ -1634,15 +1634,15 @@ function parentArea() {
     /* Méthode */
     w.append(h('div', { class: 'pcard' }, h('h3', null, 'La méthode'),
       h('p', null, h('b', null, 'Lecture. '), 'Approche phonique explicite et systématique : une correspondance lettre-son à la fois, dans un ordre allant des sons les plus faciles et fréquents (voyelles, consonnes qu’on peut prolonger : l, r, m, s, f, ch…) vers les plus complexes (ou, on, an, oi, in…). Chaque leçon enchaîne écoute des sons (conscience phonémique), reconnaissance de la lettre, fusion consonne + voyelle, lecture de mots entièrement déchiffrables (syllabes en couleurs, lettres muettes en gris), écriture des mots avec des étiquettes (encodage) puis lecture de phrases. Inspiration Céline Alvarez / Montessori : chaque leçon comporte une « lettre rugueuse » à repasser du doigt en disant son son (geste, forme et son mémorisés ensemble), l’alphabet mobile distingue les voyelles (bleu) et les consonnes (rouge), et la fusion se montre en faisant glisser la consonne vers la voyelle, lentement, avant de dire la syllabe d’un trait. Les consonnes ne sont jamais prononcées seules (pas de « me », « reu », « peu » qui ajoutent une voyelle parasite) : Lumi les désigne par un mot d’appui (« le son du début de moto ») et les fait entendre dans des syllabes. Dans « lis le mot », les images proposées commencent souvent par la même lettre, pour que l’enfant lise tout le mot au lieu de deviner. Les sons déjà vus reviennent régulièrement (rappel espacé).'),
-      h('p', null, h('b', null, 'Un accueil par thèmes. '), 'L’enfant choisit directement Lire ou Écouter, Calculer ou Compter, Jouer, Créer et Découvrir. Les activités et leur progression restent accessibles dans chaque thème. Le jardin et la cuisine se trouvent dans Découvrir.'),
+      h('p', null, h('b', null, 'Un accueil par thèmes. '), 'L’enfant choisit directement Lire ou Écouter, Calculer ou Compter, Jouer, Créer et Découvrir. Les activités et leur progression restent accessibles dans chaque thème. La cuisine reste dans Découvrir ; le potager est en pause.'),
       h('p', null, h('b', null, 'Calcul. '), 'Progression concret → imagé → symbolique : collections, cadres de dix, ligne numérique, puis écritures chiffrées. Compléments à 10, doubles et passage par la dizaine avant la mémorisation. La multiplication est introduite par des groupes égaux et des quadrillages (attendu de 2e primaire, en découverte).'),
       h('p', null, h('b', null, 'Autonomie. '), 'Toutes les consignes sont lues par Lumi et réécoutables (haut-parleur ou chouette). Pendant l’entraînement, après deux erreurs, la bonne réponse est montrée pour que l’enfant apprenne de son erreur. Chez les Petits, une étape est acquise à 80 % du premier coup ; après deux parties difficiles, le jeu propose une étape plus facile.'),
-      h('p', null, h('b', null, 'Validation (Grands). '), 'En lecture et en calcul, l’entraînement aidé ne valide rien. Il est suivi d’une courte activité autonome : 6 questions nouvelles, à 4 choix ou au clavier, sans aide ni correction, avec une seule réponse. Il faut 5 bonnes réponses sur 6 pour valider (moins d’une chance sur 200 de réussir au hasard). Raté, l’enfant refait la leçon puis retente le défi.'),
+      h('p', null, h('b', null, 'Validation (Grands). '), 'En lecture et en calcul, l’entraînement aidé ne valide rien. Il est suivi d’une courte activité autonome : 6 questions nouvelles, à 4 choix ou au clavier, sans aide ni correction, avec une seule réponse. Il faut 5 bonnes réponses sur 6 pour réussir le défi dans le jeu. Cela ne certifie pas une compétence scolaire. Sinon, l’enfant peut s’entraîner puis retenter le défi.'),
       h('p', null, h('b', null, 'Personnages. '), 'Luca et Lola jouent avec leur propre personnage, dessiné d’après leur photo (la photo elle-même n’est pas enregistrée). Le personnage les accompagne dans chaque exercice : il avance sur le chemin des questions et réagit aux réponses. Les accessoires et les trésors sont réunis dans « Mon personnage ». L’enfant peut équiper jusqu’à trois objets disponibles. Chaque série donne trois étoiles sans erreur, deux avec une erreur, une au-delà. Dix étoiles débloquent un trésor ; les étoiles restantes sont conservées dans le petit compteur du haut. Aucun rang ni niveau de récompense n’est affiché.'),
       h('p', null, h('b', null, 'Tablette et ordinateur. '), 'Le monde de Lola est pensé pour la tablette : grandes cibles, labyrinthes à parcourir du doigt. Le monde de Luca est pensé pour l’ordinateur : barre d’espace pour réécouter la consigne, Entrée pour valider, chiffres et lettres au clavier, flèches pour le robot et les labyrinthes, Échap pour quitter un jeu.'),
       h('p', null, h('b', null, 'Grands jeux et logique. '), 'Repris des « Petits Explorateurs » et réécrits : le petit robot (programmer un trajet), le marché (préparer une commande et payer juste en euros), les jardins en miroir (symétrie), la rivière des mots (assembler des syllabes), la première lettre, les mots en balade (remettre les lettres en ordre), le labyrinthe (labyrinthes) et l’œil de lynx (repérer une différence). « Tape les syllabes » existait déjà : c’est le même jeu, accessible aux deux enfants.'),
       h('p', null, h('b', null, 'Repères. '), 'Les niveaux suivent le tronc commun de la Fédération Wallonie-Bruxelles. Pour les Petits, le référentiel des compétences initiales fixe des attendus pour la M1 et la M2 ensemble, puis pour la M3 : les étiquettes « M1–M2 » et « M3 » reprennent ce découpage, et les niveaux progressent à l’intérieur de chaque palier. Pour les Grands, les référentiels de français et de mathématiques de 1re primaire (étiquette P1 ; P2 pour la multiplication, en découverte).')));
-    w.append(h('p', { style: { color: 'var(--ink-soft)', fontSize: '13px', marginTop: '16px' } }, 'La progression est enregistrée sur cet appareil' + (Remote.ref ? ' et dans votre compte Claude.' : '.')));
+    w.append(h('p', { style: { color: 'var(--ink-soft)', fontSize: '13px', marginTop: '16px' } }, 'La progression est enregistrée sur cet appareil' + (Remote.ready && Remote.state === 'on' ? ' ; la synchronisation de cette session est activée.' : ' ; pensez à exporter une sauvegarde.')));
   };
   draw();
 }
@@ -4129,8 +4129,8 @@ GAMES.lettre1 = {
 /* ================= 4. Les mots en balade (remettre les lettres en ordre) ================= */
 function baladeItem(L, ctx) {
   const lenOk = W => W.w.length >= L.min && W.w.length <= L.max && !/[ ’-]/.test(W.w);
-  let pool = WORDS.filter(W => picOK(W) && lenOk(W) && W.req <= (P().lecture.unlocked || 0));
-  if (pool.length < 6) pool = WORDS.filter(W => picOK(W) && lenOk(W));
+  const pool = (typeof curriculumWordCandidates==='function' ? curriculumWordCandidates('balade') : WORDS.filter(W => picOK(W) && W.req <= (P().lecture.unlocked || 0))).filter(lenOk);
+  if (!pool.length) return readingPracticeBlocked('balade');
   const W = avoidRepeat(ctx, pool, x => x.w);
   const letters = [...W.w];
   const mute = new Set(); let i0 = 0; W.gs.forEach(g => { if (g.mute) for (let j = 0; j < g.g.length; j++) mute.add(i0 + j); i0 += g.g.length; });
@@ -4199,9 +4199,11 @@ function riverDistract(parts, n) {
   return uniq([...shuffle(near), ...shuffle(all)]).slice(0, n);
 }
 function riviereItem(L, ctx) {
-  const pool = RIVER.filter(x => x.parts.length >= L.min && x.parts.length <= L.max);
+  const pool = typeof curriculumRiverPool==='function' ? curriculumRiverPool(L) : RIVER.filter(x => x.parts.length >= L.min && x.parts.length <= L.max);
+  if (!pool.length) return readingPracticeBlocked('riviere');
   const R = avoidRepeat(ctx, pool, x => x.w);
-  const stones = shuffle([...R.parts.map((t, i) => ({ t, i })), ...riverDistract(R.parts, L.extra).map(t => ({ t, i: -1 }))]);
+  const extras = sample(uniq(pool.flatMap(x=>x.parts)).filter(t=>!R.parts.includes(t)),L.extra);
+  const stones = shuffle([...R.parts.map((t, i) => ({ t, i })), ...extras.map(t => ({ t, i: -1 }))]);
   return {
     say: ['Construis le pont pour traverser la rivière !', 300, 'Le mot, c’est :', R.w], caption: 'Pose les syllabes dans l’ordre',
     replay() { Voice.say(['Le mot, c’est :', R.w]); },
@@ -5332,7 +5334,7 @@ const baseParentArea=parentArea;
 parentArea=function(){baseParentArea();const w=$('.parent .wrap');if(w)w.append(offlineParentBox());};
 if(typeof navigator!=='undefined'&&'serviceWorker' in navigator&&location.protocol!=='file:')offlineRegistration().catch(()=>{});
 
-function strictWordPool(li,max=8){return WORDS.filter(w=>w.req<=li&&picOK(w)&&w.gs.filter(g=>!g.mute).length<=max);}
+function strictWordPool(li,max=8){return (typeof curriculumWordCandidates==='function'?curriculumWordCandidates(RUN?.gid==='rappel'?'rappel':'mots',P(),max):WORDS).filter(w=>w.req<=li&&picOK(w)&&w.gs.filter(g=>!g.mute).length<=max);}
 function wordChainPairs(pool){const pairs=[];for(const a of pool)for(const b of pool){if(a===b)continue;const ag=a.gs,bg=b.gs;if(ag.length!==bg.length||ag.some((g,i)=>g.mute!==bg[i].mute||(g.mute&&g.g!==bg[i].g)))continue;const diff=ag.map((g,i)=>!g.mute&&G2L[g.g.toLowerCase()]!==G2L[bg[i].g.toLowerCase()]?i:-1).filter(i=>i>=0);if(diff.length===1)pairs.push({a,b,at:diff[0],ag,bg});}return pairs;}
 GAMES.mots={id:'mots',title:'Je fabrique les mots',sub:'Écouter, découper, écrire',icon:'🔤',color:'plum',stage:'#f5effa',levels:[3,4,5,6,7,8].map((max,i)=>({max,chain:i>=4,name:i>=4?'Changer un son':'Les sons puis les lettres',n:3,skill:'wordshop:'+i,tag:'P1',ref:'Segmenter un mot en sons, encoder et modifier un phonème'})),make(ctx){const li=P().lecture.unlocked||0,pool=strictWordPool(li,ctx.L.max);if(!pool.length)return itLettre(LESSONS[li],li);const pairs=ctx.L.chain?wordChainPairs(pool):[];if(!pairs.length)return itDictee(pick(pool),li);const {a,b,at,ag,bg}=pick(pairs),answer=bg[at].g,choices=shuffle(uniq([answer,ag[at].g,...sample(pool.flatMap(w=>w.gs.filter(g=>!g.mute).map(g=>g.g)),2)])).slice(0,4);if(!choices.includes(answer))choices[0]=answer;return {cls:'upgrade-stage',say:['Écoute le nouveau mot. Change un seul son pour l’écrire.',b.w],render(st,api){const slots=h('div',{class:'urow'},ag.map((g,i)=>h('span',{class:'slot'+(i===at?' next':''),style:{fontSize:'36px',color:g.mute?'#a9a6b3':''}},g.g)));let chosen=null;const row=h('div',{class:'urow'},choices.map(g=>uButton(g,()=>{chosen=g;slots.children[at].textContent=g;})));const go=uButton('✓ Vérifier',()=>{if(chosen===answer)api.answer(true,{praise:b.w});else api.answer(false,{feedback:'Écoute le nouveau mot. Change un seul son pour l’écrire.'});});api.strategy=()=>{slots.children[at].classList.add('reveal');};uWrap(st,uButton('🔊 '+b.e,()=>Voice.say(b.w),{style:{fontSize:'40px'}}),slots,row,go);}};}};
 addThemeGame('grands','lire','mots');
@@ -5389,6 +5391,13 @@ function parentProgressCard(){let child=S.current==='admin'?adminReturnId():S.cu
 const originalNextLevel=nextLevel;
 nextLevel=function(mi){const mp=modProg(MODS[mi].id);if(Number.isInteger(mp.parentStart)){for(let i=clamp(mp.parentStart,0,MODS[mi].levels.length-1);i<MODS[mi].levels.length;i++)if(!mp.pass[i]||mp.pass[i].review)return i;return clamp(mp.parentStart,0,MODS[mi].levels.length-1);}return originalNextLevel(mi);};
 document.body.append(h('style',null,`.parent-progress{border:2px solid #b8dcca!important}.parent-progress-form{display:grid;grid-template-columns:1fr 2fr 2fr;gap:12px}.parent-progress-field{display:flex;flex-direction:column;gap:6px;font-weight:700}.parent-progress-field select{width:100%;min-height:46px;border:2px solid var(--line);border-radius:12px;background:white;padding:7px;font:inherit;min-width:0}.parent-action-status{color:#28734e;font-weight:700;min-height:1.4em}.game-parent{width:44px;height:44px;flex:none;color:var(--ink-soft)}.game-top .lvl{max-width:33%;white-space:normal}.game-parent svg{width:22px;height:22px}@media(max-width:650px){.parent-progress-form{grid-template-columns:1fr}.parent-progress-actions{align-items:stretch}.parent-progress-actions button{flex:1 1 170px}.game-top .lvl{font-size:12px;max-width:30%}}`));
+
+
+
+
+
+
+
 
 
 
@@ -7401,7 +7410,7 @@ function familyCollection(){const p=P(),ov=ovScreen('Mes découvertes'),sounds=f
 function familyMathReviewDue(p,now=Date.now()){return Object.values(p.mathPractice?.encountered||{}).some(f=>{const r=p.mathPractice?.review?.[f.id];return (!r||r.due<=now)&&(typeof mathFactFromConfig!=='function'||!!mathFactFromConfig({eq:f.eq,ans:f.answer}));});}
 const familyRecommendBefore=recommendedGame;
 recommendedGame=function(){const p=P();if(S.world==='grands'&&!p.resume&&GAMES.rappelCalcul&&familyMathReviewDue(p))return 'rappelCalcul';const id=familyRecommendBefore();return familyAccess(id).ready?id:(S.world==='petits'?'alphabetP':'lecture');};
-const LUMI_RELEASE={version:'2.6.0',date:'24/10/2026',id:'apprentissages-20261024'};
+const LUMI_RELEASE={version:'2.7.0',date:'26/10/2026',id:'parcours-logiques-20261026'};
 function familyHomeFooter(main){for(const footer of document.querySelectorAll('.family-version'))footer.remove();if(!main||HOME_THEME)return;main.append(h('footer',{class:'family-version',role:'contentinfo'},'Version '+LUMI_RELEASE.version+' · '+LUMI_RELEASE.date));}
 const familyHomeBefore=renderHome;
 renderHome=function(theme=HOME_THEME){familyHomeBefore(theme);document.body.setAttribute('data-family-child',S.current);for(const oldFooter of document.querySelectorAll('.family-version'))oldFooter.remove();if(HOME_THEME)return;const main=$('.theme-home');if(!main)return;const old=main.querySelector('.suggestion');if(old)old.remove();const id=recommendedGame(),resume=P().resume;
@@ -7422,7 +7431,7 @@ parentInitialTarget=function(id){const target=familyInitialTargetBefore(id);if(t
 const familyParentBefore=parentArea;
 parentArea=function(){familyParentBefore();familyEnhanceParent();};
 const familyCelebrateBefore=Celebrate.show.bind(Celebrate);
-Celebrate.show=function(options){familyCelebrateBefore(options);const acts=$('.celebrate .acts',Shell.el);if(!acts)return;const pause=uButton('🌿 Faire une pause',()=>{Voice.stop();Shell.close();});acts.append(pause);const panel=$('.celebrate',Shell.el);if(panel&&!panel.querySelector('.family-series-note'))panel.insertBefore(h('p',{class:'family-series-note'},'Série terminée. La suite reste à ton choix.'),acts);};
+Celebrate.show=function(options){familyCelebrateBefore(options);const acts=$('.celebrate .acts',Shell.el);if(!acts)return;const pause=uButton('🌿 Faire une pause',()=>{Voice.stop();Shell.onClose=null;Shell.close();});acts.append(pause);const panel=$('.celebrate',Shell.el);if(panel&&!panel.querySelector('.family-series-note'))panel.insertBefore(h('p',{class:'family-series-note'},'Série terminée. La suite reste à ton choix.'),acts);};
 if(typeof document!=='undefined'&&document.head){const style=document.createElement('style');style.textContent=`
 .family-version{font-size:12px;color:#465d56;text-align:center;line-height:1.8;margin:24px 0 10px;padding:8px 12px;opacity:1}.family-session{display:flex;justify-content:center;align-items:stretch;gap:12px;flex-wrap:wrap;margin:12px auto 24px}.family-session .ubtn:first-child{background:#287f61;color:white;min-height:100px;font-size:25px;padding:15px 28px;min-width:300px}.family-session .ubtn{border:2px solid #bfd7c9;border-radius:24px}.family-locked{background:#f4f4f0!important}.family-locked small{font-size:13px;color:#5c6569;max-width:100%;line-height:1.9}.family-lock-picture{font-size:50px}.family-sound-map{display:flex;flex-wrap:wrap;gap:12px}.family-sound-map span{padding:12px 18px;border:2px solid #dbe2e0;border-radius:15px;font-size:30px}.family-sound-map .seen{background:#e2f3e9;border-color:#58a77a}.family-sound-map .not-seen{color:#7e8787}.family-week p{margin:5px 0}.family-series-note{font-size:16px;text-align:center}.family-level-label{font-size:14px}.family-action-icon{font-size:36px!important;min-width:80px!important;min-height:80px!important}
 body[data-family-child="lola"] .stage .ubtn,body[data-family-child="lola"] .stage .u-btn,body[data-family-child="lola"] .stage .block,body[data-family-child="lola"] .stage .node,body[data-family-child="lola"] .stage .card,body[data-family-child="lola"] .stage .mtool{min-width:80px;min-height:80px}body[data-family-child="lola"] .stage .search-object{min-width:0!important;min-height:0!important}
@@ -7516,6 +7525,65 @@ function ecoleFresh(ctx,pool,keyOf=x=>x){
  if(ctx.used)ctx.used.push(keyOf(choice));return choice;
 }
 function ecoleLevels(prefix,tag,list){return list.map((L,i)=>({n:6,...L,skill:'ecole:'+prefix+':'+i,tag,ref:L.ref||L.name}));}
+/* An explicit inventory, rather than spelling heuristics, bounds autonomous
+   reading. @ marks a spelling taught in graphies; ! remains unmodelled.
+   A spoken word in an oral task is not evidence of decoding that word. */
+const ECOLE_EXTRA_NOTATION={
+ dort:'d.o.r.*t',boit:'b.oi.*t',court:'c.ou.r.*t',vole:'v.o.l.*e',luca:'l.u.c.a',soif:'s.oi.f',couronne:'c.ou.r.o.nn.*e',donne:'d.o.nn.*e',à:'à',gros:'g.r.o.*s',joli:'j.o.l.i',petit:'p.e.t.i.*t',poussin:'p.ou.ss.in',un:'!un',
+ bateau:'b.a.t.@au',gâteau:'g.â.t.@au',chapeau:'ch.a.p.@au',oiseau:'oi.@s.@au',château:'ch.â.t.@au',cadeau:'c.a.d.@au',auto:'@au.t.o',taureau:'t.@au.r.@au',chaussette:'ch.@au.ss.è.tt.*e',
+ lait:'l.ai.*t',balai:'b.a.l.ai',fraise:'f.r.ai.@s.*e',maison:'m.ai.@s.on',chaise:'ch.ai.@s.*e',aigle:'ai.g.l.*e',baleine:'b.a.l.@ai.n.*e',neige:'n.@ai.@g.*e',reine:'r.@ai.n.*e',
+ nez:'n.@er',panier:'p.a.n.!i-glide.@er',rocher:'r.o.ch.@er',escalier:'è.s.c.a.l.!i-glide.@er',cahier:'c.a.!i-glide.@er',soulier:'s.ou.l.!i-glide.@er',
+ citron:'@c.i.t.r.on',cerise:'@c.e.r.i.@s.*e',glaçon:'g.l.a.@c.on',garçon:'g.a.r.@c.on',cinéma:'@c.i.n.é.m.a',cible:'@c.i.b.l.*e',police:'p.o.l.i.@c.*e',
+ girafe:'@g.i.r.a.f.*e',orange:'o.r.an.@g.*e',nuage:'n.!u-glide.a.@g.*e',plage:'p.l.a.@g.*e',fromage:'f.r.o.m.a.@g.*e',singe:'s.in.@g.*e',gilet:'@g.i.l.!et',bougie:'b.ou.@g.i.*e',
+ rose:'r.o.@s.*e',chemise:'ch.e.m.i.@s.*e',valise:'v.a.l.i.@s.*e',ciseaux:'@c.i.@s.@au.*x',musique:'m.u.@s.i.qu.*e',vase:'v.a.@s.*e',fusée:'f.u.@s.é.*e',
+ montagne:'m.on.t.a.@gn.*e',champignon:'ch.an.p.i.@gn.on',araignée:'a.r.@ai.@gn.é.*e',cygne:'@c.!y.@gn.*e',agneau:'a.@gn.@au',peigne:'p.@ai.@gn.*e',
+ fille:'f.i.@ill.*e',quille:'qu.i.@ill.*e',chenille:'ch.e.n.i.@ill.*e',abeille:'a.b.!eill',bouteille:'b.ou.t.!eill',feuille:'f.!euill',grenouille:'g.r.e.n.!ouill',papillon:'p.a.p.i.@ill.on',oreille:'o.r.!eill',
+ éléphant:'é.l.é.@ph.an.*t',phoque:'@ph.o.qu.*e',téléphone:'t.é.l.é.@ph.o.n.*e',dauphin:'d.@au.@ph.in',photo:'@ph.o.t.o',alphabet:'a.l.@ph.a.b.!et'
+};
+const ECOLE_GRAPH_REFERENCE={au:['o'],ai:['è'],er:['é'],c:['s'],g:['j'],s:['s'],gn:['n'],ill:['i','l'],ph:['f']};
+function ecoleWordRequirements(word){
+ const w=String(word).toLocaleLowerCase('fr').replace(/[.!?]/g,''),notation=ECOLE_EXTRA_NOTATION[w]||MINI_NOTATION[w];
+ if(!notation){const W=WORDS.find(x=>x.w===w);return W?{keys:[...W.keys],families:[],unmodelled:W.req>=99?[w]:[]}:{keys:[],families:[],unmodelled:[w]};}
+ const keys=new Set(),families=new Set(),unmodelled=[];
+ for(const token of notation.split(/[.\s-]+/)){if(!token||token[0]==='*')continue;if(token[0]==='@'){families.add(token.slice(1));for(const k of ECOLE_GRAPH_REFERENCE[token.slice(1)]||[])keys.add(k);}else if(token[0]==='!')unmodelled.push(token.slice(1));else if(G2L[token]!=null)keys.add(G2L[token]);else unmodelled.push(token);}
+ return {keys:[...keys],families:[...families],unmodelled};
+}
+function ecoleReadingKnown(p=P()){
+ const keys=readingPracticeKnownKeys(p),families=new Set();
+ for(const f of ECOLE_GRAPH_FAMILIES){const e=p.evidence?.['ecole:graphie:'+f.id+':lecture'];if(p.demo||e&&e.alone>=2&&new Set(e.seen||[]).size>=2)families.add(f.id);}
+ return {keys,families};
+}
+function ecoleWordReady(word,p=P(),options={}){
+ if(p.demo)return true;const r=ecoleWordRequirements(word),known=ecoleReadingKnown(p);
+ return !r.unmodelled.length&&r.keys.every(k=>known.keys.has(k))&&r.families.every(f=>f===options.family||known.families.has(f));
+}
+function ecoleGraphPool(family,p=P()){
+ const f=typeof family==='string'?ECOLE_GRAPH_FAMILIES.find(x=>x.id===family):family;
+ return f?f.words.filter(([w])=>ecoleWordReady(w,p,{family:f.id})).map(([w,e])=>({w,e})):[];
+}
+function ecolePhrasePool(level,p=P()){
+ const L=typeof level==='number'?GAMES.phraseOrdre.levels[level]:level;
+ return L?ECOLE_ORDER_SENTENCES.filter(x=>x.words.length===L.words&&x.words.every(w=>ecoleWordReady(w,p))):[];
+}
+/* Access is pure and accepts an explicit profile and zero-based level. */
+function ecoleReadingAccess(gid,p=P(),li){
+ const levels=GAMES[gid]?.levels||[],index=clamp(Number.isInteger(li)?li:p.games?.[gid]?.lvl||0,0,Math.max(0,levels.length-1)),L=levels[index];
+ const known=ecoleReadingKnown(p);let ready=true,available=0,missing=[],missingFamilies=[];
+ if(gid==='lettresMiroir'&&!L?.same){const need=index<3?['b','d']:index===3?['p','k']:['b','d','p','k'];missing=need.filter(k=>!known.keys.has(k));ready=!missing.length;}
+ if(gid==='phraseOrdre'){
+  available=ecolePhrasePool(L,p).length;ready=available>0;
+  if(!ready){const candidates=ECOLE_ORDER_SENTENCES.filter(x=>x.words.length===L.words).map(x=>{const req=x.words.map(ecoleWordRequirements);return {missing:uniq(req.flatMap(r=>r.keys).filter(k=>!known.keys.has(k))),families:uniq(req.flatMap(r=>r.families).filter(f=>!known.families.has(f))),unknown:req.some(r=>r.unmodelled.length)};}).filter(x=>!x.unknown).sort((a,b)=>a.missing.length+a.families.length-b.missing.length-b.families.length);missing=candidates[0]?.missing||[];missingFamilies=candidates[0]?.families||[];}
+ }
+ if(gid==='graphies'){
+  const families=L?.family==='mix'?ECOLE_GRAPH_FAMILIES.filter(f=>known.families.has(f.id)):ECOLE_GRAPH_FAMILIES.filter(f=>f.id===L?.family);
+  available=families.filter(f=>ecoleGraphPool(f,p).length>=2).length;ready=available>0;
+  if(!ready&&families.length){const candidates=families.flatMap(f=>{const req=f.words.map(([w])=>ecoleWordRequirements(w)).filter(r=>!r.unmodelled.length);return req.flatMap((r,i)=>req.slice(i+1).map(s=>({missing:uniq([...r.keys,...s.keys].filter(k=>!known.keys.has(k))),families:uniq([...r.families,...s.families].filter(x=>x!==L.family&&!known.families.has(x)))})));}).sort((a,b)=>a.missing.length+a.families.length-b.missing.length-b.families.length);missing=candidates[0]?.missing||[];missingFamilies=candidates[0]?.families||[];}
+ }
+ if(p.demo)return {ready:true,admin:true,training:false,missing:[],missingFamilies:[],available};
+ const parent=readingPracticeParentOpened(gid,p),previous=typeof curriculumLegacyGameLevel==='function'&&curriculumLegacyGameLevel(gid,p)>=index;
+ return {ready:ready||parent||previous,parent,previous,training:!ready&&(parent||previous),missing,missingFamilies,available,level:index,reason:missing.length?'Préparer les sons « '+missing.map(k=>LESSONS[LIDX[k]]?.main||k).join(', ')+' » dans Apprendre à lire.':missingFamilies.length?'Découvrir d’abord les graphies « '+missingFamilies.join(', ')+' ».':'Préparer les sons et les mots dans Apprendre à lire.'};
+}
+function ecoleChoiceWithAudio(button,text){return h('div',{class:'ecole-choice-audio'},button,onTap(h('button',{class:'hint-btn ecole-choice-listen','aria-label':'Écouter '+text},icon('speaker')),()=>Voice.say(text)));}
 function ecoleRegister(id,game,world,theme,after){
  GAMES[id]={id,color:game.color||'sky',stage:game.stage||'#f5f8fc',...game};
  SIMPLE_GAME_NAMES[id]=game.title;
@@ -7547,7 +7615,7 @@ const ECOLE_MIRROR_LEVEL_POOLS=[
 ];
 function ecoleMirrorSameItem(ctx){
  const a=pick(['b','d','p','q']),same=Math.random()<.5,b=same?a:pick(['b','d','p','q'].filter(x=>x!==a));
- return {cls:'ecole-stage ecole-mirror',say:ECOLE_VOICE.mirrorSame,caption:'Pareilles ou différentes ?',exemplar:'miroir-pareil:'+a+b,
+ return {cls:'ecole-stage ecole-mirror',say:ECOLE_VOICE.mirrorSame,caption:'Pareilles ou différentes ?',evidenceKey:'visual:letter-mirror',exemplar:'miroir-pareil:'+a+b,
   render(st,api){let target;
    const row=ecoleRow(2,[['=',true],['≠',false]].map(([sym,v])=>{const btn=ecoleTextCard(sym,v?'pareilles':'différentes','ecole-letter-card');if(v===same)target=btn;
     onTap(btn,()=>api.answer(v===same,{el:btn,correctEl:target,feedback:ECOLE_VOICE.mirrorSameWrong,praise:same?ECOLE_VOICE.mirrorSameYes:ECOLE_VOICE.mirrorSameNo}));return btn;}));
@@ -7555,9 +7623,11 @@ function ecoleMirrorSameItem(ctx){
 }
 function ecoleMirrorItem(ctx){
  if(ctx.L.same)return ecoleMirrorSameItem(ctx);
+ const access=ecoleReadingAccess('lettresMiroir',P(),ctx.li);if(!access.ready)return readingPracticeBlocked('lettresMiroir');
  const spec=ECOLE_MIRROR_LEVEL_POOLS[ctx.L.pool],W=ecoleFresh(ctx,spec.pool(),x=>x.w),gap=W.w.indexOf(W.letter);
- return {cls:'ecole-stage ecole-mirror',say:[W.w,350,ECOLE_VOICE.mirrorAsk],caption:'Quelle lettre manque ?',exemplar:'miroir:'+W.w,
+ return {cls:'ecole-stage ecole-mirror',say:[W.w,350,ECOLE_VOICE.mirrorAsk],caption:'Quelle lettre manque ?',helped:access.training,evidenceKey:access.training?'practice:letter-mirror:training':'letter:mirror-context',exemplar:'miroir:'+W.w,
   render(st,api){
+   if(access.training)api.help();
    const word=h('div',{class:'ecole-gap-word','aria-label':'mot à compléter'},[...W.w].map((c,i)=>i===gap?h('span',{class:'ecole-gap'},'?'):h('span',null,c)));
    const gapEl=word.querySelector?word.querySelector('.ecole-gap'):null;
    let target;
@@ -7568,7 +7638,7 @@ function ecoleMirrorItem(ctx){
   }};
 }
 ecoleRegister('lettresMiroir',{title:'Les lettres miroirs',sub:'Ne plus confondre b, d, p et q',icon:'🪞',color:'plum',stage:'#f4f0fa',
- levels:ecoleLevels('miroir','P1',[{same:true,name:'Pareilles ou différentes ?'},{pool:0,name:'b ou d au début du mot'},{pool:1,name:'b ou d au milieu du mot'},{pool:2,name:'p ou q'},{pool:3,name:'b, d, p ou q'}]),make:ecoleMirrorItem},'grands','lire','balade');
+ preReq:{kind:'letter-sound-context',access:(p=P(),li)=>ecoleReadingAccess('lettresMiroir',p,li)},levels:ecoleLevels('miroir','P1',[{same:true,name:'Pareilles ou différentes ?'},{pool:0,name:'b ou d au début du mot'},{pool:1,name:'b ou d au milieu du mot'},{pool:2,name:'p ou q'},{pool:3,name:'b, d, p ou q'}]),make:ecoleMirrorItem},'grands','lire','balade');
 
 /* ---------- 2. Les sons qui s’écrivent autrement ---------- */
 const ECOLE_VOWEL_CHARS='aeiouyéèêëâàîïôûù';
@@ -7613,30 +7683,37 @@ function ecoleGraphWordEl(fam,w,mark){
  if(i<w.length)out.append(h('span',null,w.slice(i)));return out;
 }
 function ecoleGraphItem(ctx){
- const mix=ctx.L.family==='mix',fam=mix?pick(ECOLE_GRAPH_FAMILIES):ECOLE_GRAPH_FAMILIES.find(f=>f.id===ctx.L.family);
- const entries=fam.words.map(([w,e])=>({w,e})),W=ecoleFresh(ctx,entries,x=>x.w),others=sample(entries.filter(x=>x.w!==W.w),2),opts=shuffle([W,...others]);
+ const profile=P(),access=ecoleReadingAccess('graphies',profile,ctx.li);if(!access.ready)return readingPracticeBlocked('graphies');
+ const content=access.training?{...profile,demo:true}:profile,known=ecoleReadingKnown(content),mix=ctx.L.family==='mix',families=mix?ECOLE_GRAPH_FAMILIES.filter(f=>(content.demo||known.families.has(f.id))&&ecoleGraphPool(f,content).length>=2):ECOLE_GRAPH_FAMILIES.filter(f=>f.id===ctx.L.family),fam=pick(families);
+ const entries=ecoleGraphPool(fam,content);if(!fam||entries.length<2)return readingPracticeBlocked('graphies');
+ const memory=ctx.bag||(ctx.bag={}),prior=(memory.graphWords||(memory.graphWords={}))[fam.id]||[],ALT={au:['au','eau'],ai:['ai','ei'],er:['er','ez']}[fam.id],complete=!!(ALT&&!mix&&ctx.i===(ctx.n||6)-1&&prior.length);
+ const W=complete?pick(prior):ecoleFresh(ctx,entries,x=>x.w),others=sample(entries.filter(x=>x.w!==W.w),2),opts=shuffle([W,...others]);
  const mark=!mix&&ctx.i<=3,hear=ctx.i%2===1;
- const ALT={au:['au','eau'],ai:['ai','ei'],er:['er','ez']}[fam.id];
- if(ALT&&!mix&&ctx.i===(ctx.n||6)-1){
+ const discovery=!mix&&ctx.i===0,helped=access.training||discovery;
+ if(!hear&&!complete){memory.graphWords[fam.id]=[W,...prior.filter(x=>x.w!==W.w)].slice(0,6);}
+ if(complete){
   const [a,b]=ecoleGraphRanges(fam.id,W.w)[0],part=W.w.slice(a,b),opts=ALT.includes(part)?ALT:[part,...ALT.filter(x=>x!==part)].slice(0,2);
-  return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphComplete],caption:'Complète le mot',exemplar:'graphie-complete:'+W.w,render(st,api){
+  return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphComplete],caption:'Complète un mot déjà vu',helped:access.training,evidenceKey:access.training?'practice:graphie:training':'encoding:graphie:'+fam.id,exemplar:'graphie-complete:'+W.w,render(st,api){
+   if(access.training)api.help();
    const gap=h('span',{class:'ecole-gap'},'?');let target;
    const row=ecoleRow(2,shuffle(opts).map(o=>{const btn=ecoleTextCard(o,o);if(o===part)target=btn;onTap(btn,()=>api.answer(o===part,{el:btn,correctEl:target,feedback:ECOLE_VOICE.graphCompleteWrong,praise:['Oui !',W.w]}).then(ok=>{if(ok){gap.textContent=part;gap.classList.add('filled');}}));return btn;}));
    api.key(target);uWrap(st,h('div',{class:'ecole-picture-line'},ecolePic(W.e,W.w,'big'),h('div',{class:'ecole-gap-word'},W.w.slice(0,a),gap,W.w.slice(b))),row);
   }};
  }
- if(hear)return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphHear],caption:'Touche le mot que tu entends',exemplar:'graphie-ecoute:'+W.w,render(st,api){
+ if(hear)return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphHear],caption:'Touche le mot que tu entends',helped:access.training,evidenceKey:access.training?'practice:graphie:training':'matching:graphie:'+fam.id,exemplar:'graphie-ecoute:'+W.w,render(st,api){
+  if(access.training)api.help();
   let target;const row=h('div',{class:'ecole-word-list'},opts.map(o=>{const b=h('button',{class:'card txt ecole-word-card','aria-label':o.w},ecoleGraphWordEl(fam,o.w,mark));if(o===W)target=b;
    onTap(b,()=>api.answer(o===W,{el:b,correctEl:target,feedback:ECOLE_VOICE.graphWrongHear,praise:['Oui !',W.w]}));return b;}));
   api.key(target);uWrap(st,ecolePic(W.e,W.w,'big'),onTap(h('button',{class:'hint-btn'},icon('speaker'),ECOLE_LABELS.replay),()=>Voice.say(W.w)),row);
  }};
- return {cls:'ecole-stage ecole-graph',say:!mix&&ctx.i===0?[...fam.rule(),400,ECOLE_VOICE.graphRead]:ECOLE_VOICE.graphRead,caption:'Lis le mot, puis touche la bonne image',exemplar:'graphie-lecture:'+W.w,render(st,api){
+ return {cls:'ecole-stage ecole-graph',say:discovery?[...fam.rule(),400,ECOLE_VOICE.graphRead]:ECOLE_VOICE.graphRead,caption:discovery?'Découvre la graphie':'Lis le mot, puis touche la bonne image',helped,evidenceKey:helped?'practice:graphie:guided:'+fam.id:'ecole:graphie:'+fam.id+':lecture',exemplar:'graphie-lecture:'+W.w,render(st,api){
+  if(helped)api.help();
   let target;const row=ecoleRow(3,opts.map(o=>{const b=ecolePicCard(o.e,'image');if(o===W)target=b;onTap(b,()=>api.answer(o===W,{el:b,correctEl:target,feedback:ECOLE_VOICE.graphWrongRead,praise:['Oui !',W.w]}));return b;}));
   api.key(target);uWrap(st,h('div',{class:'ecole-big-word'},ecoleGraphWordEl(fam,W.w,mark)),ecoleHelp(api,W.w),row);
  }};
 }
 ecoleRegister('graphies',{title:'Les sons qui s’écrivent autrement',sub:'au, eau, ai, ei, gn, ill, ph…',icon:'🔤',color:'plum',stage:'#f4f0fa',
- levels:ecoleLevels('graphies','P1',[...ECOLE_GRAPH_FAMILIES.map(f=>({family:f.id,name:f.name,n:6})),{family:'mix',name:'Tous les sons mélangés'}]),make:ecoleGraphItem},'grands','lire','phraseOrdre');
+ preReq:{kind:'explicit-spellings',access:(p=P(),li)=>ecoleReadingAccess('graphies',p,li)},levels:ecoleLevels('graphies','P1',[...ECOLE_GRAPH_FAMILIES.map(f=>({family:f.id,name:f.name,n:6})),{family:'mix',name:'Tous les sons mélangés'}]),make:ecoleGraphItem},'grands','lire','phraseOrdre');
 
 /* ---------- 3. Les petits mots : un/une, le/la, il/elle, singulier/pluriel ---------- */
 const ECOLE_NOUNS=[
@@ -7653,44 +7730,48 @@ function ecoleSmallWordsItem(ctx){
  const kind=ctx.L.kind==='mix'?ECOLE_SMALL_WORD_KINDS[ctx.i%ECOLE_SMALL_WORD_KINDS.length]:ctx.L.kind;
  if(kind==='un'||kind==='le'){
   const N=ecoleFresh(ctx,ECOLE_NOUNS,x=>x.w),options=kind==='un'?['un','une']:['le','la'],ans=ecoleArticleOf(kind,N,false);
-  return {cls:'ecole-stage ecole-small',say:[N.w,350,ECOLE_VOICE.genderAsk[kind]],caption:ECOLE_VOICE.genderAsk[kind],exemplar:'petitsmots:'+kind+':'+N.w,render(st,api){
+  return {cls:'ecole-stage ecole-small',say:[N.w,350,ECOLE_VOICE.genderAsk[kind]],caption:ECOLE_VOICE.genderAsk[kind],evidenceKey:'oral:grammar:'+kind,exemplar:'petitsmots:'+kind+':'+N.w,render(st,api){
    const gap=h('span',{class:'ecole-gap'},'?');let target;
-   const row=ecoleRow(2,options.map(o=>{const b=ecoleTextCard(o,o);if(o===ans)target=b;onTap(b,()=>api.answer(o===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.genderWrong,praise:['Oui !',ans+' '+N.w]}).then(ok=>{if(ok){gap.textContent=ans;gap.classList.add('filled');}}));return b;}));
+   const row=ecoleRow(2,options.map(o=>{const b=ecoleTextCard(o,o);if(o===ans)target=b;onTap(b,()=>api.answer(o===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.genderWrong,praise:['Oui !',ans+' '+N.w]}).then(ok=>{if(ok){gap.textContent=ans;gap.classList.add('filled');}}));return ecoleChoiceWithAudio(b,o);}));
    api.key(target);uWrap(st,ecolePic(N.e,N.w,'big'),h('div',{class:'ecole-phrase-line'},gap,' ',N.w),row);
   }};
  }
  if(kind==='il'){
   const person=ecoleFresh(ctx,ECOLE_PEOPLE,x=>x.w),verb=pick(ECOLE_PRONOUN_VERBS),ans=person.p,sentence=(ans==='il'?'Il ':'Elle ')+verb+'.';
-  return {cls:'ecole-stage ecole-small',say:[person.w,350,ECOLE_VOICE.pronounAsk],caption:ECOLE_VOICE.pronounAsk,exemplar:'petitsmots:il:'+person.w+':'+verb,render(st,api){
+  return {cls:'ecole-stage ecole-small',say:[person.w,350,ECOLE_VOICE.pronounAsk],caption:ECOLE_VOICE.pronounAsk,evidenceKey:'oral:grammar:il',exemplar:'petitsmots:il:'+person.w+':'+verb,render(st,api){
    const gap=h('span',{class:'ecole-gap'},'?');let target;
-   const row=ecoleRow(2,['Il','Elle'].map(o=>{const b=ecoleTextCard(o,o);if(o.toLowerCase()===ans)target=b;onTap(b,()=>api.answer(o.toLowerCase()===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.pronounWrong,praise:['Oui !',sentence]}).then(ok=>{if(ok){gap.textContent=o;gap.classList.add('filled');}}));return b;}));
+   const row=ecoleRow(2,['Il','Elle'].map(o=>{const b=ecoleTextCard(o,o);if(o.toLowerCase()===ans)target=b;onTap(b,()=>api.answer(o.toLowerCase()===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.pronounWrong,praise:['Oui !',sentence]}).then(ok=>{if(ok){gap.textContent=o;gap.classList.add('filled');}}));return ecoleChoiceWithAudio(b,o+' '+verb+'.');}));
    api.key(target);uWrap(st,ecolePic(person.e,person.w,'big'),h('div',{class:'ecole-phrase-line'},gap,' '+verb+'.'),row);
   }};
  }
  const N=ecoleFresh(ctx,ECOLE_NOUNS.filter(n=>n.pl),x=>x.w),plural=Math.random()<.5,count=plural?rint(3,5):1;
  const one=ecoleArticleOf(kind,N,false)+' '+N.w,many=(kind==='des'?'des ':'les ')+N.pl,ans=plural?many:one;
- return {cls:'ecole-stage ecole-small',say:ECOLE_VOICE.numberAsk,caption:'Un seul, ou plusieurs ?',exemplar:'petitsmots:'+kind+':'+N.w+':'+count,render(st,api){
+ return {cls:'ecole-stage ecole-small',say:ECOLE_VOICE.numberAsk,caption:'Un seul, ou plusieurs ?',evidenceKey:'oral:grammar:'+kind,exemplar:'petitsmots:'+kind+':'+N.w+':'+count,render(st,api){
   let target;const pics=h('div',{class:'ecole-count-pics'},Array.from({length:count},()=>ecolePic(N.e,N.w)));
-  const row=ecoleRow(2,shuffle([one,many]).map(o=>{const b=ecoleTextCard(o,o);if(o===ans)target=b;onTap(b,()=>api.answer(o===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.numberWrong,praise:['Oui !',ans]}));return b;}));
+  const row=ecoleRow(2,shuffle([one,many]).map(o=>{const b=ecoleTextCard(o,o);if(o===ans)target=b;onTap(b,()=>api.answer(o===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.numberWrong,praise:['Oui !',ans]}));return ecoleChoiceWithAudio(b,o);}));
   api.key(target);uWrap(st,pics,row);
  }};
 }
-ecoleRegister('petitsMots',{title:'Les petits mots',sub:'un, une, le, la, il, elle, les',icon:'🔡',color:'teal',stage:'#edf6f2',
+ecoleRegister('petitsMots',{title:'Les petits mots',sub:'Choisir à l’oral : un, une, le, la…',readingMode:'oral-grammar',icon:'🔡',color:'teal',stage:'#edf6f2',
  levels:ecoleLevels('petitsmots','P1',[{kind:'un',name:'un ou une'},{kind:'le',name:'le ou la'},{kind:'il',name:'il ou elle'},{kind:'des',name:'un ou des : un seul ou plusieurs'},{kind:'les',name:'le, la ou les'},{kind:'mix',name:'Tous les petits mots'}]),make:ecoleSmallWordsItem},'grands','lire','pseudoMot');
 
 /* ---------- 4. Remettre la phrase en ordre ---------- */
-/* Phrases décodables avec les sons du parcours « Apprendre à lire » (jusqu’à eu). */
+/* Autonomous sentences use explicit correspondences, not the current unlock.
+   The four additional short sentences already occur in the recorded books. */
 const ECOLE_ORDER_SENTENCES=[
  ['Le chat dort.','🐱'],['La vache boit.','🐄'],['Le bébé rit.','👶'],['La moto roule.','🏍️'],['Le loup court.','🐺'],['La fée vole.','🧚'],['La tortue dort.','🐢'],['Le canard boit.','🦆'],
  ['Papa lit un livre.','📖'],['Lola a un vélo.','🚲'],['Luca a un ballon.','🎈'],['Le chat a soif.','🐱'],['Mamie a un chat.','👵'],['Papa a une moto.','🏍️'],
  ['Le lapin a une carotte.','🥕'],['Le roi a une couronne.','👑'],['Le chat boit du lait.','🥛'],['Lola a vu un loup.','🐺'],['Papa a vu une souris.','🐭'],
  ['Luca a vu un lapin.','🐰'],
+ ['Lola a la pomme.','🍎'],['Milo a la pomme.','🍎'],['Lola a la tulipe.','🌷'],['Milo a la tulipe.','🌷'],
  ['Lola donne une pomme à papa.','🍎'],['Papa a vu un gros loup.','🐺'],['Le chat a vu une souris.','🐭'],['Le loup a vu le lapin.','🐺'],['Luca a lu un joli livre.','📖'],['La poule a un petit poussin.','🐣']
 ].map(([s,e])=>({s,e,words:s.replace(/\.$/,'').split(' ')}));
 function ecolePhraseItem(ctx){
- const pool=ECOLE_ORDER_SENTENCES.filter(x=>x.words.length===ctx.L.words),P0=ecoleFresh(ctx,pool,x=>x.s);
+ const p=P(),access=ecoleReadingAccess('phraseOrdre',p,ctx.li);if(!access.ready)return readingPracticeBlocked('phraseOrdre');
+ const content=access.training?{...p,demo:true}:p,pool=ecolePhrasePool(ctx.L,content);if(!pool.length)return readingPracticeBlocked('phraseOrdre');const P0=ecoleFresh(ctx,pool,x=>x.s);
  let order=shuffle(P0.words.map((w,i)=>({w,i})));let guard=0;while(order.every((x,i)=>x.i===i)&&guard++<10)order=shuffle(order);
- return {cls:'ecole-stage ecole-phrase',say:ECOLE_VOICE.phraseAsk,caption:'Remets les mots dans l’ordre',exemplar:'phrase:'+P0.s,render(st,api){
+ return {cls:'ecole-stage ecole-phrase',say:ECOLE_VOICE.phraseAsk,caption:'Remets les mots dans l’ordre',helped:access.training,evidenceKey:access.training?'practice:sentence-order:training':'reading:sentence-order',exemplar:'phrase:'+P0.s,render(st,api){
+  if(access.training)api.help();
   let at=0,done=false;const buttons=[];const line=h('div',{class:'ecole-sentence','aria-label':'La phrase'},P0.words.map(()=>h('span',{class:'ecole-slot'},'\u00a0')),h('span',{class:'ecole-dot'},'.'));
   const slots=line.querySelectorAll?line.querySelectorAll('.ecole-slot'):[];
   const tray=h('div',{class:'ecole-tiles'},order.map(o=>{const b=h('button',{class:'card txt ecole-tile','aria-label':o.w},o.w);buttons[o.i]=b;
@@ -7702,7 +7783,7 @@ function ecolePhraseItem(ctx){
  }};
 }
 ecoleRegister('phraseOrdre',{title:'Remettre la phrase en ordre',sub:'Lire chaque mot et construire la phrase',icon:'🧱',color:'teal',stage:'#edf6f2',
- levels:ecoleLevels('phrase','P1',[{words:3,name:'Trois mots'},{words:4,name:'Quatre mots'},{words:5,name:'Cinq mots'},{words:6,name:'Six mots'}]),make:ecolePhraseItem},'grands','lire','lisFais');
+ preReq:{kind:'readable-sentence',access:(p=P(),li)=>ecoleReadingAccess('phraseOrdre',p,li)},levels:ecoleLevels('phrase','P1',[{words:3,name:'Trois mots'},{words:4,name:'Quatre mots'},{words:5,name:'Cinq mots'},{words:6,name:'Six mots'}]),make:ecolePhraseItem},'grands','lire','lisFais');
 
 /* =========================================================
    LUCA — Calculer
@@ -7993,6 +8074,7 @@ function ecoleParcoursVoiceLines(){
  const out=[];const add=(...xs)=>xs.flat(4).forEach(x=>{if(typeof x==='string'&&x.trim())out.push(x);});
  const walk=v=>{if(typeof v==='string')add(v);else if(v&&typeof v==='object')Object.values(v).forEach(walk);};walk(ECOLE_VOICE);
  add('Oui !');
+ add('un','une','le','la');
  Object.values(ECOLE_MIRROR_WORDS).forEach(list=>list.forEach(([w])=>add(w)));
  ECOLE_GRAPH_FAMILIES.forEach(f=>{add(f.anchor[0]);f.rule().forEach(x=>{if(typeof x==='string')add(x);});f.words.forEach(([w])=>add(w));});
  ECOLE_NOUNS.forEach(n=>{add(n.w,(n.g==='m'?'un ':'une ')+n.w,(n.g==='m'?'le ':'la ')+n.w);if(n.pl)add('des '+n.pl,'les '+n.pl);});
@@ -8018,6 +8100,7 @@ function ecoleParcoursVoiceLines(){
 /* ---------- Mise en page ---------- */
 if(typeof document!=='undefined'&&document.head){const style=h('style');style.textContent=`
 .ecole-stage .upgrade-wrap{gap:16px;align-items:center}
+.ecole-choice-audio{display:flex;flex-direction:column;align-items:stretch;gap:8px}.ecole-choice-listen{align-self:center;min-width:54px;min-height:48px}
 .ecole-pic{display:inline-flex;align-items:center;justify-content:center;font-size:54px;line-height:1}
 .ecole-pic.big{font-size:clamp(70px,13vw,110px)}
 .ecole-pic .lumi-illustration{width:1em;height:1em}
@@ -8094,6 +8177,324 @@ if(typeof document!=='undefined'&&document.head){const style=h('style');style.te
 .ecole-help{align-self:center}
 @media(prefers-reduced-motion:reduce){.ecole-cell.focus{animation:none}}
 @media(max-width:600px){.ecole-roof{border-left-width:110px;border-right-width:110px}.ecole-tile{min-width:80px}}
+`;document.head.append(style);}
+
+
+/* Math curriculum: keep every stored module ID and level index. Dependencies
+   concern access and guidance; parent openings never manufacture assessment. */
+const CURRICULUM_MATH_ORDER=[
+ 'n10:0','n10:1','n10:2',
+ 'a10:0','s10:0','pb:0','c10:0','dbl:0','a10:1','s10:1','c10:1','a10:2','s10:2','c10:2',
+ 'n20:0','n20:1','n20:2','dbl:1','dbl:2',
+ 'a20:0','s20:0','pb:1','a20:1','s20:1','a20:2','s20:2',
+ 'n100:0','n100:1','n100:2','mul:0','mul:1','mul:2','pb:2'
+];
+const CURRICULUM_MATH_REQUIRES={
+ 'n10:0':[],'n10:1':[],'n10:2':['n10:1'],
+ 'a10:0':['n10:1'],'s10:0':['n10:1'],'c10:0':['n10:1'],'dbl:0':['a10:0'],
+ 'a10:1':['a10:0'],'s10:1':['s10:0'],'c10:1':['c10:0'],
+ 'a10:2':['a10:1'],'s10:2':['s10:1'],'c10:2':['c10:1','a10:0','s10:0'],
+ 'pb:0':['a10:0','s10:0'],
+ 'n20:0':['n10:1'],'n20:1':['n20:0','a10:0'],'n20:2':['n20:0','n10:2'],
+ 'dbl:1':['dbl:0','n20:0'],'dbl:2':['dbl:1','s10:0'],
+ 'a20:0':['n20:1','a10:1'],'s20:0':['n20:1','s10:1'],
+ 'a20:1':['a20:0','c10:1'],'s20:1':['s20:0','c10:1'],
+ 'a20:2':['a20:1','c10:2','s20:0'],'s20:2':['s20:1','a10:1'],
+ 'pb:1':['pb:0','n20:0','a20:0','s20:0'],
+ 'n100:0':['n20:0'],'n100:1':['n100:0'],'n100:2':['n100:0','a10:0','s10:0'],
+ 'mul:0':['a10:1','n100:0'],'mul:1':['mul:0'],'mul:2':['mul:1','n100:0'],
+ 'pb:2':['pb:1','mul:0']
+};
+const CURRICULUM_MATH_GROUPS=[
+ {id:'nombres10',title:'Les nombres jusqu’à dix',keys:['n10:0','n10:1','n10:2']},
+ {id:'operations10',title:'Ajouter, enlever et composer jusqu’à dix',keys:['a10:0','s10:0','c10:0','dbl:0','a10:1','s10:1','c10:1','a10:2','s10:2','c10:2']},
+ {id:'problemes10',title:'Des histoires avec les nombres jusqu’à dix',keys:['pb:0']},
+ {id:'nombres20',title:'Les nombres jusqu’à vingt',keys:['n20:0','n20:1','n20:2','dbl:1','dbl:2']},
+ {id:'operations20',title:'Calculer et résoudre jusqu’à vingt',keys:['a20:0','s20:0','a20:1','s20:1','a20:2','s20:2','pb:1']},
+ {id:'extensions',title:'Pour aller plus loin',note:'Les nombres jusqu’à cent et la multiplication sont des prolongements. Ils ne bloquent pas les problèmes jusqu’à vingt.',keys:['n100:0','n100:1','n100:2','mul:0','mul:1','mul:2','pb:2']}
+];
+function curriculumMathTarget(key){
+ if(typeof key!=='string')return null;const parts=key.split(':'),mi=MODS.findIndex(M=>M.id===parts[0]),lv=Number(parts[1]);
+ return parts.length===2&&mi>=0&&Number.isInteger(lv)&&lv>=0&&lv<MODS[mi].levels.length?{mi,lv}:null;
+}
+function curriculumMathKey(mi,lv){return Number.isInteger(mi)&&MODS[mi]&&Number.isInteger(lv)&&lv>=0&&lv<MODS[mi].levels.length?MODS[mi].id+':'+lv:null;}
+function curriculumMathPassed(id,lv,p=P()){
+ const mp=p.calcul?.mods?.[id],entry=mp?.pass?.[lv];
+ if(entry)return !entry.parent&&!entry.review;
+ /* Same interpretation as the existing modProg migration, without mutating p. */
+ return !mp?.pass&&!!mp?.done?.[lv];
+}
+function curriculumMathParentPassed(id,lv,p){return !!p.calcul?.mods?.[id]?.pass?.[lv]?.parent;}
+function curriculumMathSatisfied(key,p){const t=curriculumMathTarget(key);return !!t&&(curriculumMathPassed(MODS[t.mi].id,t.lv,p)||curriculumMathParentPassed(MODS[t.mi].id,t.lv,p));}
+function curriculumMathLeaf(key,p,seen){
+ if(!key||seen.has(key))return null;seen.add(key);const t=curriculumMathTarget(key);if(!t)return null;
+ if(curriculumMathSatisfied(key,p))return null;
+ for(const required of CURRICULUM_MATH_REQUIRES[key]||[]){if(!curriculumMathSatisfied(required,p)){const leaf=curriculumMathLeaf(required,p,seen);if(leaf)return leaf;}}
+ return t;
+}
+function curriculumMathAccess(mi,lv,p=P()){
+ const key=curriculumMathKey(mi,lv);if(!key||!Object.prototype.hasOwnProperty.call(CURRICULUM_MATH_REQUIRES,key))return {ready:false,reason:'Choisis une activité disponible.',missing:[]};
+ const id=MODS[mi].id,mp=p.calcul?.mods?.[id]||{},missing=CURRICULUM_MATH_REQUIRES[key].filter(k=>!curriculumMathSatisfied(k,p));
+ const passed=curriculumMathPassed(id,lv,p),parentPassed=curriculumMathParentPassed(id,lv,p);
+ const openedByAction=(p.parentActions||[]).some(a=>!a.undone&&a.target?.kind==='calcul'&&a.target.mi===mi&&a.target.index===lv);
+ const parentStart=Number.isInteger(mp.parentStart)&&lv<=mp.parentStart;
+ const parent=!!p.familyAccess?.calcul||parentStart||parentPassed||openedByAction;
+ if(p.demo===true)return {ready:true,admin:true,missing,passed};
+ if(passed||parent)return {ready:true,passed,parent,parentPassed,missing};
+ /* c.open only grants historically available access. New successes never raise
+    this legacy frontier. Its old per-level rule is preserved exactly. */
+ const oldOpen=Number.isInteger(p.calcul?.open)?p.calcul.open:0;
+ const legacy=mi<=oldOpen&&(lv===0||!!mp.pass?.[lv-1]||!!(!mp.pass&&mp.done?.[lv-1]));
+ if(legacy)return {ready:true,legacy:true,missing};
+ if(!missing.length)return {ready:true,missing:[]};
+ const target=curriculumMathLeaf(missing[0],p,new Set()),name=target?MODS[target.mi].name+' · '+MODS[target.mi].levels[target.lv].name:'';
+ return {ready:false,reason:name?'Pour commencer, essaie « '+name+' ».':'Commence par les petites quantités.',missing,target};
+}
+function curriculumMathNext(p=P(),played){
+ const playedKey=typeof played==='string'?played:played?curriculumMathKey(played.mi,played.lv):null,index=CURRICULUM_MATH_ORDER.indexOf(playedKey);
+ const after=index<0?CURRICULUM_MATH_ORDER:CURRICULUM_MATH_ORDER.slice(index+1).concat(CURRICULUM_MATH_ORDER.slice(0,index+1));
+ for(const key of after){const t=curriculumMathTarget(key);if(t&&!curriculumMathSatisfied(key,p)&&curriculumMathAccess(t.mi,t.lv,p).ready)return t;}
+ return null;
+}
+function curriculumMathCurrent(p=P()){
+ const c=p.calcul||{},resume=p.resume;
+ if(resume?.kind==='module'&&curriculumMathKey(resume.mi,resume.lv)&&curriculumMathAccess(resume.mi,resume.lv,p).ready)return {mi:resume.mi,lv:resume.lv};
+ const action=(p.parentActions||[]).slice().reverse().find(a=>!a.undone&&a.target?.kind==='calcul');
+ if(action&&action.at>(c.focus?.at||0)){
+  const mi=action.target.mi,mp=c.mods?.[MODS[mi]?.id],lv=Number.isInteger(mp?.parentStart)?mp.parentStart:action.target.index;
+  if(curriculumMathKey(mi,lv)&&curriculumMathAccess(mi,lv,p).ready)return {mi,lv};
+ }
+ if(c.focus&&curriculumMathKey(c.focus.mi,c.focus.lv)&&curriculumMathAccess(c.focus.mi,c.focus.lv,p).ready)return {mi:c.focus.mi,lv:c.focus.lv};
+ const oldMi=Number.isInteger(c.open)?clamp(c.open,0,MODS.length-1):0,old= c.mods?.[MODS[oldMi].id];
+ if(Number.isInteger(old?.parentStart)){const lv=clamp(old.parentStart,0,MODS[oldMi].levels.length-1);if(curriculumMathAccess(oldMi,lv,p).ready)return {mi:oldMi,lv};}
+ return curriculumMathNext(p)||curriculumMathTarget(CURRICULUM_MATH_ORDER[0]);
+}
+function curriculumMathSetFocus(target){if(!target)return;const c=calc();c.focus={mi:target.mi,lv:target.lv,at:Date.now()};save();}
+function curriculumMathPrepare(mi,lv){
+ const access=curriculumMathAccess(mi,lv);if(access.ready){runModule(mi,lv);return;}
+ const target=access.target,modal=h('div',{class:'modal',role:'dialog','aria-modal':'true','aria-label':'Préparer cette étape'}),sheet=h('div',{class:'sheet'}),close=()=>modal.remove();
+ sheet.append(h('h3',null,'Une étape pour commencer'),h('p',null,access.reason));
+ if(target)sheet.append(uButton('Commencer par cette activité',()=>{close();curriculumMathSetFocus(target);runModule(target.mi,target.lv);}));
+ sheet.append(uButton('Revenir au parcours',close),uButton('Aide du parent',()=>parentGate(()=>{parentAdjust(S.current,{kind:'calcul',mi,index:lv},'open');close();runModule(mi,lv);})));modal.append(sheet);document.body.append(modal);
+ Voice.say(typeof FAMILY_LINES!=='undefined'?FAMILY_LINES.locked:'Commençons par l’activité proposée.');
+}
+function curriculumMathStyle(){
+ if(typeof document==='undefined'||!document.head||document.querySelector('#curriculum-math-style'))return;
+ const style=h('style',{id:'curriculum-math-style'},'.curriculum-math-map{width:100%;max-width:900px;margin:auto;padding:18px;box-sizing:border-box;overflow:auto;max-height:100%}.curriculum-math-group{margin:0 0 16px;border:2px solid #d7e2ee;border-radius:20px;background:#fff;padding:12px}.curriculum-math-group summary{cursor:pointer;padding:8px;font-size:21px;font-weight:700;color:#22466c}.curriculum-math-group summary small{font-size:14px;font-weight:400;display:block;margin:5px 0 0 19px}.curriculum-math-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:9px;padding-top:10px}.curriculum-math-step{display:flex;align-items:flex-start;gap:10px;text-align:left;min-height:86px;padding:13px;border:2px solid #d8e4ef;border-radius:14px;background:#f7fbff;color:#263f58;font:inherit;cursor:pointer}.curriculum-math-step>span:first-child{font-size:25px;flex:none}.curriculum-math-step b,.curriculum-math-step small{display:block}.curriculum-math-step b{font-size:18px}.curriculum-math-step small{font-size:13px;margin-top:4px}.curriculum-math-step.current{border-color:#1e72ba;box-shadow:0 0 0 2px #b9dff8}.curriculum-math-step.needs{background:#f7f5f0;border-style:dashed}.curriculum-math-step.passed{background:#f0f8ef}.curriculum-math-note{font-size:15px;line-height:1.45;margin:9px 0;color:#48627b}@media(max-width:600px){.curriculum-math-map{padding:10px}.curriculum-math-list{grid-template-columns:1fr}.curriculum-math-group summary{font-size:19px}}');document.head.append(style);
+}
+openCalcul=function(){
+ Sfx.ensure();RUN=null;VoicePack.prefetchScope('calcul');curriculumMathStyle();
+ Shell.open({bg:'#EAF3FF',level:'Compter et calculer',onClose:null});Shell.setDots(0);const st=Shell.stage;st.innerHTML='';st.className='stage';st.style.background='#EAF3FF';
+ const p=P(),current=curriculumMathCurrent(p),currentKey=curriculumMathKey(current.mi,current.lv),wrap=h('div',{class:'curriculum-math-map'});
+ wrap.append(h('h2',null,'Mon chemin de calcul'),h('p',{class:'curriculum-math-note'},'Les étapes vont des quantités aux calculs et aux problèmes. Tu peux revoir ce que tu as déjà fait.'));
+ CURRICULUM_MATH_GROUPS.forEach(group=>{
+  const completed=group.keys.filter(key=>{const t=curriculumMathTarget(key);return curriculumMathPassed(MODS[t.mi].id,t.lv,p);}).length,active=group.keys.includes(currentKey);
+  const details=h('details',{class:'curriculum-math-group',open:active||undefined}),summary=h('summary',null,group.title,h('small',null,completed+' / '+group.keys.length+' séries réussies dans le jeu'));
+  details.append(summary);if(group.note)details.append(h('p',{class:'curriculum-math-note'},group.note));const list=h('div',{class:'curriculum-math-list'});
+  group.keys.forEach(key=>{const t=curriculumMathTarget(key),M=MODS[t.mi],L=M.levels[t.lv],access=curriculumMathAccess(t.mi,t.lv,p),passed=curriculumMathPassed(M.id,t.lv,p),active=key===currentKey;
+   const status=passed?'Réussi dans le jeu':access.parent?'Accès ouvert par le parent':access.legacy&&access.missing.length?'Accès conservé':access.ready?'À essayer':'À préparer';
+   const button=h('button',{class:'curriculum-math-step'+(active?' current':'')+(passed?' passed':'')+(!access.ready?' needs':''),'data-math-key':key,'aria-current':active?'step':null,'aria-label':M.name+' · '+L.name+' · '+status},h('span',{'aria-hidden':'true'},passed?'✓':access.ready?M.em:'↪'),h('span',null,h('b',null,L.name),h('small',null,M.name),h('small',null,status)));
+   onTap(button,()=>{Voice.stop();if(access.ready){curriculumMathSetFocus(t);runModule(t.mi,t.lv);}else curriculumMathPrepare(t.mi,t.lv);});list.append(button);
+  });details.append(list);wrap.append(details);
+ });st.append(wrap);const say='Choisis une activité pour compter et calculer.';Shell.item={say};Shell.caption('Choisis une activité');Voice.say(say);
+};
+const levelStateBeforeCurriculumMath=levelState;
+levelState=function(gid){
+ if(gid!=='calcul')return levelStateBeforeCurriculumMath(gid);
+ const p=P(),active=curriculumMathCurrent(p),items=CURRICULUM_MATH_ORDER.map(key=>{const t=curriculumMathTarget(key),M=MODS[t.mi],access=curriculumMathAccess(t.mi,t.lv,p);return {name:M.name+' · '+M.levels[t.lv].name,open:access.ready,go:()=>runModule(t.mi,t.lv),mi:t.mi,lv:t.lv,key,missing:access.missing};});
+ const current=items.findIndex(x=>x.mi===active.mi&&x.lv===active.lv);
+ return {current:Math.max(0,current)+1,total:items.length,label:'Étape',items};
+};
+GAMES.calcul.open=openCalcul;
+GAMES.calcul.info=function(){const p=P(),n=CURRICULUM_MATH_ORDER.filter(key=>{const t=curriculumMathTarget(key);return curriculumMathPassed(MODS[t.mi].id,t.lv,p);}).length;return {lv:n+' séries réussies sur '+CURRICULUM_MATH_ORDER.length,pct:n/CURRICULUM_MATH_ORDER.length};};
+
+/* Latest skip-aware runner, with DAG routing instead of an increasing module
+   frontier. Score on screen and credited stars use the same final result. */
+runModule=async function(mi,lv){
+ const access=curriculumMathAccess(mi,lv);if(!access.ready){curriculumMathPrepare(mi,lv);return;}
+ Sfx.ensure();curriculumMathSetFocus({mi,lv});const M=MODS[mi],L=M.levels[lv],session=resumeSession('module',{mi,lv}),run={gid:'calcul',levelIndex:lv,key:'calc:'+M.id+':'+lv,session,abort:false,res:[...session.res]};RUN=run;
+ Shell.open({bg:'#EAF3FF',level:M.name,onClose:()=>openCalcul()});const n=8;Shell.setDots(n);const items=withSeed(session.seed,()=>genDistinct(L.gen,n,false));
+ for(let i=0;i<n;i++){
+  Shell.now(i);if(i<session.next){markResult(i,session.res[i]);continue;}
+  const r=await Engine.play(items[i],run);if(run.abort||RUN!==run)return;
+  run.res.push(r);checkpoint(run,i+1);markResult(i,r);if(countableResult(r))recordSkill('calc:'+M.id+':'+lv,r.first);
+ }
+ const initial=scoreOf(run.res),{pct,stars}=initial,mp=modProg(M.id),ps=mp.pass[lv];let note=null,noteSay=null,next=null;
+ const goOn=()=>{const target=curriculumMathNext(P(),{mi,lv});if(!target)return null;curriculumMathSetFocus(target);next=()=>runModule(target.mi,target.lv);return 'Prochaine étape : '+MODS[target.mi].name+' · '+MODS[target.mi].levels[target.lv].name;};
+ if(initial.skipped){note=skippedNote(initial.skipped);}
+ else if(ps&&!ps.review&&!ps.parent){if(pct>=.8)mp.done[lv]=Math.max(mp.done[lv]||0,stars);note='Révision terminée.';goOn();}
+ else if(pct<.6){note='On s’entraîne encore un peu : rejoue ce niveau, puis tu feras le petit défi.';noteSay='Rejoue ce niveau, et ensuite, tu feras le petit défi.';}
+ else{
+  const d=await runDefi(run,genDistinct(L.gen,DEFI.n,true),false);if(!d)return;
+  run.res.push(...d.res);d.res.forEach(r=>{if(countableResult(r))recordSkill('calc:'+M.id+':'+lv,r.first);});logCalc({k:[M.id+':'+lv],at:Date.now(),ok:d.ok,n:d.n,skipped:d.skipped,kind:'defi'});
+  if(d.pass){mp.pass[lv]={at:Date.now(),score:d.ok};mp.done[lv]=Math.max(mp.done[lv]||0,stars);const following=goOn();note='Défi réussi : '+d.ok+' sur '+d.n+(following?' · '+following:'');noteSay='Défi réussi !';}
+  else if(d.skipped){note=skippedNote(d.skipped);}
+  else{note='Défi : '+d.ok+' sur '+d.n+'. Il en faut 5 : rejoue ce niveau, puis retente le défi.';noteSay='Tu as eu '+nw(d.ok)+' sur six. Il en faut cinq. Rejoue ce niveau pour t’entraîner, et tu retenteras le défi.';}
+ }
+ clearResume(run);const finalScore=scoreOf(run.res),sticker=finalScore.stars>0?addStars(finalScore.stars):null;save();Shell.onClose=()=>openCalcul();
+ Celebrate.show({stars:finalScore.stars,sticker,note,noteSay,next,nextLabel:'Étape suivante',again:()=>runModule(mi,lv),home:()=>openCalcul()});
+};
+
+
+/* Parcours explicites : les prérequis portent sur une tâche, jamais sur une
+   visite, une quantité d’étoiles, ni une certification scolaire. Les anciens
+   accès et décisions du parent restent utilisables comme entraînement. */
+const LEARNING_PATHS={
+ grands:{
+  lire:[
+   {id:'sons',title:'1. Les sons et les lettres',note:'Découvrir les sons, leurs lettres et les syllabes à l’oral.',ids:['lecture','lettre1','syllabes']},
+   {id:'mots',title:'2. Assembler et écrire des mots',note:'Utiliser les sons déjà rencontrés, sans attendre tout l’alphabet.',ids:['mots','riviere','balade','pseudoMot']},
+   {id:'phrases',title:'3. Lire et comprendre',note:'Passer des mots aux phrases, puis aux petits livres.',ids:['phraseOrdre','lisFais','livres']},
+   {id:'graphies',title:'4. D’autres écritures des sons',note:'Revoir les lettres proches et découvrir de nouvelles graphies.',ids:['lettresMiroir','graphies']},
+   {id:'revoir',title:'Revoir ce que j’ai rencontré',note:'Des rappels courts et des mots déjà connus. La vitesse reste facultative.',ids:['rappel','lectureEclair']},
+   {id:'oral',title:'Écouter et comprendre',note:'À explorer en parallèle : ces jeux ne demandent pas de savoir lire.',parallel:true,ids:['petitsMots','recit']}
+  ],
+  calculer:[
+   {id:'nombres',title:'1. Construire les nombres',note:'Relier une quantité à un nombre, puis le séparer en deux parties.',ids:['blocs','ligne','maisonNombres']},
+   {id:'operations',title:'2. Ajouter, enlever et résoudre',note:'Un parcours par petites étapes : les premiers problèmes arrivent dès les petites opérations.',ids:['calcul']},
+   {id:'strategies',title:'3. Trouver des stratégies',note:'Compléter dix, comprendre l’égalité et représenter les problèmes.',ids:['pontDix','balance','barres']},
+   {id:'revoir',title:'Revoir les calculs rencontrés',ids:['rappelCalcul']},
+   {id:'quotidien',title:'Les nombres au quotidien',parallel:true,note:'Écouter les nombres écrits et jouer avec la monnaie.',ids:['nombresLettres','marche']},
+   {id:'explorer',title:'Formes, mesures et temps',parallel:true,note:'Ces découvertes avancent en parallèle du calcul.',ids:['formesSolides','grandeurs','calendrier','heure']},
+   {id:'extension',title:'Pour aller plus loin',note:'Faire des groupes égaux ; découvrir ensuite la multiplication, à son rythme.',extension:true,ids:['paniers']}
+  ]
+ },
+ petits:{
+  lire:[
+   {id:'ecouter',title:'Écouter et comprendre',ids:['ferme','ensemble','consignesP','recitP']},
+   {id:'sons',title:'Jouer avec les sons',ids:['syllabes','sonsP']},
+   {id:'lettres',title:'Découvrir les lettres',note:'Une découverte à côté des jeux oraux, sans obligation de lire.',ids:['alphabetP']}
+  ],
+  calculer:[
+   {id:'quantites',title:'1. Découvrir les petites quantités',ids:['doigts','nombres']},
+   {id:'construire',title:'2. Construire et comparer',ids:['blocsP','grandpetit']},
+   {id:'suite',title:'3. Avancer dans les nombres',ids:['ligneP']},
+   {id:'tailles',title:'Comparer les tailles',parallel:true,ids:['tailles']}
+  ]
+ }
+};
+function learningPathGroups(world,theme){return LEARNING_PATHS[world]?.[theme]||null;}
+function curriculumAccessSnapshot(p={}){const games={};for(const id of Object.keys(GAMES)){if(familyPlayed(p,id))games[id]=Math.max(0,Number(p.games?.[id]?.lvl)||0,Number(p.games?.[id]?.unlocked)||0);}return {readingOpen:Number(p.learningPaths?.legacyReadingOpen??p.lecture?.unlocked)||0,games};}
+function curriculumPreserveAccess(state){
+ state.settings=state.settings||{};const all=state.settings.learningPathLegacy||(state.settings.learningPathLegacy={v:1,children:{}});all.children=all.children||{};
+ for(const profile of state.profiles||[]){if(!all.children[profile.id])all.children[profile.id]=curriculumAccessSnapshot(state.progress?.[profile.id]);}return state;
+}
+function curriculumLegacyAccess(p=P()){const id=Object.keys(S.progress||{}).find(id=>S.progress[id]===p);return S.settings.learningPathLegacy?.children?.[id]||(S.settings.learningPathLegacy?{readingOpen:0,games:{}}:curriculumAccessSnapshot(p));}
+function curriculumLegacyGameLevel(id,p=P()){return curriculumLegacyAccess(p).games?.[id]??-1;}
+const migrationBeforeLearningPaths=migrate;
+migrate=function(input){return curriculumPreserveAccess(migrationBeforeLearningPaths(input));};
+const themesBeforeLearningPaths=themesOf;
+themesOf=function(world){return themesBeforeLearningPaths(world).map(t=>{const groups=learningPathGroups(world,t.id);if(!groups)return t;const order=groups.flatMap(g=>g.ids),ids=[...order.filter(id=>t.ids.includes(id)),...t.ids.filter(id=>!order.includes(id))];return {...t,ids};});};
+function curriculumGamePassed(id,level,p=P()){
+ const record=p.pathSeries?.[id]?.[level];if(record)return record.independent===true;
+ const best=p.games?.[id]?.best?.[level];return Number(best)>=2;
+}
+function curriculumReadableWords(p=P(),max=8){const known=readingPracticeKnownKeys(p);return WORDS.filter(w=>picOK(w)&&!GLIDE_WORDS.has(w.w)&&w.req!==99&&w.gs.filter(g=>!g.mute).length<=max&&Array.from(w.keys).every(k=>known.has(k)));}
+function curriculumWordCandidates(id,p=P(),max=12){
+ const known=curriculumReadableWords(p,max);if(known.length||p.demo)return known;
+ const parent=p.familyAccess?.[id]||(p.parentActions||[]).some(a=>!a.undone&&a.target?.gid===id);
+ const legacy=curriculumLegacyAccess(p).readingOpen>=(id==='balade'?3:2)||curriculumLegacyGameLevel(id,p)>=0;
+ return parent||legacy?WORDS.filter(w=>picOK(w)&&!GLIDE_WORDS.has(w.w)&&w.gs.filter(g=>!g.mute).length<=max):known;
+}
+function curriculumRiverPool(L,p=P()){
+ const known=new Set(curriculumWordCandidates('riviere',p).map(w=>w.w));return RIVER.filter(w=>known.has(w.w)&&w.parts.length>=L.min&&w.parts.length<=L.max);
+}
+function curriculumReadingTarget(p=P()){return {gid:'lecture'};}
+function curriculumQuantitiesReady(p,max=10){
+ if(curriculumMathPassed('n10',1,p))return true;
+ return ['blocs','blocsP'].some(id=>(GAMES[id]?.levels||[]).some((L,i)=>L.max>=max&&curriculumGamePassed(id,i,p)));
+}
+function curriculumGameRequirement(id,p=P(),level=p.games?.[id]?.lvl||0){
+ const need=(ready,reason,gid,lv=0)=>({ready:!!ready,reason,target:{gid,level:lv}});
+ if(S.world==='petits'&&['doigts','nombres','blocsP','grandpetit','ligneP','tailles','ferme','ensemble','consignesP','recitP','syllabes','sonsP','alphabetP'].includes(id))return {ready:true};
+ if(['phraseOrdre','graphies','lettresMiroir','petitsMots'].includes(id)&&typeof ecoleReadingAccess==='function'){
+  const access=ecoleReadingAccess(id,p,level);return {...access,target:access.target||curriculumReadingTarget(p)};
+ }
+ if(['pseudoMot','lisFais','lectureEclair'].includes(id)){const access=readingPracticeAccess(id,p);return {...access,reason:access.reason||'Découvrir les sons nécessaires dans « Apprendre à lire ».',target:{gid:id==='lectureEclair'?'mots':'lecture'}};}
+ if(['mots','balade','riviere'].includes(id)){
+  const L=GAMES[id].levels[clamp(level,0,GAMES[id].levels.length-1)],words=curriculumReadableWords(p,id==='mots'?L.max:12),known=new Set(words.map(w=>w.w)),pool=id==='riviere'?RIVER.filter(w=>known.has(w.w)&&w.parts.length>=L.min&&w.parts.length<=L.max):id==='balade'?words.filter(w=>w.w.length>=L.min&&w.w.length<=L.max):words;
+  return need(pool.length>=3,'Découvrir les sons de quelques mots dans « Apprendre à lire ».','lecture');
+ }
+ if(id==='livres')return need(MINI_BOOKS.some(b=>{const r=miniBookRequirement(b);return r!==null&&LESSONS.slice(0,r+1).every((L,i)=>readingPracticeKnownKeys(p).has(L.k));}),'Découvrir les sons du premier livre dans « Apprendre à lire ».','lecture');
+ if(id==='rappel')return need(readingPracticeKnownKeys(p).size>0,'Rencontrer un premier son dans « Apprendre à lire ».','lecture');
+ if(id==='rappelCalcul')return need(Object.keys(p.mathPractice?.encountered||{}).length>0,'Rencontrer un premier calcul dans le parcours.','calcul');
+ if(id==='maisonNombres')return need(curriculumQuantitiesReady(p,level===0?5:10),'Construire d’abord des quantités avec les cubes.','blocs',level===0?0:2);
+ if(id==='pontDix')return need(curriculumQuantitiesReady(p,10),'Construire les nombres jusqu’à dix.','blocs',2);
+ if(id==='balance')return need((curriculumMathPassed('a10',0,p)||curriculumGamePassed('blocs',4,p))&&(curriculumGamePassed('maisonNombres',2,p)||curriculumGamePassed('pontDix',0,p)||curriculumMathPassed('c10',0,p)),'Ajouter de petits nombres et compléter une quantité.','pontDix');
+ if(id==='barres')return need(level===0?(curriculumMathPassed('a10',0,p)||curriculumGamePassed('blocs',4,p)):(curriculumMathPassed('s10',0,p)||curriculumGamePassed('blocs',5,p)),'Essayer d’abord les petites additions et soustractions.','calcul');
+ if(id==='paniers')return need(curriculumQuantitiesReady(p,level<3?5:10),'Construire d’abord les petites quantités.','blocs',level<3?0:2);
+ if(id==='nombresLettres')return need(curriculumQuantitiesReady(p,level===0?5:10),'Relier d’abord les petites quantités aux nombres.','blocs',level===0?0:2);
+ if(id==='heure')return need(curriculumMathPassed('n20',0,p)||curriculumGamePassed('ligne',0,p),'Découvrir d’abord les nombres de l’horloge.','ligne');
+ if(id==='grandeurs'&&level>=3)return need((curriculumMathPassed('s10',0,p)||curriculumGamePassed('blocs',5,p))&&curriculumGamePassed('marche',0,p),'Jouer avec les euros et les petits retraits avant de rendre la monnaie.','marche');
+ return {ready:true};
+}
+const familyAccessBeforePaths=familyAccess;
+familyAccess=function(id,p=P()){
+ if(!GAMES[id])return {ready:false,reason:'Choisis une activité disponible.'};
+ const access=curriculumGameRequirement(id,p);
+ if(p.demo||p.familyAccess?.[id])return {...access,ready:true,parent:!p.demo,training:!access.ready};
+ const parent=(p.parentActions||[]).some(a=>!a.undone&&a.target?.kind==='game'&&a.target.gid===id);
+ if(parent)return {...access,ready:true,parent:true,training:!access.ready};
+ /* A preserved access is not used as a prerequisite for a different activity. */
+ const current=p.games?.[id]?.lvl||0;
+ if(!access.ready&&curriculumLegacyGameLevel(id,p)>=current)return {...access,ready:true,previous:true,training:true};
+ if(!access.ready&&current===0&&['mots','riviere','balade','livres'].includes(id)&&curriculumLegacyAccess(p).readingOpen>=(id==='mots'||id==='riviere'?2:3))return {...access,ready:true,previous:true,legacy:true,training:true};
+ if(!access.ready)return access;
+ /* Requirements above replace the old visit-based mathematics gates. */
+ if(['maisonNombres','pontDix','balance','barres','paniers','nombresLettres','heure','grandeurs','rappel','rappelCalcul','mots','balade','riviere','livres','phraseOrdre','graphies','lettresMiroir','petitsMots'].includes(id))return access;
+ return familyAccessBeforePaths(id,p);
+};
+/* A useful next step, rather than an unexplained lock. */
+const familyLockedBeforePaths=familyLocked;
+familyLocked=function(id,access){
+ familyLockedBeforePaths(id,access);const sheet=$('.modal:last-child .sheet')||$$('.modal .sheet').at(-1);if(!sheet||!access.target?.gid)return;
+ const target=access.target.gid,label=SIMPLE_GAME_NAMES[target]||GAMES[target]?.title||'Apprendre à lire';
+ const button=uButton('Commencer par « '+label+' »',()=>{const modal=sheet.parentNode;modal.remove();Voice.stop();runGame(target);},{class:'pbtn pri curriculum-prepare','data-prepare-gid':target});
+ sheet.insertBefore(button,sheet.children[sheet.children.length-2]||null);
+};
+/* The numerical game models keep the same IDs. Only their presentation changes. */
+Object.assign(SIMPLE_GAME_NAMES,{calcul:'Mon parcours de calcul',pseudoMot:'Lire des mots inventés',lectureEclair:'Revoir les mots',lettresMiroir:'Distinguer b, d, p et q',petitsMots:'Choisir les petits mots à l’oral',phraseOrdre:'Construire une phrase',graphies:'Découvrir les autres graphies'});
+const tileBeforeLearningPaths=simpleGameTile;
+simpleGameTile=function(id){const tile=tileBeforeLearningPaths(id),access=familyAccess(id);if(access.ready&&access.training)tile.append(h('small',{class:'curriculum-aided'},'Entraînement accompagné'));return tile;};
+for(const id of ['mots','balade','riviere']){
+ const make=GAMES[id].make;GAMES[id].make=function(ctx){const item=make.call(this,ctx),access=curriculumGameRequirement(id,P(),gameProg(id).lvl);if(!access.ready){item.helped=true;item.evidenceKey='training:'+id;const render=item.render;item.render=function(st,api){api.help();return render.call(this,st,api);};}return item;};
+}
+/* Mark genuinely guided entry consistently, including mathematics activities
+   opened early by an adult. A historical opening is not an answer. */
+const engineBeforePathGuidance=Engine.play.bind(Engine);
+Engine.play=function(item,run){
+ if(GAMES[run.gid]?.levels){const level=run.levelIndex??run.session?.li??0,access=curriculumGameRequirement(run.gid,P(),level);if(!access.ready){item.helped=true;item.evidenceKey='training:'+run.gid;}}
+ return engineBeforePathGuidance(item,run);
+};
+const finishGameBeforePathEvidence=finishGame;
+finishGame=function(run,g,gp){
+ if(run.res?.length){const p=P(),level=run.levelIndex??run.session?.li??gp.lvl,all=p.pathSeries||(p.pathSeries={}),by=all[g.id]||(all[g.id]={}),sc=scoreOf(run.res),independent=!run.res.some(r=>r.helped||r.skipped)&&sc.pct>=.8;
+  if(independent||!by[level]?.independent)by[level]={at:Date.now(),independent,answered:run.res.filter(countableResult).length};
+ }
+ return finishGameBeforePathEvidence(run,g,gp);
+};
+/* A parent-opened sound is access, not evidence of autonomous book decoding. */
+miniBookDecodable=function(b){const known=readingPracticeKnownKeys(P());return b.pages.flatMap(bookTokens).every(t=>{const word=WORDS.find(w=>w.w.toLocaleLowerCase('fr')===t);const keys=word?word.keys:MINI_NOTATION[t]?reqOf(parseNotation(MINI_NOTATION[t])).keys:null;return !!keys&&Array.from(keys).every(k=>known.has(k));});};
+/* Use the same series score for the visible result and the reward counter. */
+const celebrationBeforeConsistentScore=Celebrate.show.bind(Celebrate);
+Celebrate.show=function(options){if(RUN?.session&&['lesson','module'].includes(RUN.session.kind)&&RUN.res?.length)options={...options,stars:scoreOf(RUN.res).stars};return celebrationBeforeConsistentScore(options);};
+const homeBeforeLearningPaths=renderHome;
+renderHome=function(theme=HOME_THEME){
+ homeBeforeLearningPaths(theme);if(!HOME_THEME)return;
+ const groups=learningPathGroups(S.world,HOME_THEME),main=$('.theme-home'),old=main&&$('.theme-games',main);if(!groups||!old)return;
+ const tiles=new Map(Array.from(old.children).map(t=>[t.getAttribute('data-gid'),t]));
+ const path=h('div',{class:'learning-path','aria-label':'Parcours '+(HOME_THEME==='lire'?'de lecture':'de calcul')}),used=new Set();
+ for(const group of groups){const ids=group.ids.filter(id=>tiles.has(id));if(!ids.length)continue;const section=h('section',{class:'learning-path-group'+(group.parallel?' parallel':'')+(group.extension?' extension':''),'aria-label':group.title,'data-path-group':group.id});section.append(h('h2',null,group.title));if(group.note)section.append(h('p',{class:'path-note'},group.note));const grid=h('div',{class:'theme-games'});for(const id of ids){used.add(id);grid.append(tiles.get(id));}section.append(grid);path.append(section);}
+ const other=Array.from(tiles).filter(([id])=>!used.has(id));if(other.length){const sec=h('section',{class:'learning-path-group'},h('h2',null,'D’autres découvertes')),grid=h('div',{class:'theme-games'});for(const[,tile]of other)grid.append(tile);sec.append(grid);path.append(sec);}
+ old.remove();main.append(path);
+};
+/* The home suggestion follows the same readiness rules as the categories. */
+const recommendedBeforeLearningPaths=recommendedGame;
+recommendedGame=function(){const p=P();if(p.resume)return recommendedBeforeLearningPaths();const old=recommendedBeforeLearningPaths();if((['rappel','rappelCalcul'].includes(old)||Object.values(p.evidence||{}).some(e=>e.due<=Date.now()))&&familyAccess(old,p).ready)return old;
+ const ids=themesOf(S.world).filter(t=>['lire','calculer'].includes(t.id)).flatMap(t=>t.ids),eligible=ids.filter(id=>familyAccess(id,p).ready&&!familyPlayed(p,id));return eligible[0]||(familyAccess(old,p).ready?old:(S.world==='petits'?'doigts':'lecture'));
+};
+if(typeof document!=='undefined'&&document.head){const style=h('style');style.textContent=`
+.learning-path{display:grid;gap:30px;margin:8px 0 35px}.learning-path-group h2{font-size:clamp(21px,3.5vw,29px);line-height:1.8;margin:0 0 4px;color:var(--ink)}.path-note{font-size:16px;line-height:1.9;margin:0 0 14px;max-width:850px;color:var(--ink-soft)}.learning-path-group.parallel,.learning-path-group.extension{padding-top:20px;border-top:2px solid #dbe6e0}.learning-path .theme-games{margin:0}.curriculum-aided{font-size:13px;color:#675c39;line-height:1.8}.curriculum-prepare{display:block;width:100%;margin:14px 0}.simple-game small{overflow-wrap:anywhere}.learning-path-group .simple-game{min-height:175px}@media(max-width:600px){.learning-path{gap:24px}.path-note{font-size:14px}.learning-path-group .simple-game{min-height:160px}.learning-path-group h2{font-size:21px}}
 `;document.head.append(style);}
 
 

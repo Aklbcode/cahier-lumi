@@ -84,6 +84,65 @@ function ecoleFresh(ctx,pool,keyOf=x=>x){
  if(ctx.used)ctx.used.push(keyOf(choice));return choice;
 }
 function ecoleLevels(prefix,tag,list){return list.map((L,i)=>({n:6,...L,skill:'ecole:'+prefix+':'+i,tag,ref:L.ref||L.name}));}
+/* An explicit inventory, rather than spelling heuristics, bounds autonomous
+   reading. @ marks a spelling taught in graphies; ! remains unmodelled.
+   A spoken word in an oral task is not evidence of decoding that word. */
+const ECOLE_EXTRA_NOTATION={
+ dort:'d.o.r.*t',boit:'b.oi.*t',court:'c.ou.r.*t',vole:'v.o.l.*e',luca:'l.u.c.a',soif:'s.oi.f',couronne:'c.ou.r.o.nn.*e',donne:'d.o.nn.*e',à:'à',gros:'g.r.o.*s',joli:'j.o.l.i',petit:'p.e.t.i.*t',poussin:'p.ou.ss.in',un:'!un',
+ bateau:'b.a.t.@au',gâteau:'g.â.t.@au',chapeau:'ch.a.p.@au',oiseau:'oi.@s.@au',château:'ch.â.t.@au',cadeau:'c.a.d.@au',auto:'@au.t.o',taureau:'t.@au.r.@au',chaussette:'ch.@au.ss.è.tt.*e',
+ lait:'l.ai.*t',balai:'b.a.l.ai',fraise:'f.r.ai.@s.*e',maison:'m.ai.@s.on',chaise:'ch.ai.@s.*e',aigle:'ai.g.l.*e',baleine:'b.a.l.@ai.n.*e',neige:'n.@ai.@g.*e',reine:'r.@ai.n.*e',
+ nez:'n.@er',panier:'p.a.n.!i-glide.@er',rocher:'r.o.ch.@er',escalier:'è.s.c.a.l.!i-glide.@er',cahier:'c.a.!i-glide.@er',soulier:'s.ou.l.!i-glide.@er',
+ citron:'@c.i.t.r.on',cerise:'@c.e.r.i.@s.*e',glaçon:'g.l.a.@c.on',garçon:'g.a.r.@c.on',cinéma:'@c.i.n.é.m.a',cible:'@c.i.b.l.*e',police:'p.o.l.i.@c.*e',
+ girafe:'@g.i.r.a.f.*e',orange:'o.r.an.@g.*e',nuage:'n.!u-glide.a.@g.*e',plage:'p.l.a.@g.*e',fromage:'f.r.o.m.a.@g.*e',singe:'s.in.@g.*e',gilet:'@g.i.l.!et',bougie:'b.ou.@g.i.*e',
+ rose:'r.o.@s.*e',chemise:'ch.e.m.i.@s.*e',valise:'v.a.l.i.@s.*e',ciseaux:'@c.i.@s.@au.*x',musique:'m.u.@s.i.qu.*e',vase:'v.a.@s.*e',fusée:'f.u.@s.é.*e',
+ montagne:'m.on.t.a.@gn.*e',champignon:'ch.an.p.i.@gn.on',araignée:'a.r.@ai.@gn.é.*e',cygne:'@c.!y.@gn.*e',agneau:'a.@gn.@au',peigne:'p.@ai.@gn.*e',
+ fille:'f.i.@ill.*e',quille:'qu.i.@ill.*e',chenille:'ch.e.n.i.@ill.*e',abeille:'a.b.!eill',bouteille:'b.ou.t.!eill',feuille:'f.!euill',grenouille:'g.r.e.n.!ouill',papillon:'p.a.p.i.@ill.on',oreille:'o.r.!eill',
+ éléphant:'é.l.é.@ph.an.*t',phoque:'@ph.o.qu.*e',téléphone:'t.é.l.é.@ph.o.n.*e',dauphin:'d.@au.@ph.in',photo:'@ph.o.t.o',alphabet:'a.l.@ph.a.b.!et'
+};
+const ECOLE_GRAPH_REFERENCE={au:['o'],ai:['è'],er:['é'],c:['s'],g:['j'],s:['s'],gn:['n'],ill:['i','l'],ph:['f']};
+function ecoleWordRequirements(word){
+ const w=String(word).toLocaleLowerCase('fr').replace(/[.!?]/g,''),notation=ECOLE_EXTRA_NOTATION[w]||MINI_NOTATION[w];
+ if(!notation){const W=WORDS.find(x=>x.w===w);return W?{keys:[...W.keys],families:[],unmodelled:W.req>=99?[w]:[]}:{keys:[],families:[],unmodelled:[w]};}
+ const keys=new Set(),families=new Set(),unmodelled=[];
+ for(const token of notation.split(/[.\s-]+/)){if(!token||token[0]==='*')continue;if(token[0]==='@'){families.add(token.slice(1));for(const k of ECOLE_GRAPH_REFERENCE[token.slice(1)]||[])keys.add(k);}else if(token[0]==='!')unmodelled.push(token.slice(1));else if(G2L[token]!=null)keys.add(G2L[token]);else unmodelled.push(token);}
+ return {keys:[...keys],families:[...families],unmodelled};
+}
+function ecoleReadingKnown(p=P()){
+ const keys=readingPracticeKnownKeys(p),families=new Set();
+ for(const f of ECOLE_GRAPH_FAMILIES){const e=p.evidence?.['ecole:graphie:'+f.id+':lecture'];if(p.demo||e&&e.alone>=2&&new Set(e.seen||[]).size>=2)families.add(f.id);}
+ return {keys,families};
+}
+function ecoleWordReady(word,p=P(),options={}){
+ if(p.demo)return true;const r=ecoleWordRequirements(word),known=ecoleReadingKnown(p);
+ return !r.unmodelled.length&&r.keys.every(k=>known.keys.has(k))&&r.families.every(f=>f===options.family||known.families.has(f));
+}
+function ecoleGraphPool(family,p=P()){
+ const f=typeof family==='string'?ECOLE_GRAPH_FAMILIES.find(x=>x.id===family):family;
+ return f?f.words.filter(([w])=>ecoleWordReady(w,p,{family:f.id})).map(([w,e])=>({w,e})):[];
+}
+function ecolePhrasePool(level,p=P()){
+ const L=typeof level==='number'?GAMES.phraseOrdre.levels[level]:level;
+ return L?ECOLE_ORDER_SENTENCES.filter(x=>x.words.length===L.words&&x.words.every(w=>ecoleWordReady(w,p))):[];
+}
+/* Access is pure and accepts an explicit profile and zero-based level. */
+function ecoleReadingAccess(gid,p=P(),li){
+ const levels=GAMES[gid]?.levels||[],index=clamp(Number.isInteger(li)?li:p.games?.[gid]?.lvl||0,0,Math.max(0,levels.length-1)),L=levels[index];
+ const known=ecoleReadingKnown(p);let ready=true,available=0,missing=[],missingFamilies=[];
+ if(gid==='lettresMiroir'&&!L?.same){const need=index<3?['b','d']:index===3?['p','k']:['b','d','p','k'];missing=need.filter(k=>!known.keys.has(k));ready=!missing.length;}
+ if(gid==='phraseOrdre'){
+  available=ecolePhrasePool(L,p).length;ready=available>0;
+  if(!ready){const candidates=ECOLE_ORDER_SENTENCES.filter(x=>x.words.length===L.words).map(x=>{const req=x.words.map(ecoleWordRequirements);return {missing:uniq(req.flatMap(r=>r.keys).filter(k=>!known.keys.has(k))),families:uniq(req.flatMap(r=>r.families).filter(f=>!known.families.has(f))),unknown:req.some(r=>r.unmodelled.length)};}).filter(x=>!x.unknown).sort((a,b)=>a.missing.length+a.families.length-b.missing.length-b.families.length);missing=candidates[0]?.missing||[];missingFamilies=candidates[0]?.families||[];}
+ }
+ if(gid==='graphies'){
+  const families=L?.family==='mix'?ECOLE_GRAPH_FAMILIES.filter(f=>known.families.has(f.id)):ECOLE_GRAPH_FAMILIES.filter(f=>f.id===L?.family);
+  available=families.filter(f=>ecoleGraphPool(f,p).length>=2).length;ready=available>0;
+  if(!ready&&families.length){const candidates=families.flatMap(f=>{const req=f.words.map(([w])=>ecoleWordRequirements(w)).filter(r=>!r.unmodelled.length);return req.flatMap((r,i)=>req.slice(i+1).map(s=>({missing:uniq([...r.keys,...s.keys].filter(k=>!known.keys.has(k))),families:uniq([...r.families,...s.families].filter(x=>x!==L.family&&!known.families.has(x)))})));}).sort((a,b)=>a.missing.length+a.families.length-b.missing.length-b.families.length);missing=candidates[0]?.missing||[];missingFamilies=candidates[0]?.families||[];}
+ }
+ if(p.demo)return {ready:true,admin:true,training:false,missing:[],missingFamilies:[],available};
+ const parent=readingPracticeParentOpened(gid,p),previous=typeof curriculumLegacyGameLevel==='function'&&curriculumLegacyGameLevel(gid,p)>=index;
+ return {ready:ready||parent||previous,parent,previous,training:!ready&&(parent||previous),missing,missingFamilies,available,level:index,reason:missing.length?'Préparer les sons « '+missing.map(k=>LESSONS[LIDX[k]]?.main||k).join(', ')+' » dans Apprendre à lire.':missingFamilies.length?'Découvrir d’abord les graphies « '+missingFamilies.join(', ')+' ».':'Préparer les sons et les mots dans Apprendre à lire.'};
+}
+function ecoleChoiceWithAudio(button,text){return h('div',{class:'ecole-choice-audio'},button,onTap(h('button',{class:'hint-btn ecole-choice-listen','aria-label':'Écouter '+text},icon('speaker')),()=>Voice.say(text)));}
 function ecoleRegister(id,game,world,theme,after){
  GAMES[id]={id,color:game.color||'sky',stage:game.stage||'#f5f8fc',...game};
  SIMPLE_GAME_NAMES[id]=game.title;
@@ -115,7 +174,7 @@ const ECOLE_MIRROR_LEVEL_POOLS=[
 ];
 function ecoleMirrorSameItem(ctx){
  const a=pick(['b','d','p','q']),same=Math.random()<.5,b=same?a:pick(['b','d','p','q'].filter(x=>x!==a));
- return {cls:'ecole-stage ecole-mirror',say:ECOLE_VOICE.mirrorSame,caption:'Pareilles ou différentes ?',exemplar:'miroir-pareil:'+a+b,
+ return {cls:'ecole-stage ecole-mirror',say:ECOLE_VOICE.mirrorSame,caption:'Pareilles ou différentes ?',evidenceKey:'visual:letter-mirror',exemplar:'miroir-pareil:'+a+b,
   render(st,api){let target;
    const row=ecoleRow(2,[['=',true],['≠',false]].map(([sym,v])=>{const btn=ecoleTextCard(sym,v?'pareilles':'différentes','ecole-letter-card');if(v===same)target=btn;
     onTap(btn,()=>api.answer(v===same,{el:btn,correctEl:target,feedback:ECOLE_VOICE.mirrorSameWrong,praise:same?ECOLE_VOICE.mirrorSameYes:ECOLE_VOICE.mirrorSameNo}));return btn;}));
@@ -123,9 +182,11 @@ function ecoleMirrorSameItem(ctx){
 }
 function ecoleMirrorItem(ctx){
  if(ctx.L.same)return ecoleMirrorSameItem(ctx);
+ const access=ecoleReadingAccess('lettresMiroir',P(),ctx.li);if(!access.ready)return readingPracticeBlocked('lettresMiroir');
  const spec=ECOLE_MIRROR_LEVEL_POOLS[ctx.L.pool],W=ecoleFresh(ctx,spec.pool(),x=>x.w),gap=W.w.indexOf(W.letter);
- return {cls:'ecole-stage ecole-mirror',say:[W.w,350,ECOLE_VOICE.mirrorAsk],caption:'Quelle lettre manque ?',exemplar:'miroir:'+W.w,
+ return {cls:'ecole-stage ecole-mirror',say:[W.w,350,ECOLE_VOICE.mirrorAsk],caption:'Quelle lettre manque ?',helped:access.training,evidenceKey:access.training?'practice:letter-mirror:training':'letter:mirror-context',exemplar:'miroir:'+W.w,
   render(st,api){
+   if(access.training)api.help();
    const word=h('div',{class:'ecole-gap-word','aria-label':'mot à compléter'},[...W.w].map((c,i)=>i===gap?h('span',{class:'ecole-gap'},'?'):h('span',null,c)));
    const gapEl=word.querySelector?word.querySelector('.ecole-gap'):null;
    let target;
@@ -136,7 +197,7 @@ function ecoleMirrorItem(ctx){
   }};
 }
 ecoleRegister('lettresMiroir',{title:'Les lettres miroirs',sub:'Ne plus confondre b, d, p et q',icon:'🪞',color:'plum',stage:'#f4f0fa',
- levels:ecoleLevels('miroir','P1',[{same:true,name:'Pareilles ou différentes ?'},{pool:0,name:'b ou d au début du mot'},{pool:1,name:'b ou d au milieu du mot'},{pool:2,name:'p ou q'},{pool:3,name:'b, d, p ou q'}]),make:ecoleMirrorItem},'grands','lire','balade');
+ preReq:{kind:'letter-sound-context',access:(p=P(),li)=>ecoleReadingAccess('lettresMiroir',p,li)},levels:ecoleLevels('miroir','P1',[{same:true,name:'Pareilles ou différentes ?'},{pool:0,name:'b ou d au début du mot'},{pool:1,name:'b ou d au milieu du mot'},{pool:2,name:'p ou q'},{pool:3,name:'b, d, p ou q'}]),make:ecoleMirrorItem},'grands','lire','balade');
 
 /* ---------- 2. Les sons qui s’écrivent autrement ---------- */
 const ECOLE_VOWEL_CHARS='aeiouyéèêëâàîïôûù';
@@ -181,30 +242,37 @@ function ecoleGraphWordEl(fam,w,mark){
  if(i<w.length)out.append(h('span',null,w.slice(i)));return out;
 }
 function ecoleGraphItem(ctx){
- const mix=ctx.L.family==='mix',fam=mix?pick(ECOLE_GRAPH_FAMILIES):ECOLE_GRAPH_FAMILIES.find(f=>f.id===ctx.L.family);
- const entries=fam.words.map(([w,e])=>({w,e})),W=ecoleFresh(ctx,entries,x=>x.w),others=sample(entries.filter(x=>x.w!==W.w),2),opts=shuffle([W,...others]);
+ const profile=P(),access=ecoleReadingAccess('graphies',profile,ctx.li);if(!access.ready)return readingPracticeBlocked('graphies');
+ const content=access.training?{...profile,demo:true}:profile,known=ecoleReadingKnown(content),mix=ctx.L.family==='mix',families=mix?ECOLE_GRAPH_FAMILIES.filter(f=>(content.demo||known.families.has(f.id))&&ecoleGraphPool(f,content).length>=2):ECOLE_GRAPH_FAMILIES.filter(f=>f.id===ctx.L.family),fam=pick(families);
+ const entries=ecoleGraphPool(fam,content);if(!fam||entries.length<2)return readingPracticeBlocked('graphies');
+ const memory=ctx.bag||(ctx.bag={}),prior=(memory.graphWords||(memory.graphWords={}))[fam.id]||[],ALT={au:['au','eau'],ai:['ai','ei'],er:['er','ez']}[fam.id],complete=!!(ALT&&!mix&&ctx.i===(ctx.n||6)-1&&prior.length);
+ const W=complete?pick(prior):ecoleFresh(ctx,entries,x=>x.w),others=sample(entries.filter(x=>x.w!==W.w),2),opts=shuffle([W,...others]);
  const mark=!mix&&ctx.i<=3,hear=ctx.i%2===1;
- const ALT={au:['au','eau'],ai:['ai','ei'],er:['er','ez']}[fam.id];
- if(ALT&&!mix&&ctx.i===(ctx.n||6)-1){
+ const discovery=!mix&&ctx.i===0,helped=access.training||discovery;
+ if(!hear&&!complete){memory.graphWords[fam.id]=[W,...prior.filter(x=>x.w!==W.w)].slice(0,6);}
+ if(complete){
   const [a,b]=ecoleGraphRanges(fam.id,W.w)[0],part=W.w.slice(a,b),opts=ALT.includes(part)?ALT:[part,...ALT.filter(x=>x!==part)].slice(0,2);
-  return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphComplete],caption:'Complète le mot',exemplar:'graphie-complete:'+W.w,render(st,api){
+  return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphComplete],caption:'Complète un mot déjà vu',helped:access.training,evidenceKey:access.training?'practice:graphie:training':'encoding:graphie:'+fam.id,exemplar:'graphie-complete:'+W.w,render(st,api){
+   if(access.training)api.help();
    const gap=h('span',{class:'ecole-gap'},'?');let target;
    const row=ecoleRow(2,shuffle(opts).map(o=>{const btn=ecoleTextCard(o,o);if(o===part)target=btn;onTap(btn,()=>api.answer(o===part,{el:btn,correctEl:target,feedback:ECOLE_VOICE.graphCompleteWrong,praise:['Oui !',W.w]}).then(ok=>{if(ok){gap.textContent=part;gap.classList.add('filled');}}));return btn;}));
    api.key(target);uWrap(st,h('div',{class:'ecole-picture-line'},ecolePic(W.e,W.w,'big'),h('div',{class:'ecole-gap-word'},W.w.slice(0,a),gap,W.w.slice(b))),row);
   }};
  }
- if(hear)return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphHear],caption:'Touche le mot que tu entends',exemplar:'graphie-ecoute:'+W.w,render(st,api){
+ if(hear)return {cls:'ecole-stage ecole-graph',say:[W.w,350,ECOLE_VOICE.graphHear],caption:'Touche le mot que tu entends',helped:access.training,evidenceKey:access.training?'practice:graphie:training':'matching:graphie:'+fam.id,exemplar:'graphie-ecoute:'+W.w,render(st,api){
+  if(access.training)api.help();
   let target;const row=h('div',{class:'ecole-word-list'},opts.map(o=>{const b=h('button',{class:'card txt ecole-word-card','aria-label':o.w},ecoleGraphWordEl(fam,o.w,mark));if(o===W)target=b;
    onTap(b,()=>api.answer(o===W,{el:b,correctEl:target,feedback:ECOLE_VOICE.graphWrongHear,praise:['Oui !',W.w]}));return b;}));
   api.key(target);uWrap(st,ecolePic(W.e,W.w,'big'),onTap(h('button',{class:'hint-btn'},icon('speaker'),ECOLE_LABELS.replay),()=>Voice.say(W.w)),row);
  }};
- return {cls:'ecole-stage ecole-graph',say:!mix&&ctx.i===0?[...fam.rule(),400,ECOLE_VOICE.graphRead]:ECOLE_VOICE.graphRead,caption:'Lis le mot, puis touche la bonne image',exemplar:'graphie-lecture:'+W.w,render(st,api){
+ return {cls:'ecole-stage ecole-graph',say:discovery?[...fam.rule(),400,ECOLE_VOICE.graphRead]:ECOLE_VOICE.graphRead,caption:discovery?'Découvre la graphie':'Lis le mot, puis touche la bonne image',helped,evidenceKey:helped?'practice:graphie:guided:'+fam.id:'ecole:graphie:'+fam.id+':lecture',exemplar:'graphie-lecture:'+W.w,render(st,api){
+  if(helped)api.help();
   let target;const row=ecoleRow(3,opts.map(o=>{const b=ecolePicCard(o.e,'image');if(o===W)target=b;onTap(b,()=>api.answer(o===W,{el:b,correctEl:target,feedback:ECOLE_VOICE.graphWrongRead,praise:['Oui !',W.w]}));return b;}));
   api.key(target);uWrap(st,h('div',{class:'ecole-big-word'},ecoleGraphWordEl(fam,W.w,mark)),ecoleHelp(api,W.w),row);
  }};
 }
 ecoleRegister('graphies',{title:'Les sons qui s’écrivent autrement',sub:'au, eau, ai, ei, gn, ill, ph…',icon:'🔤',color:'plum',stage:'#f4f0fa',
- levels:ecoleLevels('graphies','P1',[...ECOLE_GRAPH_FAMILIES.map(f=>({family:f.id,name:f.name,n:6})),{family:'mix',name:'Tous les sons mélangés'}]),make:ecoleGraphItem},'grands','lire','phraseOrdre');
+ preReq:{kind:'explicit-spellings',access:(p=P(),li)=>ecoleReadingAccess('graphies',p,li)},levels:ecoleLevels('graphies','P1',[...ECOLE_GRAPH_FAMILIES.map(f=>({family:f.id,name:f.name,n:6})),{family:'mix',name:'Tous les sons mélangés'}]),make:ecoleGraphItem},'grands','lire','phraseOrdre');
 
 /* ---------- 3. Les petits mots : un/une, le/la, il/elle, singulier/pluriel ---------- */
 const ECOLE_NOUNS=[
@@ -221,44 +289,48 @@ function ecoleSmallWordsItem(ctx){
  const kind=ctx.L.kind==='mix'?ECOLE_SMALL_WORD_KINDS[ctx.i%ECOLE_SMALL_WORD_KINDS.length]:ctx.L.kind;
  if(kind==='un'||kind==='le'){
   const N=ecoleFresh(ctx,ECOLE_NOUNS,x=>x.w),options=kind==='un'?['un','une']:['le','la'],ans=ecoleArticleOf(kind,N,false);
-  return {cls:'ecole-stage ecole-small',say:[N.w,350,ECOLE_VOICE.genderAsk[kind]],caption:ECOLE_VOICE.genderAsk[kind],exemplar:'petitsmots:'+kind+':'+N.w,render(st,api){
+  return {cls:'ecole-stage ecole-small',say:[N.w,350,ECOLE_VOICE.genderAsk[kind]],caption:ECOLE_VOICE.genderAsk[kind],evidenceKey:'oral:grammar:'+kind,exemplar:'petitsmots:'+kind+':'+N.w,render(st,api){
    const gap=h('span',{class:'ecole-gap'},'?');let target;
-   const row=ecoleRow(2,options.map(o=>{const b=ecoleTextCard(o,o);if(o===ans)target=b;onTap(b,()=>api.answer(o===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.genderWrong,praise:['Oui !',ans+' '+N.w]}).then(ok=>{if(ok){gap.textContent=ans;gap.classList.add('filled');}}));return b;}));
+   const row=ecoleRow(2,options.map(o=>{const b=ecoleTextCard(o,o);if(o===ans)target=b;onTap(b,()=>api.answer(o===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.genderWrong,praise:['Oui !',ans+' '+N.w]}).then(ok=>{if(ok){gap.textContent=ans;gap.classList.add('filled');}}));return ecoleChoiceWithAudio(b,o);}));
    api.key(target);uWrap(st,ecolePic(N.e,N.w,'big'),h('div',{class:'ecole-phrase-line'},gap,' ',N.w),row);
   }};
  }
  if(kind==='il'){
   const person=ecoleFresh(ctx,ECOLE_PEOPLE,x=>x.w),verb=pick(ECOLE_PRONOUN_VERBS),ans=person.p,sentence=(ans==='il'?'Il ':'Elle ')+verb+'.';
-  return {cls:'ecole-stage ecole-small',say:[person.w,350,ECOLE_VOICE.pronounAsk],caption:ECOLE_VOICE.pronounAsk,exemplar:'petitsmots:il:'+person.w+':'+verb,render(st,api){
+  return {cls:'ecole-stage ecole-small',say:[person.w,350,ECOLE_VOICE.pronounAsk],caption:ECOLE_VOICE.pronounAsk,evidenceKey:'oral:grammar:il',exemplar:'petitsmots:il:'+person.w+':'+verb,render(st,api){
    const gap=h('span',{class:'ecole-gap'},'?');let target;
-   const row=ecoleRow(2,['Il','Elle'].map(o=>{const b=ecoleTextCard(o,o);if(o.toLowerCase()===ans)target=b;onTap(b,()=>api.answer(o.toLowerCase()===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.pronounWrong,praise:['Oui !',sentence]}).then(ok=>{if(ok){gap.textContent=o;gap.classList.add('filled');}}));return b;}));
+   const row=ecoleRow(2,['Il','Elle'].map(o=>{const b=ecoleTextCard(o,o);if(o.toLowerCase()===ans)target=b;onTap(b,()=>api.answer(o.toLowerCase()===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.pronounWrong,praise:['Oui !',sentence]}).then(ok=>{if(ok){gap.textContent=o;gap.classList.add('filled');}}));return ecoleChoiceWithAudio(b,o+' '+verb+'.');}));
    api.key(target);uWrap(st,ecolePic(person.e,person.w,'big'),h('div',{class:'ecole-phrase-line'},gap,' '+verb+'.'),row);
   }};
  }
  const N=ecoleFresh(ctx,ECOLE_NOUNS.filter(n=>n.pl),x=>x.w),plural=Math.random()<.5,count=plural?rint(3,5):1;
  const one=ecoleArticleOf(kind,N,false)+' '+N.w,many=(kind==='des'?'des ':'les ')+N.pl,ans=plural?many:one;
- return {cls:'ecole-stage ecole-small',say:ECOLE_VOICE.numberAsk,caption:'Un seul, ou plusieurs ?',exemplar:'petitsmots:'+kind+':'+N.w+':'+count,render(st,api){
+ return {cls:'ecole-stage ecole-small',say:ECOLE_VOICE.numberAsk,caption:'Un seul, ou plusieurs ?',evidenceKey:'oral:grammar:'+kind,exemplar:'petitsmots:'+kind+':'+N.w+':'+count,render(st,api){
   let target;const pics=h('div',{class:'ecole-count-pics'},Array.from({length:count},()=>ecolePic(N.e,N.w)));
-  const row=ecoleRow(2,shuffle([one,many]).map(o=>{const b=ecoleTextCard(o,o);if(o===ans)target=b;onTap(b,()=>api.answer(o===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.numberWrong,praise:['Oui !',ans]}));return b;}));
+  const row=ecoleRow(2,shuffle([one,many]).map(o=>{const b=ecoleTextCard(o,o);if(o===ans)target=b;onTap(b,()=>api.answer(o===ans,{el:b,correctEl:target,feedback:ECOLE_VOICE.numberWrong,praise:['Oui !',ans]}));return ecoleChoiceWithAudio(b,o);}));
   api.key(target);uWrap(st,pics,row);
  }};
 }
-ecoleRegister('petitsMots',{title:'Les petits mots',sub:'un, une, le, la, il, elle, les',icon:'🔡',color:'teal',stage:'#edf6f2',
+ecoleRegister('petitsMots',{title:'Les petits mots',sub:'Choisir à l’oral : un, une, le, la…',readingMode:'oral-grammar',icon:'🔡',color:'teal',stage:'#edf6f2',
  levels:ecoleLevels('petitsmots','P1',[{kind:'un',name:'un ou une'},{kind:'le',name:'le ou la'},{kind:'il',name:'il ou elle'},{kind:'des',name:'un ou des : un seul ou plusieurs'},{kind:'les',name:'le, la ou les'},{kind:'mix',name:'Tous les petits mots'}]),make:ecoleSmallWordsItem},'grands','lire','pseudoMot');
 
 /* ---------- 4. Remettre la phrase en ordre ---------- */
-/* Phrases décodables avec les sons du parcours « Apprendre à lire » (jusqu’à eu). */
+/* Autonomous sentences use explicit correspondences, not the current unlock.
+   The four additional short sentences already occur in the recorded books. */
 const ECOLE_ORDER_SENTENCES=[
  ['Le chat dort.','🐱'],['La vache boit.','🐄'],['Le bébé rit.','👶'],['La moto roule.','🏍️'],['Le loup court.','🐺'],['La fée vole.','🧚'],['La tortue dort.','🐢'],['Le canard boit.','🦆'],
  ['Papa lit un livre.','📖'],['Lola a un vélo.','🚲'],['Luca a un ballon.','🎈'],['Le chat a soif.','🐱'],['Mamie a un chat.','👵'],['Papa a une moto.','🏍️'],
  ['Le lapin a une carotte.','🥕'],['Le roi a une couronne.','👑'],['Le chat boit du lait.','🥛'],['Lola a vu un loup.','🐺'],['Papa a vu une souris.','🐭'],
  ['Luca a vu un lapin.','🐰'],
+ ['Lola a la pomme.','🍎'],['Milo a la pomme.','🍎'],['Lola a la tulipe.','🌷'],['Milo a la tulipe.','🌷'],
  ['Lola donne une pomme à papa.','🍎'],['Papa a vu un gros loup.','🐺'],['Le chat a vu une souris.','🐭'],['Le loup a vu le lapin.','🐺'],['Luca a lu un joli livre.','📖'],['La poule a un petit poussin.','🐣']
 ].map(([s,e])=>({s,e,words:s.replace(/\.$/,'').split(' ')}));
 function ecolePhraseItem(ctx){
- const pool=ECOLE_ORDER_SENTENCES.filter(x=>x.words.length===ctx.L.words),P0=ecoleFresh(ctx,pool,x=>x.s);
+ const p=P(),access=ecoleReadingAccess('phraseOrdre',p,ctx.li);if(!access.ready)return readingPracticeBlocked('phraseOrdre');
+ const content=access.training?{...p,demo:true}:p,pool=ecolePhrasePool(ctx.L,content);if(!pool.length)return readingPracticeBlocked('phraseOrdre');const P0=ecoleFresh(ctx,pool,x=>x.s);
  let order=shuffle(P0.words.map((w,i)=>({w,i})));let guard=0;while(order.every((x,i)=>x.i===i)&&guard++<10)order=shuffle(order);
- return {cls:'ecole-stage ecole-phrase',say:ECOLE_VOICE.phraseAsk,caption:'Remets les mots dans l’ordre',exemplar:'phrase:'+P0.s,render(st,api){
+ return {cls:'ecole-stage ecole-phrase',say:ECOLE_VOICE.phraseAsk,caption:'Remets les mots dans l’ordre',helped:access.training,evidenceKey:access.training?'practice:sentence-order:training':'reading:sentence-order',exemplar:'phrase:'+P0.s,render(st,api){
+  if(access.training)api.help();
   let at=0,done=false;const buttons=[];const line=h('div',{class:'ecole-sentence','aria-label':'La phrase'},P0.words.map(()=>h('span',{class:'ecole-slot'},'\u00a0')),h('span',{class:'ecole-dot'},'.'));
   const slots=line.querySelectorAll?line.querySelectorAll('.ecole-slot'):[];
   const tray=h('div',{class:'ecole-tiles'},order.map(o=>{const b=h('button',{class:'card txt ecole-tile','aria-label':o.w},o.w);buttons[o.i]=b;
@@ -270,7 +342,7 @@ function ecolePhraseItem(ctx){
  }};
 }
 ecoleRegister('phraseOrdre',{title:'Remettre la phrase en ordre',sub:'Lire chaque mot et construire la phrase',icon:'🧱',color:'teal',stage:'#edf6f2',
- levels:ecoleLevels('phrase','P1',[{words:3,name:'Trois mots'},{words:4,name:'Quatre mots'},{words:5,name:'Cinq mots'},{words:6,name:'Six mots'}]),make:ecolePhraseItem},'grands','lire','lisFais');
+ preReq:{kind:'readable-sentence',access:(p=P(),li)=>ecoleReadingAccess('phraseOrdre',p,li)},levels:ecoleLevels('phrase','P1',[{words:3,name:'Trois mots'},{words:4,name:'Quatre mots'},{words:5,name:'Cinq mots'},{words:6,name:'Six mots'}]),make:ecolePhraseItem},'grands','lire','lisFais');
 
 /* =========================================================
    LUCA — Calculer
@@ -561,6 +633,7 @@ function ecoleParcoursVoiceLines(){
  const out=[];const add=(...xs)=>xs.flat(4).forEach(x=>{if(typeof x==='string'&&x.trim())out.push(x);});
  const walk=v=>{if(typeof v==='string')add(v);else if(v&&typeof v==='object')Object.values(v).forEach(walk);};walk(ECOLE_VOICE);
  add('Oui !');
+ add('un','une','le','la');
  Object.values(ECOLE_MIRROR_WORDS).forEach(list=>list.forEach(([w])=>add(w)));
  ECOLE_GRAPH_FAMILIES.forEach(f=>{add(f.anchor[0]);f.rule().forEach(x=>{if(typeof x==='string')add(x);});f.words.forEach(([w])=>add(w));});
  ECOLE_NOUNS.forEach(n=>{add(n.w,(n.g==='m'?'un ':'une ')+n.w,(n.g==='m'?'le ':'la ')+n.w);if(n.pl)add('des '+n.pl,'les '+n.pl);});
@@ -586,6 +659,7 @@ function ecoleParcoursVoiceLines(){
 /* ---------- Mise en page ---------- */
 if(typeof document!=='undefined'&&document.head){const style=h('style');style.textContent=`
 .ecole-stage .upgrade-wrap{gap:16px;align-items:center}
+.ecole-choice-audio{display:flex;flex-direction:column;align-items:stretch;gap:8px}.ecole-choice-listen{align-self:center;min-width:54px;min-height:48px}
 .ecole-pic{display:inline-flex;align-items:center;justify-content:center;font-size:54px;line-height:1}
 .ecole-pic.big{font-size:clamp(70px,13vw,110px)}
 .ecole-pic .lumi-illustration{width:1em;height:1em}

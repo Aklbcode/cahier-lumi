@@ -4,7 +4,7 @@ const {speechSegments,speechJoin}=require('../speech-engine.js');
 const root=path.join(__dirname,'..'),{ctx}=loadApp({Blob,URL,AbortController,setTimeout:()=>0,clearTimeout(){}});
 const check=(ok,msg)=>{if(!ok)throw Error(msg);};
 const run=code=>vm.runInContext(code,ctx);
-run(`save=()=>{};Voice.stop=()=>{};Voice.say=()=>Promise.resolve();Voice.slower=f=>f();Sfx.play=()=>{};Lumi.react=()=>{};S=defState();S.current='luca';`);
+run(`save=()=>{};Voice.stop=()=>{};Voice.say=()=>Promise.resolve();Voice.slower=f=>f();Sfx.play=()=>{};Lumi.react=()=>{};S=defState();S.current='luca';P().demo=true;`);
 
 const IDS=['lettresMiroir','graphies','petitsMots','phraseOrdre','maisonNombres','nombresLettres','calendrier','formesSolides','copieModele','ensemble','pareilModele'];
 const WORLD={copieModele:'petits',ensemble:'petits',pareilModele:'petits'};
@@ -16,8 +16,8 @@ for(const id of IDS){
  check(run(`themesOf('${world}').some(t=>t.ids.includes('${id}'))`),id+' apparaît dans un thème de '+world);
 }
 const lire=run(`themesOf('grands').find(t=>t.id==='lire').ids`);
-check(lire.indexOf('lettresMiroir')===lire.indexOf('balade')+1,'Les lettres miroirs suivent Écrire avec les lettres');
-check(lire.indexOf('graphies')>lire.indexOf('phraseOrdre'),'Les sons complexes viennent après la phrase');
+check(new Set(lire).size===lire.length,'Chaque activité Lire apparaît une seule fois');
+check(run(`['lettresMiroir','graphies','phraseOrdre'].every(id=>typeof GAMES[id].preReq?.access==='function')`),'Les nouvelles lectures exposent leurs prérequis');
 
 /* 2. Chaque niveau se joue jusqu’au bout avec de vrais clics, et les phrases dites sont enregistrables */
 const keyNorm=t=>String(t).normalize('NFC').replace(/[’‘]/g,"'").replace(/\s+/g,' ').trim().replace(/[.!?…:]+$/,'').trim().toLocaleLowerCase('fr');

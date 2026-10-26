@@ -60,7 +60,7 @@ async function main(){
  for(const id of ['suites','suitesG','monstre','monstreP','recit','recitP','sonsP'])if(GAMES[id]?.levels){const names=GAMES[id].levels.map(L=>L.name);check(new Set(names).size===names.length,'Every renamed stage describes a distinguishable difficulty in '+id);}
  // The footer belongs only to the home view, and repeated renders replace it.
  {
-  const main=h('div',{class:'theme-home'});document.body.append(main);HOME_THEME=null;familyHomeFooter(main);familyHomeFooter(main);let footers=document.body.querySelectorAll('.family-version');check(footers.length===1&&footers[0].getAttribute('role')==='contentinfo'&&footers[0].textContent==='Version 2.6.0 · 24/10/2026','Home has one discreet, dated release marker');HOME_THEME='jouer';familyHomeFooter(main);check(!document.body.querySelector('.family-version'),'Activity/theme screens do not keep the home release footer');HOME_THEME=null;main.remove();
+  const main=h('div',{class:'theme-home'});document.body.append(main);HOME_THEME=null;familyHomeFooter(main);familyHomeFooter(main);let footers=document.body.querySelectorAll('.family-version');check(footers.length===1&&footers[0].getAttribute('role')==='contentinfo'&&footers[0].textContent==='Version '+LUMI_RELEASE.version+' · '+LUMI_RELEASE.date,'Home has one discreet, dated release marker');HOME_THEME='jouer';familyHomeFooter(main);check(!document.body.querySelector('.family-version'),'Activity/theme screens do not keep the home release footer');HOME_THEME=null;main.remove();
  }
  check(familyGuidanceVoiceLines().every(t=>typeof t==='string'&&t.length>0)&&familyGuidanceVoiceLines().includes(FAMILY_LINES.add),'Every named family instruction is included in the voice inventory');
 })()`,ctx,{timeout:30000});

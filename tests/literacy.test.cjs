@@ -86,7 +86,7 @@ const savedName=kid().name;kid().name='<script>alert(1)</script>';const hostileC
 
 // Four-item revision remains the same after an interrupted series, while
 // routing due skills preserves the active child and existing rewards.
-P().lecture.unlocked=18;P().resume=null;P().evidence={'gp:a':{due:0,seen:[]},'encoding:words':{due:1,seen:['papa']},'reading:words':{due:2,seen:['papa']}};
+P().lecture.unlocked=18;P().lecture.pass=Object.fromEntries(LESSONS.slice(0,19).map((L,i)=>[i,{at:1,score:6}]));P().resume=null;P().evidence={'gp:a':{due:0,seen:[]},'encoding:words':{due:1,seen:['papa']},'reading:words':{due:2,seen:['papa']}};
 const session=resumeSession('game',{gid:'rappel',li:0}),ctxRecall={L:GAMES.rappel.levels[0],li:0,bag:{},i:0};GAMES.rappel.make(ctxRecall);const planBefore=JSON.stringify(session.reviewPlan);checkLiteracy(session.reviewPlan.length===4&&session.reviewPlan.some(t=>t.kind==='write'),'Revision includes due encoding and four tasks');
 for(let i=0;i<4;i++){const t=session.reviewPlan[i],item=GAMES.rappel.make({...ctxRecall,i});checkLiteracy(typeof item.render==='function','Every planned review item can render');if(t.kind==='letter')checkLiteracy(LIDX[t.k]<=18,'No untaught letter in review');else checkLiteracy(WORDS.find(w=>w.w===t.word)?.req<=18,'No untaught word in review');}
 P().evidence={};const resumed={L:GAMES.rappel.levels[0],li:0,bag:{},i:2};GAMES.rappel.make(resumed);checkLiteracy(JSON.stringify(resumed.bag.plan)===planBefore&&JSON.stringify(session.reviewPlan)===planBefore,'Interrupted review retains exact plan');
@@ -96,7 +96,7 @@ checkLiteracy(seriesRewards().stars===starsBefore&&S.current==='luca','Planning 
 for(const id of ['lecture','recit','rappel','messages'])checkLiteracy(themesOf('grands').some(t=>t.ids.includes(id)),'New activity reachable '+id);
 checkLiteracy(!themesOf('grands').some(t=>t.ids.includes('consignes')),'Oral placement intentionally removed for Luca');
 P().evidence={'gp:legacy-unknown':{due:0,seen:[]}};checkLiteracy(recommendedGame()!=='rappel','Unknown legacy reading keys do not create an empty review');
-S.current='lola';S.world='petits';P().resume=null;P().evidence={};checkLiteracy(recommendedGame()==='consignesP','Preschool suggestion uses preschool progression');for(const [key,id]of [['oral:placement:0','consignesP'],['narrative:order','recitP']]){P().evidence={[key]:{due:0,seen:[]}};checkLiteracy(recommendedGame()===id&&themesOf('petits').some(t=>t.ids.includes(id)),'Preschool due skill routes to its own progression '+key);}
+S.current='lola';S.world='petits';P().resume=null;P().evidence={};checkLiteracy(recommendedGame()==='ferme','A new preschool suggestion begins with the first oral discovery group');for(const [key,id]of [['oral:placement:0','consignesP'],['narrative:order','recitP']]){P().evidence={[key]:{due:0,seen:[]}};checkLiteracy(recommendedGame()===id&&themesOf('petits').some(t=>t.ids.includes(id)),'Preschool due skill routes to its own progression '+key);}
 `,ctx,{timeout:20000});
 assert.ok(!/autonomousDecodingValidated\s*:\s*true/.test(source),'The app must not certify autonomous decoding from comprehension choices');
 console.log('Lecture/langage : phonèmes, 700 modèles oraux, gestes réels, récits progressifs, 24 questions, messages et rappels vérifiés.');

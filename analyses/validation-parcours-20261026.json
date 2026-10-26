@@ -1,0 +1,194 @@
+{
+  "date": "2026-10-26",
+  "version": "2.7.0",
+  "tests": 31,
+  "passed": 31,
+  "results": [
+    {
+      "test": "tests/admin-integration.test.cjs",
+      "status": "passed",
+      "seconds": 0.23,
+      "output": "Admin intégré : isolation cloud, horodatages enfants, rechargement et import historique vérifiés.\n"
+    },
+    {
+      "test": "tests/admin.test.cjs",
+      "status": "passed",
+      "seconds": 0.23,
+      "output": "Admin : accès intégral, profil local indépendant, migration sûre et accès parents vérifiés.\n"
+    },
+    {
+      "test": "tests/animal-audio.test.cjs",
+      "status": "passed",
+      "seconds": 0.25,
+      "output": "Cris animaliers : fichiers présents, lecture réelle, cache/reprise, annulation voix/réseau, erreurs et 25 choix rendus vérifiés.\n"
+    },
+    {
+      "test": "tests/character-games.test.cjs",
+      "status": "passed",
+      "seconds": 0.35,
+      "output": "Personnages en jeu : paires réelles et identiques, 64 mélanges par palier, clics/erreurs/fin, couleurs et transfert neutre vérifiés.\n"
+    },
+    {
+      "test": "tests/character-learning.test.cjs",
+      "status": "passed",
+      "seconds": 0.11,
+      "output": "Personnages : sudoku unique 2/3/4, suites logiques et tailles vérifiés avec les clics ; nombres et crayons inchangés.\n"
+    },
+    {
+      "test": "tests/character-search.test.cjs",
+      "status": "passed",
+      "seconds": 0.3,
+      "output": "Chercher : 800 scènes déterministes, cibles accessibles sans chevauchement, 30 parties réelles, zoom/pan, indices et résultats vérifiés.\n"
+    },
+    {
+      "test": "tests/child-ux.test.cjs",
+      "status": "passed",
+      "seconds": 0.18,
+      "output": "Interface enfant : 1 200 tirages alphabet/sons, choix corrects, noms/phonèmes distincts, profils, retraits et livres conservés vérifiés.\n"
+    },
+    {
+      "test": "tests/classic-compat.test.cjs",
+      "status": "passed",
+      "seconds": 0.15,
+      "output": "Classique : panne Array.at reproduite, anciens helpers restaurés, vrai démarrage/accueil/navigation et sauvegardes conservées vérifiés.\n"
+    },
+    {
+      "test": "tests/curriculum-math.test.cjs",
+      "status": "passed",
+      "seconds": 0.08,
+      "output": "Curriculum maths : 33 niveaux sans cycle, prérequis locaux, problèmes précoces, accès historiques/parent/Admin, groupes, reprise, saut, isolation et étoiles finales cohérentes — OK.\n"
+    },
+    {
+      "test": "tests/curriculum-paths.test.cjs",
+      "status": "passed",
+      "seconds": 0.25,
+      "output": "Parcours : 14829 contrôles, 1128 items générés ; groupes complets, prérequis, accès historiques/adultes, migration et corpus décodables vérifiés.\n"
+    },
+    {
+      "test": "tests/cursive.test.cjs",
+      "status": "passed",
+      "seconds": 1.1,
+      "output": "Cursive: versioned geometry, continuous gestures, distinct evidence, stages, font and export passed.\n"
+    },
+    {
+      "test": "tests/ecole-parcours.test.cjs",
+      "status": "passed",
+      "seconds": 0.43,
+      "output": "ecole-parcours: 11 jeux, 937 phrases, 164 images — OK\n"
+    },
+    {
+      "test": "tests/ecole-reading-prereqs.test.cjs",
+      "status": "passed",
+      "seconds": 0.11,
+      "output": "Lecture école : prérequis par niveau, corpus bornés, exceptions non devinées, guidage distinct, mots déjà vus, accès adulte et réemploi audio vérifiés.\n"
+    },
+    {
+      "test": "tests/engine-skip.test.cjs",
+      "status": "passed",
+      "seconds": 0.89,
+      "output": "Moteur réel : passer en jeu/défi/reprise, rendu en erreur, voix bloquée, résultat unique et bouton permanent vérifiés.\n"
+    },
+    {
+      "test": "tests/family-guidance.test.cjs",
+      "status": "passed",
+      "seconds": 0.08,
+      "output": "Famille : accès historique/parent sans acquis, icônes et voix correctes, démo pré-question sans score, temps séparé par enfant, réglages parents, ordre et version d’accueil vérifiés.\n"
+    },
+    {
+      "test": "tests/favorite-characters.test.cjs",
+      "status": "passed",
+      "seconds": 0.06,
+      "output": "Personnages : vrais supports, contexte narratif hors réponses, phonèmes préservés et inventaire vocal vérifiés.\n"
+    },
+    {
+      "test": "tests/games.test.cjs",
+      "status": "passed",
+      "seconds": 0.08,
+      "output": "Jeux : dons uniques, sudoku, différences, chemins, suites, 12 livres, suivi, reprise et cartes vérifiés.\n"
+    },
+    {
+      "test": "tests/illustrations.test.cjs",
+      "status": "passed",
+      "seconds": 0.05,
+      "output": "Illustrations : 405 SVG locaux, sécurité des ressources, animaux récents, assemblages et texte des réponses vérifiés.\n"
+    },
+    {
+      "test": "tests/literacy.test.cjs",
+      "status": "passed",
+      "seconds": 0.12,
+      "output": "Lecture/langage : phonèmes, 700 modèles oraux, gestes réels, récits progressifs, 24 questions, messages et rappels vérifiés.\n"
+    },
+    {
+      "test": "tests/math-practice.test.cjs",
+      "status": "passed",
+      "seconds": 0.09,
+      "output": "Maths : faits réellement vus, espacement 1/3/7/14/30, ligne, compléments, égalités, barres, grandeurs, doigts, erreurs et sauts vérifiés.\n"
+    },
+    {
+      "test": "tests/math-strategy.test.cjs",
+      "status": "passed",
+      "seconds": 0.06,
+      "output": "Calcul : compléments, surcomptage, passage par dix et retrait visibles après erreur ; aide, défi, rappel et passage préservés.\n"
+    },
+    {
+      "test": "tests/memory-progression.test.cjs",
+      "status": "passed",
+      "seconds": 0.08,
+      "output": "Mémos : clics de toutes les paires, erreur exploratoire, score, niveau suivant, reprise et exercices passés vérifiés.\n"
+    },
+    {
+      "test": "tests/narrative.test.cjs",
+      "status": "passed",
+      "seconds": 0.08,
+      "output": "Récits : tutoriel distinct, progression 2–4 images, 90 interactions, erreurs, aide et fin directe vérifiés.\n"
+    },
+    {
+      "test": "tests/offline.test.cjs",
+      "status": "passed",
+      "seconds": 0.04,
+      "output": "Hors connexion : téléchargement, voix, navigation et échec réseau vérifiés.\n"
+    },
+    {
+      "test": "tests/progression.test.cjs",
+      "status": "passed",
+      "seconds": 0.07,
+      "output": "Progression : niveaux actuels/disponibles, parcours lecture et calcul, tuiles, reprise exacte, étape suivante et exercices passés vérifiés.\n"
+    },
+    {
+      "test": "tests/reading-practice.test.cjs",
+      "status": "passed",
+      "seconds": 0.2,
+      "output": "Lecture : 512 pseudomots, 384 actions lues, prérequis indépendants, vrais clics, aides, mots connus et affichage bref sans pression vérifiés.\n"
+    },
+    {
+      "test": "tests/reasoning-practice.test.cjs",
+      "status": "passed",
+      "seconds": 0.08,
+      "output": "Raisonnement : tangram 2–7 sans trous ni chevauchements, rotation et toucher, tableaux à deux critères, analogies françaises, ordre 5–9, défi local réellement créé et résolu sans fausse compétence.\n"
+    },
+    {
+      "test": "tests/school-type.test.cjs",
+      "status": "passed",
+      "seconds": 0.06,
+      "output": "Typographie : Borel locale dans tous les rôles et textes SVG ; contenus, calculs, compétences et tracés vectoriels inchangés.\n"
+    },
+    {
+      "test": "tests/skip.test.cjs",
+      "status": "passed",
+      "seconds": 0.06,
+      "output": "Exercices passés : récompenses proportionnées, défis sans fausse validation, reprises, progression et acquis antérieurs vérifiés.\n"
+    },
+    {
+      "test": "tests/speech.test.cjs",
+      "status": "passed",
+      "seconds": 0.16,
+      "output": "Voix : débit des enregistrements, timbre conservé au ralenti, secours cohérent, choix féminin, annulation et application vérifiés.\n"
+    },
+    {
+      "test": "tests/writing.test.cjs",
+      "status": "passed",
+      "seconds": 0.72,
+      "output": "Écriture : géométries, trois modes, prégraphisme, tracé tactile/stylet/souris continu, cible SVG stable, annulations et anciens Safari vérifiés.\n"
+    }
+  ]
+}
