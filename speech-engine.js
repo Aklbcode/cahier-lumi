@@ -1,4 +1,4 @@
-/* Lumi speech v3. Natural Belgian French; explicit, recording-only teaching sounds. */
+/* Lumi speech v4. Same Belgian recordings over HTTPS, including local-file launches. */
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -32,22 +32,41 @@
   function create(adapters = {}) {
     const env = adapters.env || rootEnvironment();
     const settings = adapters.settings || (() => ({}));
+    // Browsers refuse fetch(file://...). A downloaded HTML keeps its local
+    // progress and loads the exact same public Charline bank over HTTPS.
+    const localFile = !!env.location && env.location.protocol === 'file:';
+    const bankBase = localFile ? 'https://aklbcode.github.io/cahier-lumi/voix/' : 'voix/';
+    const unavailable = teaching => localFile
+      ? 'Connecte-toi à Internet pour écouter Lumi, puis touche le haut-parleur.'
+      : (teaching ? 'Le son' : 'La voix') + ' ne se charge pas. Touche le haut-parleur pour réessayer.';
     const state = (status, text = '') => { Voice.status=status; Voice.text=text; if (adapters.onState) adapters.onState({status,text,mode:Voice.mode}); };
     const VoicePack = {
-      base:'voix/', revision:'20261025-ecole-1', idx:null, packs:[], order:{}, scopes:{}, loading:{}, packAge:new Map(), urls:new Map(), hits:0, misses:new Set(), label:'', ready:null,
+      base:bankBase, revision:'20261025-ecole-1', idx:null, packs:[], order:{}, scopes:{}, loading:{}, packAge:new Map(), urls:new Map(), hits:0, misses:new Set(), label:'', ready:null,
       init() {
         if (this.ready) return this.ready;
         this.ready = (async () => {
+          const ctrl = typeof env.AbortController === 'function' ? new env.AbortController() : null;
+          let timer;
           try {
-            const r = await env.fetch(this.base+'index-belge.json?v='+this.revision); if (!r.ok) return;
-            const j = await r.json(); if (![2,3].includes(j.v) || !j.clips || !Array.isArray(j.packs)) return;
+            // Bound the entire manifest download (including its body), while
+            // allowing a slow first connection more than the former five seconds.
+            const load = async () => {
+              const r = await env.fetch(this.base+'index-belge.json?v='+this.revision, ctrl ? {signal:ctrl.signal} : {});
+              if (!r.ok) throw Error('voice index');
+              return r.json();
+            };
+            const timeout = new Promise((_, reject) => {
+              timer = env.setTimeout(() => { if (ctrl) ctrl.abort(); reject(Error('voice index timeout')); },15000);
+            });
+            const j = await Promise.race([load(),timeout]);
+            if (![2,3].includes(j.v) || !j.clips || !Array.isArray(j.packs)) return;
             this.idx=j.clips; this.packs=j.packs; this.order=j.order||{}; this.scopes=j.scopes||{}; this.label=j.voice;
             this.normal = new Map(Object.keys(this.idx).map(k => [keyNorm(k), k]));
             this.byText = new Map(Object.keys(this.idx).filter(k=>/^[nms]\|/.test(k)).map(k=>[keyNorm(k.slice(2)).toLocaleLowerCase('fr'),k]));
             // Only prime the first UI pack. Requested speech always gets priority.
             const first=(this.scopes.ui||[])[0]; if (first != null) this.loadPack(first);
           } catch (_) { this.idx=null; }
-          finally { if (!this.idx) this.ready=null; }
+          finally { env.clearTimeout(timer); if (!this.idx) this.ready=null; }
         })(); return this.ready;
       },
       usable() { return !!this.idx; },
@@ -64,8 +83,13 @@
         if (this.packAge.has(i)) { this.packAge.delete(i); this.packAge.set(i,true); }
         if (!this.loading[i]) this.loading[i] = (async () => {
           const ctrl = typeof env.AbortController === 'function' ? new env.AbortController() : null;
-          const timer = env.setTimeout(() => { if (ctrl) ctrl.abort(); },15000);
-          try { const r = await env.fetch(this.base+this.packs[i]+'?v='+this.revision,ctrl ? {signal:ctrl.signal} : {}); if (!r.ok) throw Error('audio'); const ab=await r.arrayBuffer(); this.packAge.set(i,true); while(this.packAge.size>8){const old=this.packAge.keys().next().value;this.packAge.delete(old);delete this.loading[old];} return ab; }
+          let timer;
+          try {
+            const load=async()=>{const r=await env.fetch(this.base+this.packs[i]+'?v='+this.revision,ctrl ? {signal:ctrl.signal} : {});if(!r.ok)throw Error('audio');return r.arrayBuffer();};
+            const timeout=new Promise((_,reject)=>{timer=env.setTimeout(()=>{if(ctrl)ctrl.abort();reject(Error('audio timeout'));},15000);});
+            const ab=await Promise.race([load(),timeout]);
+            this.packAge.set(i,true); while(this.packAge.size>8){const old=this.packAge.keys().next().value;this.packAge.delete(old);delete this.loading[old];} return ab;
+          }
           catch (_) { delete this.loading[i]; return null; }
           finally { env.clearTimeout(timer); }
         })();
@@ -142,7 +166,7 @@
         this.speaking=true; state('loading');
         try {
           const teaching=units.some(u=>u && (u.phoneme || u.syllable));
-          if (teaching || !options.device) await Promise.race([VoicePack.init(),this.wait(5000,my)]);
+          if (teaching || !options.device) await Promise.race([VoicePack.init(),this.wait(16000,my)]);
           if (my!==this.tok) return;
           // Prefer a whole recorded phrase. A voice naturally links its words;
           // only split when a complete phrase is absent from the static bank.
@@ -169,8 +193,8 @@
             if(my!==this.tok)return;
             if(url && this.audio){units.splice(0,units.length,{t:fallback,rate:1,end:'.'});urls=[url];recorded=true;this.lastFallback=true;}
           }
-          if (teaching && !recorded) { state('error','Le son ne se charge pas. Touche le haut-parleur pour réessayer.'); return; }
-          if (!recorded && !options.device) { state('error','La voix ne se charge pas. Touche le haut-parleur pour réessayer.'); return; }
+          if (teaching && !recorded) { state('error',unavailable(true)); return; }
+          if (!recorded && !options.device) { state('error',unavailable(false)); return; }
           if (!recorded) prepare(true);
           this.mode=recorded?'recorded':'device';
           let at=0;
@@ -219,7 +243,7 @@
     return {Voice,VoicePack,speechSegments,speechJoin,speechBucket};
   }
   function rootEnvironment() {
-    return {fetch:(...a)=>fetch(...a),document:typeof document!=='undefined'?document:null,Audio:typeof Audio==='function'?Audio:null,Blob,URL,AbortController:typeof AbortController==='function'?AbortController:null,
+    return {fetch:(...a)=>fetch(...a),location:typeof location!=='undefined'?location:null,document:typeof document!=='undefined'?document:null,Audio:typeof Audio==='function'?Audio:null,Blob,URL,AbortController:typeof AbortController==='function'?AbortController:null,
       synth:typeof speechSynthesis!=='undefined'?speechSynthesis:null,Utterance:typeof SpeechSynthesisUtterance==='function'?SpeechSynthesisUtterance:null,setTimeout:(fn,ms)=>setTimeout(fn,ms),clearTimeout:id=>clearTimeout(id)};
   }
   return {create,speechSegments,speechJoin,speechBucket,norm};

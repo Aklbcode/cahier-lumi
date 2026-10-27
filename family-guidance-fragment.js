@@ -178,7 +178,7 @@ function familyCollection(){const p=P(),ov=ovScreen('Mes découvertes'),sounds=f
 function familyMathReviewDue(p,now=Date.now()){return Object.values(p.mathPractice?.encountered||{}).some(f=>{const r=p.mathPractice?.review?.[f.id];return (!r||r.due<=now)&&(typeof mathFactFromConfig!=='function'||!!mathFactFromConfig({eq:f.eq,ans:f.answer}));});}
 const familyRecommendBefore=recommendedGame;
 recommendedGame=function(){const p=P();if(S.world==='grands'&&!p.resume&&GAMES.rappelCalcul&&familyMathReviewDue(p))return 'rappelCalcul';const id=familyRecommendBefore();return familyAccess(id).ready?id:(S.world==='petits'?'alphabetP':'lecture');};
-const LUMI_RELEASE={version:'2.7.0',date:'26/10/2026',id:'parcours-logiques-20261026'};
+const LUMI_RELEASE={version:'2.7.1',date:'27/10/2026',id:'voix-boules-20261027'};
 function familyHomeFooter(main){for(const footer of document.querySelectorAll('.family-version'))footer.remove();if(!main||HOME_THEME)return;main.append(h('footer',{class:'family-version',role:'contentinfo'},'Version '+LUMI_RELEASE.version+' · '+LUMI_RELEASE.date));}
 const familyHomeBefore=renderHome;
 renderHome=function(theme=HOME_THEME){familyHomeBefore(theme);document.body.setAttribute('data-family-child',S.current);for(const oldFooter of document.querySelectorAll('.family-version'))oldFooter.remove();if(HOME_THEME)return;const main=$('.theme-home');if(!main)return;const old=main.querySelector('.suggestion');if(old)old.remove();const id=recommendedGame(),resume=P().resume;

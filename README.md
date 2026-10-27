@@ -1,5 +1,11 @@
 # Le Cahier de Lumi
 
+## Version 2.7.1 — voix et boules rouges du 27 octobre 2026
+
+- **Voix** : une copie ouverte en fichier local charge désormais les mêmes enregistrements Charline depuis le site public en HTTPS. Une connexion Internet est nécessaire dans ce mode ; les progrès restent locaux. Les téléchargements vocaux lents disposent d’un délai plus long, et un chargement bloqué peut être relancé, même sans AbortController. Aucune voix système ne remplace les sons de lecture.
+- **Lola → Compter → Compter les boules rouges** : cadre fixe de deux rangées de cinq cases ; quatre niveaux (1–3, 1–5, 1–10 alignées, puis 1–10 dispersées). Huit questions par série, réponse directe sur le chiffre, progression et passage parent habituels.
+- Pour jouer hors connexion, ouvrir le site et effectuer le téléchargement complet depuis l’espace parents. Une simple copie du HTML ne contient pas les enregistrements.
+
 ## Version 2.7.0 — parcours logiques du 26 octobre 2026
 
 Lire et Calculer sont regroupés par objectifs et prérequis locaux. Les premiers problèmes ne dépendent plus de la multiplication ; les textes de lecture suivent les sons réellement rencontrés. Les branches orales, formes, mesures et calendrier restent parallèles. Les anciens accès, les profils, les récompenses et le passage parent sont conservés, sans devenir des compétences fictives.
