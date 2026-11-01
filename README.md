@@ -1,5 +1,12 @@
 # Le Cahier de Lumi
 
+## Version 2.8.0 — exposé du renard du 1er novembre 2026
+
+- **Luca → Découvrir → Mon exposé : le renard** : préparation de l’exposé « animal totem » du lundi 14 décembre. Un menu de onze activités courtes, toutes à la voix : *Je découvre le renard* (huit fiches, une par rubrique de la consigne : famille, corps, taille, repas, lieux de vie, monde, dangers, particularités), *Le corps du renard* (toucher la partie nommée sur un dessin original), *Grand ou petit ?*, *Le repas du renard*, *Où vit le renard ?*, *Amis ou dangers ?*, *Vrai ou faux ?*, *La comptine du renard* (texte original), *Je répète mon exposé*, *Je présente tout seul* et *Le grand quiz*.
+- **Le grand quiz** : douze questions sur les huit rubriques. La première réponse est notée, puis l’enfant est corrigé. Le bilan final indique, rubrique par rubrique, ce qui est su et l’activité à refaire ; les vingt derniers résultats restent dans le profil (`renardQuiz`).
+- **Fiche à imprimer** (`renard/fiche.html`, bouton en bas du menu) : grandes images à découper pour les volets du support, petites images par volet avec un mot en capitales, aide-mémoire des phrases, comptine et sources.
+- Faits vérifiés auprès de Bruxelles Environnement, Vikidia et du Gouvernement du Québec. Pictogrammes Twemoji (CC BY 4.0), dessins du renard et du terrier originaux. Les 260 nouvelles phrases sont enregistrées avec la voix Charline par l’action « Voix Charline » à la publication de la branche `lumi-renard`. Vérification : `node tests/renard.test.cjs`.
+
 ## Version 2.7.1 — voix et boules rouges du 27 octobre 2026
 
 - **Voix** : une copie ouverte en fichier local charge désormais les mêmes enregistrements Charline depuis le site public en HTTPS. Une connexion Internet est nécessaire dans ce mode ; les progrès restent locaux. Les téléchargements vocaux lents disposent d’un délai plus long, et un chargement bloqué peut être relancé, même sans AbortController. Aucune voix système ne remplace les sons de lecture.

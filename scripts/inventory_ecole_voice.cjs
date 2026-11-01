@@ -1,4 +1,4 @@
-/* Liste les phrases des compléments « école » absentes de la banque Charline.
+/* Liste les phrases des compléments « école » et de l’exposé du renard absentes de la banque Charline.
    Source seulement : aucun navigateur, aucun profil, aucune donnée d’enfant.
    Sortie : audit-voix/phrases-ecole.json (déclenche la génération sur GitHub). */
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
@@ -6,7 +6,7 @@ const {loadApp}=require('../tests/helpers/render-fixture.cjs');
 const {speechSegments}=require('../speech-engine.js');
 const root=path.join(__dirname,'..');
 const {ctx}=loadApp({Blob,URL,AbortController,setTimeout:()=>0,clearTimeout(){}});
-const lines=vm.runInContext('ecoleParcoursVoiceLines()',ctx);
+const lines=vm.runInContext("[...ecoleParcoursVoiceLines(),...(typeof renardVoiceLines==='function'?renardVoiceLines():[])]",ctx);
 const keyNorm=t=>String(t).normalize('NFC').replace(/[’‘]/g,"'").replace(/\s+/g,' ').trim().replace(/[.!?…:]+$/,'').trim().toLocaleLowerCase('fr');
 const bank=JSON.parse(fs.readFileSync(path.join(root,'voix/index-belge.json'),'utf8'));
 const known=new Set(Object.keys(bank.clips).filter(k=>/^[nms]\|/.test(k)).map(k=>keyNorm(k.slice(2))));

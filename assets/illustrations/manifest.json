@@ -2444,6 +2444,78 @@
       "code": "1f600",
       "sha256": "41478e547c5b6ad66bfcf91ead5350fa0bc247956c3ff912020327e3e9ad0d2b",
       "bytes": 450
+    },
+    {
+      "emoji": "🦡",
+      "code": "1f9a1",
+      "sha256": "8a961350b2aa6d013d189bee9319e655ecf691df25e790716129167f2e8272c3",
+      "bytes": 1540
+    },
+    {
+      "emoji": "🪲",
+      "code": "1fab2",
+      "sha256": "0f91886a04d327dae2be3ea9f653dfcd2e68320ca0243c89d80d7413ec206652",
+      "bytes": 3735
+    },
+    {
+      "emoji": "🪱",
+      "code": "1fab1",
+      "sha256": "bccb133e349cee44831442487a28b698f764736ae56cd24bc1c26dd035a84d87",
+      "bytes": 5861
+    },
+    {
+      "emoji": "🏙️",
+      "code": "1f3d9",
+      "sha256": "fc7ee26a37f643563250af9559e27062093fd2f91fe41e41f5802af4a0876024",
+      "bytes": 580
+    },
+    {
+      "emoji": "🌍",
+      "code": "1f30d",
+      "sha256": "593d59f9f319875b02111ac46a9f70df2c1e0f3a5fd92810c3f5ddbb598ca62c",
+      "bytes": 1156
+    },
+    {
+      "emoji": "⚠️",
+      "code": "26a0",
+      "sha256": "03382ac2fd7fe0d58ae2f81964b332bd34dfc9cc5145a10e61cb5e776aef5e2b",
+      "bytes": 548
+    },
+    {
+      "emoji": "🍽️",
+      "code": "1f37d",
+      "sha256": "aa43d35aa7b27cc15959a15b0cf223eeea11dfe8c673d805267f8418af10786f",
+      "bytes": 938
+    },
+    {
+      "emoji": "👪",
+      "code": "1f46a",
+      "sha256": "e7a20a015e4357967635035f9f78e35cdd14699288ef9ccf28e9c0e60c869010",
+      "bytes": 1563
+    },
+    {
+      "emoji": "⚪",
+      "code": "26aa",
+      "sha256": "2b3db84b20166284b6710898a39baecd15db929f5a42ff89603d9a4076638764",
+      "bytes": 113
+    },
+    {
+      "emoji": "⚫",
+      "code": "26ab",
+      "sha256": "19db983a0eb045f757dc9593ac7a083c412eb682463f50d39c46358fdf17f5c6",
+      "bytes": 113
+    },
+    {
+      "emoji": "🟢",
+      "code": "1f7e2",
+      "sha256": "66b1c8e22d1f5804ed048c6a1f5fe5d4210c274967d4f7f42e595851d6cd9f47",
+      "bytes": 113
+    },
+    {
+      "emoji": "🖨️",
+      "code": "1f5a8",
+      "sha256": "af2ba5bdf08ed4eefc3ed72f987241491fe38fc81ab39f15ac22d771db7b1394",
+      "bytes": 953
     }
   ],
   "missing": []
